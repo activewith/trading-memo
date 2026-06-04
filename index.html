@@ -393,7 +393,7 @@ async function load(){
     } else if(res.ok){
       const json=await res.json();
       ghSha=json.sha;
-      const decoded=atob(json.content.replace(/\n/g,''));
+      const decoded=decodeURIComponent(escape(atob(json.content.replace(/\n/g,''))));
       memos=JSON.parse(decoded);
     } else if(res.status===401){
       localStorage.removeItem(TOKEN_KEY);
