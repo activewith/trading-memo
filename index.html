@@ -187,6 +187,21 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 </style>
 </head>
 <body>
+
+<!-- GitHub 토큰 설정 오버레이 -->
+<div id="token-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;padding:24px">
+  <div style="background:var(--bg);border-radius:var(--radius);padding:24px;width:100%;max-width:360px">
+    <div style="font-size:17px;font-weight:700;margin-bottom:6px">🔑 GitHub 토큰 설정</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6">
+      데이터를 기기간 동기화하려면<br>GitHub Personal Access Token이 필요합니다.<br>
+      토큰은 이 기기에만 저장됩니다.
+    </div>
+    <div id="token-msg" style="font-size:12px;color:var(--red-text);margin-bottom:8px;min-height:16px"></div>
+    <input id="token-input" type="password" placeholder="ghp_xxxxxxxxxxxx" style="width:100%;padding:12px 13px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);font-size:14px;font-family:inherit;margin-bottom:12px;-webkit-appearance:none">
+    <button onclick="saveToken()" style="width:100%;padding:14px;border-radius:var(--radius);background:var(--text);color:var(--bg);font-size:15px;font-weight:600;border:none;cursor:pointer;font-family:inherit">저장하고 시작하기</button>
+    <button onclick="localStorage.removeItem('gh_token_v1');hideTokenSetup();load();" style="width:100%;padding:10px;margin-top:8px;border-radius:var(--radius);background:transparent;border:1px solid var(--border);color:var(--text2);font-size:13px;cursor:pointer;font-family:inherit">나중에 설정 (로컬만 사용)</button>
+  </div>
+</div>
 <div class="app">
   <div class="topbar">
     <div class="topbar-inner">
@@ -337,17 +352,83 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 //# sourceMappingURL=tesseract.min.js.map
 </script>
 <script>
-// ── Storage ─────────────────────────────────────────────
+// ── Storage (GitHub API) ─────────────────────────────────
 let memos=[];
-const DB='trading_memos_v3';
-function load(){
-  try{const d=localStorage.getItem(DB);if(d)memos=JSON.parse(d);}catch(e){memos=[];}
+const GH_OWNER='activewith';
+const GH_REPO='trading-memo';
+const GH_FILE='data.json';
+const GH_API=`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`;
+const TOKEN_KEY='gh_token_v1';
+let ghSha=null; // 파일 SHA (업데이트 시 필요)
+
+function getToken(){return localStorage.getItem(TOKEN_KEY)||'';}
+
+function showTokenSetup(){
+  const overlay=document.getElementById('token-overlay');
+  if(overlay)overlay.style.display='flex';
+}
+function hideTokenSetup(){
+  const overlay=document.getElementById('token-overlay');
+  if(overlay)overlay.style.display='none';
+}
+async function saveToken(){
+  const v=(document.getElementById('token-input').value||'').trim();
+  if(!v){alert('토큰을 입력해주세요.');return;}
+  localStorage.setItem(TOKEN_KEY,v);
+  hideTokenSetup();
+  await load();
+}
+
+async function load(){
+  const token=getToken();
+  if(!token){showTokenSetup();return;}
+  // 로딩 표시
+  const badge=document.getElementById('count-badge');
+  if(badge)badge.textContent='불러오는 중…';
+  try{
+    const res=await fetch(GH_API,{headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json'}});
+    if(res.status===404){
+      // 파일 없음 → 빈 배열로 시작
+      memos=[];ghSha=null;
+    } else if(res.ok){
+      const json=await res.json();
+      ghSha=json.sha;
+      const decoded=atob(json.content.replace(/\n/g,''));
+      memos=JSON.parse(decoded);
+    } else if(res.status===401){
+      localStorage.removeItem(TOKEN_KEY);
+      showTokenSetup();
+      document.getElementById('token-msg').textContent='토큰이 유효하지 않습니다. 다시 입력해주세요.';
+      return;
+    }
+  }catch(e){
+    // 오프라인 등 → localStorage 캐시로 폴백
+    try{const d=localStorage.getItem('tm_cache');if(d)memos=JSON.parse(d);}catch(e2){memos=[];}
+  }
+  // 캐시 저장
+  try{localStorage.setItem('tm_cache',JSON.stringify(memos));}catch(e){}
   renderList();updateBadge();showInstallHint();
-  if(!localStorage.getItem('ocr_ready') && !localStorage.getItem('ocr_hint_dismissed')){
+  if(!localStorage.getItem('ocr_ready')&&!localStorage.getItem('ocr_hint_dismissed')){
     document.getElementById('first-time-banner').style.display='block';
   }
 }
-function persist(){try{localStorage.setItem(DB,JSON.stringify(memos));}catch(e){}}
+
+async function persist(){
+  // 로컬 캐시 즉시 저장
+  try{localStorage.setItem('tm_cache',JSON.stringify(memos));}catch(e){}
+  const token=getToken();
+  if(!token)return;
+  const content=btoa(unescape(encodeURIComponent(JSON.stringify(memos,null,2))));
+  const body={message:'update data',content:content};
+  if(ghSha)body.sha=ghSha;
+  try{
+    const res=await fetch(GH_API,{method:'PUT',headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(res.ok){
+      const json=await res.json();
+      ghSha=json.content.sha;
+    }
+  }catch(e){}
+}
 
 function sw(p){
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('on',(i===0&&p==='new')||(i===1&&p==='list')));
@@ -667,7 +748,7 @@ function fillForm(item){
 }
 
 // ── 저장/초기화 ──────────────────────────────────────────
-function doSave(){
+async function doSave(){
   const name=document.getElementById('f-name').value.trim();
   const buy=numVal('f-buy');
   if(!name||!buy){showNotice('종목명과 매수가는 필수입니다.','err');return;}
@@ -683,7 +764,7 @@ function doSave(){
     date:new Date().toLocaleDateString('ko-KR'),
     status:'active'
   });
-  persist();updateBadge();
+ await persist();updateBadge();
   // 픽 리스트에서 현재 채운 항목 저장됨 표시
   var items=window._parsedItems||[];
   var curName=name;
@@ -878,7 +959,7 @@ function onSellInput(id){
     +'</div></div>';
 }
 
-function confirmSell(id){
+async function confirmSell(id){
   var m=memos.find(function(m){return m.id===id;});if(!m)return;
   var priceEl=document.getElementById('si-price-'+id);
   var dateEl=document.getElementById('si-date-'+id);
@@ -889,7 +970,7 @@ function confirmSell(id){
   m.sellTotal=sellP*(m.qty||1);
   m.sellDate=dateEl?dateEl.value:'';
   m.status='closed';
-  persist();updateBadge();renderList();showDetail(id);
+ await persist();updateBadge();renderList();showDetail(id);
 }
 
 function editDetail(id){
@@ -968,7 +1049,7 @@ function updateEditSellCalc(id){
     +'</div></div>';
 }
 
-function saveEdit(id){
+async function saveEdit(id){
   var m=memos.find(function(m){return m.id===id;});if(!m)return;
   m.name=document.getElementById('ef-name').value.trim()||m.name;
   m.buyDate=document.getElementById('ef-date').value||m.buyDate;
@@ -986,11 +1067,11 @@ function saveEdit(id){
   m.sellDate=newSellDate||null;
   m.sellTotal=newSellPrice&&m.qty?newSellPrice*m.qty:null;
   if(m.sellPrice) m.status='closed';
-  persist();renderList();showDetail(id);
+ await persist();renderList();showDetail(id);
 }
 
-function toggleStat(id){const m=memos.find(m=>m.id===id);if(m){m.status=m.status==='active'?'closed':'active';persist();updateBadge();renderList();document.getElementById('detail-area').innerHTML='';}}
-function delMemo(id){if(!confirm('삭제할까요?'))return;memos=memos.filter(m=>m.id!==id);persist();updateBadge();renderList();document.getElementById('detail-area').innerHTML='';}
+async function toggleStat(id){const m=memos.find(m=>m.id===id);if(m){m.status=m.status==='active'?'closed':'active';await persist();updateBadge();renderList();document.getElementById('detail-area').innerHTML='';}}
+async function delMemo(id){if(!confirm('삭제할까요?'))return;memos=memos.filter(m=>m.id!==id);await persist();updateBadge();renderList();document.getElementById('detail-area').innerHTML='';}
 
 function showInstallHint(){
   if(localStorage.getItem('install_hint_shown'))return;
@@ -1007,7 +1088,7 @@ function showInstallHint(){
   }
 }
 
-load();upPrev();
+(async()=>{await load();upPrev();})();
 </script>
 </body>
 </html>
