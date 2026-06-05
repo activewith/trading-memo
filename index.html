@@ -112,6 +112,9 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 .mc-divider{height:1px;background:var(--border);margin:10px 0}
 .mc-memo-txt{font-size:13px;color:var(--text2);line-height:1.5}
 .empty{text-align:center;padding:60px 0;color:var(--text2);font-size:14px;line-height:2}
+.mc-closed-rate{font-size:15px;font-weight:700;margin-top:3px;letter-spacing:-0.3px}
+.mc-cr-up{color:var(--green-text)}
+.mc-cr-dn{color:var(--red-text)}
 
 
 .detail{background:var(--bg2);border-radius:var(--radius);padding:18px;margin-bottom:12px;border:1px solid var(--border2)}
@@ -851,9 +854,19 @@ function renderList(){
     // 행3: 보유기한
     if(m.days) rows+='<div class="mc-meta-row"><span><span class="lbl">보유기한</span><span class="val">'+m.days+'일</span></span></div>';
 
+    // 종료된 종목 수익률 배지
+    var closedBadge='';
+    if(m.status!=='active'&&m.sellPrice){
+      var crv=((m.sellPrice-m.buy)/m.buy*100);
+      var crs=(crv>0?'+':'')+crv.toFixed(2)+'%';
+      closedBadge='<div class="mc-closed-rate '+(crv>=0?'mc-cr-up':'mc-cr-dn')+'">'+crs+'</div>';
+    }
     return '<div class="memo-card" onclick="showDetail('+m.id+')">'
       +'<div class="mc-top">'
+      +'<div>'
       +'<div class="mc-name">'+m.name+'</div>'
+      +closedBadge
+      +'</div>'
       +'<div class="mc-right">'
       +'<span class="mc-date">'+( m.buyDate||m.date)+'</span>'
       +'<span class="badge '+(m.status==='active'?'b-on':'b-off')+'">'+(m.status==='active'?'보유중':'종료')+'</span>'
