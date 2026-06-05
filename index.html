@@ -365,6 +365,16 @@ const TOKEN_KEY='gh_token_v1';
 let ghSha=null; // 파일 SHA (업데이트 시 필요)
 
 function getToken(){return localStorage.getItem(TOKEN_KEY)||'';}
+function calcEndDate(buyDate, days){
+  if(!buyDate||!days)return null;
+  var d=new Date(buyDate);
+  d.setDate(d.getDate()+parseInt(days));
+  var y=d.getFullYear();
+  var mo=String(d.getMonth()+1).padStart(2,'0');
+  var da=String(d.getDate()).padStart(2,'0');
+  return y+'-'+mo+'-'+da;
+}
+
 
 function showTokenSetup(){
   const overlay=document.getElementById('token-overlay');
@@ -852,7 +862,7 @@ function renderList(){
     if(m.stop)   r2+='<span><span class="lbl">손절</span><span class="val-dn">'+fmt(m.stop)+'원 ('+sp+'%)</span></span>';
     if(r2) rows+='<div class="mc-meta-row">'+r2+'</div>';
     // 행3: 보유기한
-    if(m.days) rows+='<div class="mc-meta-row"><span><span class="lbl">보유기한</span><span class="val">'+m.days+'일</span></span></div>';
+    if(m.days){var ed=calcEndDate(m.buyDate||m.date,m.days);rows+='<div class="mc-meta-row"><span><span class="lbl">보유기한</span><span class="val">'+m.days+'일'+(ed?' ('+ed+')':'')+' </span></span></div>';}
 
     // 종료된 종목 수익률 배지
     var closedBadge='';
@@ -902,7 +912,7 @@ function showDetail(id){
   if(m.total) rows+=detailRow('매수총액', fmt(m.total)+'원');
   if(m.target)rows+=detailRow('목표가', fmt(m.target)+'원','up','(+'+(tp)+'%)  → 도달 시 즉시 매도');
   if(m.stop)  rows+=detailRow('손절가', fmt(m.stop)+'원','dn','('+sp+'%)  → 도달 시 즉시 매도');
-  if(m.days)  rows+=detailRow('보유기한', m.days+'일','','→ 횡보 손절');
+  if(m.days){var endD=calcEndDate(m.buyDate,m.days);rows+=detailRow('보유기한', m.days+'일'+(endD?' ('+endD+')':''),'','→ 횡보 손절');}
   if(m.memo)  rows+=detailRow('메모', m.memo);
 
   // 매도 결과 (이미 입력된 경우)
