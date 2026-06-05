@@ -418,6 +418,16 @@ async function persist(){
   try{localStorage.setItem('tm_cache',JSON.stringify(memos));}catch(e){}
   const token=getToken();
   if(!token)return;
+  // 저장 전 항상 최신 SHA를 GitHub에서 가져옴 (다른 기기에서 변경됐을 수 있으므로)
+  try{
+    const headRes=await fetch(GH_API,{headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json'}});
+    if(headRes.ok){
+      const headJson=await headRes.json();
+      ghSha=headJson.sha;
+    } else if(headRes.status===404){
+      ghSha=null;
+    }
+  }catch(e){}
   const content=btoa(unescape(encodeURIComponent(JSON.stringify(memos,null,2))));
   const body={message:'update data',content:content};
   if(ghSha)body.sha=ghSha;
