@@ -187,6 +187,24 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 .ih-title{font-size:13px;font-weight:600;color:var(--blue-text);margin-bottom:5px}
 .ih-body{font-size:12px;color:var(--text2);line-height:1.6}
 .ih-close{float:right;background:none;border:none;cursor:pointer;color:var(--text2);font-size:14px;padding:0;margin:-2px -2px 0 6px}
+/* 추가매수 스캔 버튼 (상세화면) */
+.add-buy-scan{border:1.5px dashed var(--border2);border-radius:var(--radius-sm);padding:7px 16px;text-align:center;cursor:pointer;background:var(--bg2);margin-bottom:10px;position:relative;display:block;width:100%}
+.add-buy-scan:active{background:var(--bg3)}
+.add-buy-scan input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;font-size:16px}
+.add-buy-scan .ab-icon{font-size:20px;margin-bottom:2px}
+.add-buy-scan .ab-label{font-size:13px;font-weight:500;color:var(--text)}
+.ab-analyzing{text-align:center;padding:10px;background:var(--bg2);border-radius:var(--radius-sm);margin-bottom:10px}
+.ab-result-box{background:var(--blue-bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;font-size:13px;line-height:2;margin-bottom:10px}
+.ab-result-title{font-weight:600;color:var(--blue-text);margin-bottom:4px;font-size:13px}
+.ab-result-row{display:flex;justify-content:space-between;align-items:center;padding:2px 0}
+.ab-arrow{color:var(--text3);margin:0 6px}
+.ab-old{color:var(--text2)}
+.ab-new{font-weight:700}
+.ab-new-up{color:var(--green-text);font-weight:700}
+.ab-new-dn{color:var(--red-text);font-weight:700}
+.ab-new-blue{color:var(--blue-text);font-weight:700}
+.ab-apply-btn{width:100%;padding:11px;border-radius:var(--radius-sm);background:var(--text);color:var(--bg);font-size:14px;font-weight:600;border:none;cursor:pointer;font-family:inherit;margin-top:8px}
+.ab-cancel-btn{width:100%;padding:9px;border-radius:var(--radius-sm);background:transparent;border:1px solid var(--border);color:var(--text2);font-size:13px;cursor:pointer;font-family:inherit;margin-top:6px}
 </style>
 </head>
 <body>
@@ -365,16 +383,6 @@ const TOKEN_KEY='gh_token_v1';
 let ghSha=null; // 파일 SHA (업데이트 시 필요)
 
 function getToken(){return localStorage.getItem(TOKEN_KEY)||'';}
-function calcEndDate(buyDate, days){
-  if(!buyDate||!days)return null;
-  var d=new Date(buyDate);
-  d.setDate(d.getDate()+parseInt(days));
-  var y=d.getFullYear();
-  var mo=String(d.getMonth()+1).padStart(2,'0');
-  var da=String(d.getDate()).padStart(2,'0');
-  return y+'-'+mo+'-'+da;
-}
-
 
 function showTokenSetup(){
   const overlay=document.getElementById('token-overlay');
@@ -862,7 +870,7 @@ function renderList(){
     if(m.stop)   r2+='<span><span class="lbl">손절</span><span class="val-dn">'+fmt(m.stop)+'원 ('+sp+'%)</span></span>';
     if(r2) rows+='<div class="mc-meta-row">'+r2+'</div>';
     // 행3: 보유기한
-    if(m.days){var ed=calcEndDate(m.buyDate||m.date,m.days);rows+='<div class="mc-meta-row"><span><span class="lbl">보유기한</span><span class="val">'+m.days+'일'+(ed?' ('+ed+')':'')+' </span></span></div>';}
+    if(m.days) rows+='<div class="mc-meta-row"><span><span class="lbl">보유기한</span><span class="val">'+m.days+'일</span></span></div>';
 
     // 종료된 종목 수익률 배지
     var closedBadge='';
@@ -912,7 +920,15 @@ function showDetail(id){
   if(m.total) rows+=detailRow('매수총액', fmt(m.total)+'원');
   if(m.target)rows+=detailRow('목표가', fmt(m.target)+'원','up','(+'+(tp)+'%)  → 도달 시 즉시 매도');
   if(m.stop)  rows+=detailRow('손절가', fmt(m.stop)+'원','dn','('+sp+'%)  → 도달 시 즉시 매도');
-  if(m.days){var endD=calcEndDate(m.buyDate,m.days);rows+=detailRow('보유기한', m.days+'일'+(endD?' ('+endD+')':''),'','→ 횡보 손절');}
+  if(m.days){
+    var _dlStr='';
+    if(m.buyDate){
+      var _dl=new Date(m.buyDate);
+      _dl.setDate(_dl.getDate()+parseInt(m.days));
+      _dlStr=' ('+_dl.toISOString().slice(0,10)+')';
+    }
+    rows+=detailRow('보유기한', m.days+'일'+_dlStr,'','→ 횡보 손절');
+  }
   if(m.memo)  rows+=detailRow('메모', m.memo);
 
   // 매도 결과 (이미 입력된 경우)
@@ -953,11 +969,26 @@ function showDetail(id){
       +'</div>';
   }
 
+  // 추가매수 버튼 (보유중 종목만)
+  var addBuyBtn='';
+  if(m.status==='active'){
+    var _abId='ab-inp-'+id;
+    var _abRId='ab-result-'+id;
+    addBuyBtn='<div class="add-buy-scan" onclick="document.getElementById(\'' + _abId + '\').click()">'
+      +'<input type="file" accept="image/*" id="'+_abId+'" onchange="onAddBuyImg(this,'+id+')">'
+      +'<div class="ab-icon">📷</div>'
+      +'<div class="ab-label">추가매수 스크린샷</div>'
+      +'</div>'
+      +'<div id="'+_abRId+'"></div>';
+  }
+
+
   da.innerHTML='<div class="detail">'
     +'<div class="d-header"><span class="d-name">'+m.name+'</span>'
     +'<button class="close-x" onclick="closeDetail()">✕</button></div>'
     +sellResult
     +'<div class="d-rows">'+rows+'</div>'
+    +addBuyBtn
     +sellInput
     +'<div class="act-row">'
     +'<button class="act-btn act-edit" onclick="editDetail('+id+')">수정</button>'
@@ -1103,7 +1134,94 @@ async function saveEdit(id){
  await persist();renderList();showDetail(id);
 }
 
-async function toggleStat(id){const m=memos.find(m=>m.id===id);if(m){m.status=m.status==='active'?'closed':'active';await persist();updateBadge();renderList();document.getElementById('detail-area').innerHTML='';}}
+// ── 추가매수 OCR ─────────────────────────────────────────
+async function onAddBuyImg(inp,id){
+  var m=memos.find(function(m){return m.id===id;});if(!m||!inp.files||!inp.files[0])return;
+  const file=inp.files[0];
+  const resEl=document.getElementById('ab-result-'+id);
+  resEl.innerHTML='<div class="ab-analyzing"><div class="spin"></div><div class="analyzing-txt" style="font-size:13px">화면 인식 중...</div></div>';
+  try{
+    const result=await Tesseract.recognize(file,'kor',{});
+    const raw=result.data.text||'';
+    const parsed=parseSamsungMTS(raw);
+    if(parsed.type==='none'||!parsed.items.length){
+      resEl.innerHTML='<div style="color:var(--red-text);font-size:13px;padding:8px 0">종목 정보를 찾지 못했습니다.</div>';return;
+    }
+    const it=parsed.items[0];
+    const newP=parseInt((it.price||'').replace(/,/g,''))||0;
+    const newQ=parseInt((it.qty||'').replace(/,/g,''))||0;
+    if(!newP){resEl.innerHTML='<div style="color:var(--red-text);font-size:13px;padding:8px 0">가격 인식 실패 — 다시 시도해주세요.</div>';return;}
+    // 계산
+    const oldBuy=m.buy||0;
+    const oldQty=m.qty||0;
+    let newAvgBuy=newP, newTotalQty=newQ, newTotal=newP*newQ;
+    if(oldQty>0&&newQ>0){
+      newTotalQty=oldQty+newQ;
+      newAvgBuy=Math.round((oldBuy*oldQty+newP*newQ)/newTotalQty);
+      newTotal=newAvgBuy*newTotalQty;
+    }else if(oldQty>0){
+      newTotalQty=oldQty; newAvgBuy=Math.round((oldBuy+newP)/2); newTotal=newAvgBuy*newTotalQty;
+    }
+    // 목표/손절 비율 유지
+    var newTarget=null,newStop=null;
+    if(m.target&&oldBuy){var tp=(m.target-oldBuy)/oldBuy;newTarget=Math.round(newAvgBuy*(1+tp));}
+    if(m.stop&&oldBuy){var sp=(m.stop-oldBuy)/oldBuy;newStop=Math.round(newAvgBuy*(1+sp));}
+    // 보유기한 +7
+    var oldDays=parseInt(m.days)||0;
+    var newDays=oldDays+7;
+    var dlDate=new Date();dlDate.setDate(dlDate.getDate()+newDays);
+    var dlStr=(dlDate.getMonth()+1)+'/'+(dlDate.getDate());
+    // 결과 표시
+    var html='<div class="ab-result-box">'
+      +'<div class="ab-result-title">📊 추가매수 계산 결과</div>'
+      +'<div class="ab-result-row"><span style="color:var(--text2);font-size:12px">매수가</span>'
+      +'<span><span class="ab-old">'+fmt(oldBuy)+'원</span>'
+      +'<span class="ab-arrow">→</span>'
+      +'<span class="ab-new-blue">'+fmt(newAvgBuy)+'원</span></span></div>';
+    if(oldQty)html+='<div class="ab-result-row"><span style="color:var(--text2);font-size:12px">수량</span>'
+      +'<span><span class="ab-old">'+fmt(oldQty)+'주</span>'
+      +'<span class="ab-arrow">→</span>'
+      +'<span class="ab-new-blue">'+fmt(newTotalQty)+'주</span></span></div>';
+    if(m.total)html+='<div class="ab-result-row"><span style="color:var(--text2);font-size:12px">매수총액</span>'
+      +'<span><span class="ab-old">'+fmt(m.total)+'원</span>'
+      +'<span class="ab-arrow">→</span>'
+      +'<span class="ab-new-blue">'+fmt(newTotal)+'원</span></span></div>';
+    if(newTarget)html+='<div class="ab-result-row"><span style="color:var(--text2);font-size:12px">목표가</span>'
+      +'<span><span class="ab-old">'+fmt(m.target)+'원</span>'
+      +'<span class="ab-arrow">→</span>'
+      +'<span class="ab-new-up">'+fmt(newTarget)+'원</span></span></div>';
+    if(newStop)html+='<div class="ab-result-row"><span style="color:var(--text2);font-size:12px">손절가</span>'
+      +'<span><span class="ab-old">'+fmt(m.stop)+'원</span>'
+      +'<span class="ab-arrow">→</span>'
+      +'<span class="ab-new-dn">'+fmt(newStop)+'원</span></span></div>';
+    html+='<div class="ab-result-row"><span style="color:var(--text2);font-size:12px">보유기한</span>'
+      +'<span><span class="ab-old">'+oldDays+'일</span>'
+      +'<span class="ab-arrow">→</span>'
+      +'<span class="ab-new-blue">'+newDays+'일 +7 ('+dlStr+')</span></span></div>'
+      +'</div>';
+    html+='<button class="ab-apply-btn" onclick="applyAddBuy('+id+','+newAvgBuy+','+newTotalQty+','+newTotal+','+(newTarget||0)+','+(newStop||0)+','+newDays+')">적용하기</button>';
+    html+='<button class="ab-cancel-btn" onclick="document.getElementById(\'ab-result-'+id+'\').innerHTML=\'\'">취소</button>';
+    resEl.innerHTML=html;
+    resEl.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }catch(e){
+    resEl.innerHTML='<div style="color:var(--red-text);font-size:13px;padding:8px 0">OCR 오류: '+(e.message||String(e))+'</div>';
+  }
+}
+
+async function applyAddBuy(id,newBuy,newQty,newTotal,newTarget,newStop,newDays){
+  var m=memos.find(function(m){return m.id===id;});if(!m)return;
+  m.buy=newBuy;
+  if(newQty)m.qty=newQty;
+  if(newTotal)m.total=newTotal;
+  if(newTarget)m.target=newTarget;
+  if(newStop)m.stop=newStop;
+  m.days=String(newDays);
+  await persist();renderList();showDetail(id);
+}
+
+async function toggleStat(id){const m=memos.find(m=>m.id===id);if(m){m.status=m.status==='active'?'closed':'active';await persist();updateBadge();renderList();document.getElementById('detail-area').innerHTML='';}
+}
+
 async function delMemo(id){if(!confirm('삭제할까요?'))return;memos=memos.filter(m=>m.id!==id);await persist();updateBadge();renderList();document.getElementById('detail-area').innerHTML='';}
 
 function showInstallHint(){
