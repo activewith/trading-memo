@@ -25,7 +25,10 @@
     "memo": "",
     "buyDate": "2026-06-01",
     "date": "2026. 6. 5.",
-    "status": "active"
+    "status": "closed",
+    "sellPrice": 17860,
+    "sellTotal": 321480,
+    "sellDate": "2026-06-05"
   },
   {
     "id": 1780575608438,
