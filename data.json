@@ -1,5 +1,19 @@
 [
   {
+    "id": 1780640972004,
+    "name": "TigerAi반도체핵심공",
+    "buy": 19970,
+    "qty": 20,
+    "total": 399400,
+    "target": 21967,
+    "stop": 17973,
+    "days": null,
+    "memo": "",
+    "buyDate": "2026-06-01",
+    "date": "2026. 6. 5.",
+    "status": "active"
+  },
+  {
     "id": 1780633934887,
     "name": "Tiger 200 금융",
     "buy": 17057,
