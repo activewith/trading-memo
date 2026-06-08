@@ -205,6 +205,69 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 .ab-new-blue{color:var(--blue-text);font-weight:700}
 .ab-apply-btn{width:100%;padding:11px;border-radius:var(--radius-sm);background:var(--text);color:var(--bg);font-size:14px;font-weight:600;border:none;cursor:pointer;font-family:inherit;margin-top:8px}
 .ab-cancel-btn{width:100%;padding:9px;border-radius:var(--radius-sm);background:transparent;border:1px solid var(--border);color:var(--text2);font-size:13px;cursor:pointer;font-family:inherit;margin-top:6px}
+
+/* ── 그룹 섹션 ──────────────────────────────────────────── */
+.group-section{margin-bottom:18px}
+.group-header{display:flex;align-items:center;gap:8px;padding:6px 2px 8px;border-bottom:2px solid var(--border);margin-bottom:10px}
+.group-name-txt{font-size:14px;font-weight:700;color:var(--text);flex:1;cursor:pointer;padding:2px 0}
+.group-name-txt:hover{color:var(--blue-text)}
+.group-name-input{font-size:14px;font-weight:700;color:var(--text);flex:1;border:none;background:transparent;font-family:inherit;border-bottom:2px solid var(--blue-text);padding:2px 0;outline:none;-webkit-appearance:none}
+.group-stats-badge{font-size:11px;padding:3px 9px;border-radius:10px;background:var(--bg3);color:var(--text2);white-space:nowrap}
+.group-btn{background:none;border:1px solid var(--border);cursor:pointer;font-size:12px;color:var(--text2);padding:4px 10px;border-radius:8px;font-family:inherit}
+.group-btn:active{background:var(--bg3)}
+.group-btn.danger{color:var(--red-text);border-color:var(--red-bg)}
+.ungrouped-header{display:flex;align-items:center;gap:8px;padding:6px 2px 8px;border-bottom:1px dashed var(--border);margin-bottom:10px}
+.ungrouped-lbl{font-size:13px;font-weight:600;color:var(--text2);flex:1}
+
+/* ── 카드 체크박스 래퍼 ─────────────────────────────────── */
+.card-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
+.card-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--border2);flex-shrink:0;margin-top:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:var(--bg);transition:all 0.15s;font-size:12px;color:transparent}
+.card-check.checked{background:var(--blue);border-color:var(--blue);color:#fff}
+.card-row .memo-card{flex:1;margin-bottom:0}
+
+/* ── 선택 액션바 ────────────────────────────────────────── */
+.select-bar{display:none;position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--text);color:var(--bg);padding:14px 18px calc(14px + env(safe-area-inset-bottom,0px));z-index:200;border-radius:16px 16px 0 0;box-shadow:0 -4px 20px rgba(0,0,0,0.15)}
+.select-bar.show{display:flex;align-items:center;gap:10px}
+.select-bar-info{flex:1;font-size:14px;font-weight:600}
+.select-bar-sub{font-size:11px;font-weight:400;opacity:0.7;margin-top:2px}
+.select-bar-btn{background:rgba(255,255,255,0.18);color:#fff;border:none;padding:9px 14px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
+.select-bar-btn:active{background:rgba(255,255,255,0.3)}
+.select-bar-cancel{background:transparent;color:rgba(255,255,255,0.6);border:none;font-size:13px;cursor:pointer;font-family:inherit;padding:8px 6px}
+
+/* ── 그룹 만들기 모달 ───────────────────────────────────── */
+.gmodal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;align-items:flex-end}
+.gmodal-overlay.show{display:flex}
+.gmodal-box{background:var(--bg);border-radius:20px 20px 0 0;padding:22px 20px calc(22px + env(safe-area-inset-bottom,0px));width:100%;max-width:430px;margin:0 auto}
+.gmodal-title{font-size:16px;font-weight:700;margin-bottom:14px}
+.gmodal-input{width:100%;padding:13px 14px;border:1.5px solid var(--border2);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);font-size:16px;font-family:inherit;-webkit-appearance:none;outline:none;margin-bottom:14px}
+.gmodal-input:focus{border-color:var(--blue-text)}
+.gmodal-acts{display:flex;gap:8px}
+.gmodal-ok{flex:2;padding:13px;border-radius:var(--radius-sm);background:var(--text);color:var(--bg);font-size:15px;font-weight:600;border:none;cursor:pointer;font-family:inherit}
+.gmodal-cancel{flex:1;padding:13px;border-radius:var(--radius-sm);background:transparent;border:1px solid var(--border);color:var(--text2);font-size:14px;cursor:pointer;font-family:inherit}
+
+/* ── 통계 탭 ────────────────────────────────────────────── */
+.stat-summary-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+.stat-kpi{background:var(--bg2);border-radius:var(--radius);padding:14px 12px;border:1px solid var(--border);text-align:center}
+.stat-kpi-val{font-size:20px;font-weight:800;letter-spacing:-0.5px;margin-bottom:3px}
+.stat-kpi-lbl{font-size:11px;color:var(--text2);font-weight:500}
+.stat-kpi-val.up{color:var(--green-text)}
+.stat-kpi-val.dn{color:var(--red-text)}
+.stat-section{background:var(--bg2);border-radius:var(--radius);padding:16px;margin-bottom:14px;border:1px solid var(--border)}
+.stat-sec-title{font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px}
+.stat-group-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:13px 14px;margin-bottom:10px}
+.stat-group-card:last-child{margin-bottom:0}
+.stat-gc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.stat-gc-name{font-size:15px;font-weight:700}
+.stat-gc-count{font-size:12px;color:var(--text2)}
+.stat-gc-rows{display:flex;flex-direction:column;gap:0}
+.stat-gc-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}
+.stat-gc-row:last-child{border-bottom:none}
+.stat-gc-lbl{color:var(--text2)}
+.stat-gc-val{font-weight:600;color:var(--text)}
+.stat-gc-val.up{color:var(--green-text);font-weight:700}
+.stat-gc-val.dn{color:var(--red-text);font-weight:700}
+.stat-total-card{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:13px 14px;margin-top:4px}
+.stat-total-label{font-size:13px;font-weight:700;margin-bottom:8px;color:var(--text)}
 </style>
 </head>
 <body>
@@ -232,6 +295,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
     <div class="tabs">
       <button class="tab on" onclick="sw('new')">새 기록</button>
       <button class="tab" onclick="sw('list')">목록</button>
+      <button class="tab" onclick="sw('stat')">통계</button>
     </div>
   </div>
 
@@ -363,6 +427,33 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 <div id="detail-area"></div>
       <div id="list-area"></div>
     </div>
+
+    <div id="pane-stat" class="content" style="display:none">
+      <div id="stat-area"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 선택 액션바 -->
+<div class="select-bar" id="select-bar">
+  <div class="select-bar-info">
+    <div id="select-bar-txt">0개 선택됨</div>
+    <div class="select-bar-sub">그룹으로 묶어 회차별 통계를 확인하세요</div>
+  </div>
+  <button class="select-bar-cancel" onclick="clearSelection()">✕</button>
+  <button class="select-bar-btn" onclick="startGroupCreate()">그룹 만들기</button>
+</div>
+
+<!-- 그룹 이름 모달 -->
+<div class="gmodal-overlay" id="gmodal-overlay" onclick="if(event.target===this)cancelGroupCreate()">
+  <div class="gmodal-box">
+    <div class="gmodal-title">📁 그룹 이름 입력</div>
+    <input class="gmodal-input" id="gmodal-input" type="text" placeholder="예: 1회차" maxlength="30"
+      onkeydown="if(event.key==='Enter')confirmGroupCreate()">
+    <div class="gmodal-acts">
+      <button class="gmodal-cancel" onclick="cancelGroupCreate()">취소</button>
+      <button class="gmodal-ok" onclick="confirmGroupCreate()">만들기</button>
+    </div>
   </div>
 </div>
 
@@ -375,6 +466,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 <script>
 // ── Storage (GitHub API) ─────────────────────────────────
 let memos=[];
+let groups=[]; // {id, name, createdAt}
+let selectedMemos=new Set(); // 체크된 메모 ID
 const GH_OWNER='activewith';
 const GH_REPO='trading-memo';
 const GH_FILE='data.json';
@@ -410,12 +503,15 @@ async function load(){
     const res=await fetch(GH_API,{headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json'}});
     if(res.status===404){
       // 파일 없음 → 빈 배열로 시작
-      memos=[];ghSha=null;
+      memos=[];groups=[];ghSha=null;
     } else if(res.ok){
       const json=await res.json();
       ghSha=json.sha;
       const decoded=decodeURIComponent(escape(atob(json.content.replace(/\n/g,''))));
-      memos=JSON.parse(decoded);
+      const parsed=JSON.parse(decoded);
+      // 하위호환: 이전 버전은 배열 형태였음
+      if(Array.isArray(parsed)){memos=parsed;groups=[];}
+      else{memos=parsed.memos||[];groups=parsed.groups||[];}
     } else if(res.status===401){
       localStorage.removeItem(TOKEN_KEY);
       showTokenSetup();
@@ -424,10 +520,13 @@ async function load(){
     }
   }catch(e){
     // 오프라인 등 → localStorage 캐시로 폴백
-    try{const d=localStorage.getItem('tm_cache');if(d)memos=JSON.parse(d);}catch(e2){memos=[];}
+    try{
+      const d=localStorage.getItem('tm_cache');
+      if(d){const p=JSON.parse(d);if(Array.isArray(p)){memos=p;groups=[];}else{memos=p.memos||[];groups=p.groups||[];}}
+    }catch(e2){memos=[];groups=[];}
   }
   // 캐시 저장
-  try{localStorage.setItem('tm_cache',JSON.stringify(memos));}catch(e){}
+  try{localStorage.setItem('tm_cache',JSON.stringify({memos,groups}));}catch(e){}
   renderList();updateBadge();showInstallHint();
   if(!localStorage.getItem('ocr_ready')&&!localStorage.getItem('ocr_hint_dismissed')){
     document.getElementById('first-time-banner').style.display='block';
@@ -436,7 +535,7 @@ async function load(){
 
 async function persist(){
   // 로컬 캐시 즉시 저장
-  try{localStorage.setItem('tm_cache',JSON.stringify(memos));}catch(e){}
+  try{localStorage.setItem('tm_cache',JSON.stringify({memos,groups}));}catch(e){}
   const token=getToken();
   if(!token)return;
   // 저장 전 항상 최신 SHA를 GitHub에서 가져옴 (다른 기기에서 변경됐을 수 있으므로)
@@ -449,7 +548,7 @@ async function persist(){
       ghSha=null;
     }
   }catch(e){}
-  const content=btoa(unescape(encodeURIComponent(JSON.stringify(memos,null,2))));
+  const content=btoa(unescape(encodeURIComponent(JSON.stringify({memos,groups},null,2))));
   const body={message:'update data',content:content};
   if(ghSha)body.sha=ghSha;
   try{
@@ -462,10 +561,16 @@ async function persist(){
 }
 
 function sw(p){
-  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('on',(i===0&&p==='new')||(i===1&&p==='list')));
+  const tabs=document.querySelectorAll('.tab');
+  tabs[0].classList.toggle('on',p==='new');
+  tabs[1].classList.toggle('on',p==='list');
+  tabs[2].classList.toggle('on',p==='stat');
   document.getElementById('pane-new').style.display=p==='new'?'block':'none';
   document.getElementById('pane-list').style.display=p==='list'?'block':'none';
+  document.getElementById('pane-stat').style.display=p==='stat'?'block':'none';
   if(p==='list')renderList();
+  if(p==='stat')renderStat();
+  if(p!=='list')clearSelection();
 }
 
 // ── 계산 헬퍼 ───────────────────────────────────────────
@@ -851,49 +956,268 @@ function updateBadge(){
   document.getElementById('count-badge').textContent=n?`보유 ${n}종목`:'';
 }
 
+// ── 유틸 ─────────────────────────────────────────────────
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ── 체크박스 / 선택 ──────────────────────────────────────
+function toggleCheck(id){
+  if(selectedMemos.has(id))selectedMemos.delete(id);else selectedMemos.add(id);
+  updateSelectBar();
+  renderList();
+}
+function clearSelection(){
+  selectedMemos.clear();
+  updateSelectBar();
+  renderList();
+}
+function updateSelectBar(){
+  const bar=document.getElementById('select-bar');
+  const txt=document.getElementById('select-bar-txt');
+  if(selectedMemos.size>0){
+    bar.classList.add('show');
+    txt.textContent=selectedMemos.size+'개 선택됨';
+  }else{
+    bar.classList.remove('show');
+  }
+}
+
+// ── 그룹 만들기 ──────────────────────────────────────────
+function startGroupCreate(){
+  if(!selectedMemos.size)return;
+  const nextNum=groups.length+1;
+  const inp=document.getElementById('gmodal-input');
+  inp.value=nextNum+'회차';
+  document.getElementById('gmodal-overlay').classList.add('show');
+  setTimeout(()=>{inp.focus();inp.select();},100);
+}
+function cancelGroupCreate(){
+  document.getElementById('gmodal-overlay').classList.remove('show');
+}
+async function confirmGroupCreate(){
+  const name=(document.getElementById('gmodal-input').value||'').trim();
+  if(!name){alert('그룹 이름을 입력해주세요.');return;}
+  const gid=Date.now();
+  groups.push({id:gid,name,createdAt:new Date().toISOString()});
+  // 선택된 메모들에 groupId 할당
+  memos.forEach(m=>{if(selectedMemos.has(m.id))m.groupId=gid;});
+  selectedMemos.clear();
+  cancelGroupCreate();
+  await persist();
+  updateSelectBar();
+  renderList();
+}
+
+// ── 그룹 이름 편집 ───────────────────────────────────────
+function startEditGroupName(gid){
+  const g=groups.find(g=>g.id===gid);if(!g)return;
+  const el=document.getElementById('gname-'+gid);if(!el)return;
+  el.outerHTML='<input class="group-name-input" id="gname-inp-'+gid
+    +'" value="'+escHtml(g.name)+'"'
+    +' onblur="saveGroupName('+gid+',this.value)"'
+    +' onkeydown="if(event.key===\'Enter\')this.blur()">';
+  const inp=document.getElementById('gname-inp-'+gid);
+  if(inp){inp.focus();inp.select();}
+}
+async function saveGroupName(gid,val){
+  const g=groups.find(g=>g.id===gid);if(!g)return;
+  const name=(val||'').trim()||g.name;
+  g.name=name;
+  await persist();
+  renderList();
+}
+
+// ── 그룹 해제 ────────────────────────────────────────────
+async function ungroupGroup(gid){
+  if(!confirm('이 그룹을 해제할까요? 종목들은 미분류로 이동합니다.'))return;
+  memos.forEach(m=>{if(m.groupId===gid)delete m.groupId;});
+  groups=groups.filter(g=>g.id!==gid);
+  await persist();
+  renderList();
+}
+
+// ── 카드 렌더 ────────────────────────────────────────────
+function renderCard(m){
+  var tp=m.target?pct(m.buy,m.target):null;
+  var sp=m.stop?pct(m.buy,m.stop):null;
+  var isChecked=selectedMemos.has(m.id);
+  var rows='';
+  var r1='<span><span class="lbl">매수가</span><span class="val">'+fmt(m.buy)+'원</span></span>';
+  if(m.qty) r1+='<span><span class="lbl">수량</span><span class="val">'+fmt(m.qty)+'주</span></span>';
+  if(m.total) r1+='<span><span class="lbl">총액</span><span class="val">'+fmt(m.total)+'원</span></span>';
+  rows+='<div class="mc-meta-row">'+r1+'</div>';
+  var r2='';
+  if(m.target) r2+='<span><span class="lbl">목표</span><span class="val-up">'+fmt(m.target)+'원 (+'+tp+'%)</span></span>';
+  if(m.stop)   r2+='<span><span class="lbl">손절</span><span class="val-dn">'+fmt(m.stop)+'원 ('+sp+'%)</span></span>';
+  if(r2) rows+='<div class="mc-meta-row">'+r2+'</div>';
+  if(m.days) rows+='<div class="mc-meta-row"><span><span class="lbl">보유기한</span><span class="val">'+m.days+'일</span></span></div>';
+  var closedBadge='';
+  if(m.status!=='active'&&m.sellPrice){
+    var crv=((m.sellPrice-m.buy)/m.buy*100);
+    var crs=(crv>0?'+':'')+crv.toFixed(2)+'%';
+    closedBadge='<div class="mc-closed-rate '+(crv>=0?'mc-cr-up':'mc-cr-dn')+'">'+crs+'</div>';
+  }
+  var cardHtml='<div class="memo-card" onclick="showDetail('+m.id+')">'
+    +'<div class="mc-top">'
+    +'<div>'
+    +'<div class="mc-name">'+m.name+'</div>'
+    +closedBadge
+    +'</div>'
+    +'<div class="mc-right">'
+    +'<span class="mc-date">'+(m.buyDate||m.date)+'</span>'
+    +'<span class="badge '+(m.status==='active'?'b-on':'b-off')+'">'+(m.status==='active'?'보유중':'종료')+'</span>'
+    +'</div></div>'
+    +'<div class="mc-divider"></div>'
+    +'<div class="mc-meta">'+rows+'</div>'
+    +(m.memo?'<div class="mc-memo-txt" style="margin-top:10px">📝 '+m.memo+'</div>':'')
+    +'</div>';
+  return '<div class="card-row">'
+    +'<div class="card-check'+(isChecked?' checked':'')+'" onclick="event.stopPropagation();toggleCheck('+m.id+')">'+(isChecked?'✓':'')+'</div>'
+    +cardHtml
+    +'</div>';
+}
+
 // ── 목록 ─────────────────────────────────────────────────
 function renderList(){
   var la=document.getElementById('list-area');
   if(!memos.length){la.innerHTML='<div class="empty">📋 저장된 기록이 없습니다.<br>새 기록 탭에서 추가하세요.</div>';return;}
-  la.innerHTML='<div class="memo-list">'+memos.map(function(m){
-    var tp=m.target?pct(m.buy,m.target):null;
-    var sp=m.stop?pct(m.buy,m.stop):null;
-    var rows='';
-    // 행1: 매수가 / 수량 / 총액
-    var r1='<span><span class="lbl">매수가</span><span class="val">'+fmt(m.buy)+'원</span></span>';
-    if(m.qty) r1+='<span><span class="lbl">수량</span><span class="val">'+fmt(m.qty)+'주</span></span>';
-    if(m.total) r1+='<span><span class="lbl">총액</span><span class="val">'+fmt(m.total)+'원</span></span>';
-    rows+='<div class="mc-meta-row">'+r1+'</div>';
-    // 행2: 목표가 / 손절가
-    var r2='';
-    if(m.target) r2+='<span><span class="lbl">목표</span><span class="val-up">'+fmt(m.target)+'원 (+'+tp+'%)</span></span>';
-    if(m.stop)   r2+='<span><span class="lbl">손절</span><span class="val-dn">'+fmt(m.stop)+'원 ('+sp+'%)</span></span>';
-    if(r2) rows+='<div class="mc-meta-row">'+r2+'</div>';
-    // 행3: 보유기한
-    if(m.days) rows+='<div class="mc-meta-row"><span><span class="lbl">보유기한</span><span class="val">'+m.days+'일</span></span></div>';
-
-    // 종료된 종목 수익률 배지
-    var closedBadge='';
-    if(m.status!=='active'&&m.sellPrice){
-      var crv=((m.sellPrice-m.buy)/m.buy*100);
-      var crs=(crv>0?'+':'')+crv.toFixed(2)+'%';
-      closedBadge='<div class="mc-closed-rate '+(crv>=0?'mc-cr-up':'mc-cr-dn')+'">'+crs+'</div>';
+  var html='';
+  var validGroupIds=new Set(groups.map(g=>g.id));
+  // 그룹별 렌더
+  groups.forEach(function(g){
+    var gMemos=memos.filter(m=>m.groupId===g.id);
+    if(!gMemos.length)return;
+    // 그룹 요약 통계 (종료 종목만)
+    var closed=gMemos.filter(m=>m.status==='closed'&&m.sellPrice&&m.buy);
+    var totalBuyAmt=closed.reduce((s,m)=>s+m.buy*(m.qty||1),0);
+    var totalProfit=closed.reduce((s,m)=>s+(m.sellPrice-m.buy)*(m.qty||1),0);
+    var badge=gMemos.length+'종목';
+    if(closed.length){
+      var pp=totalBuyAmt?(totalProfit/totalBuyAmt*100):0;
+      badge+=' · 청산'+closed.length+' · <span style="color:'+(pp>=0?'var(--green-text)':'var(--red-text)')+'">'+( pp>0?'+':'')+pp.toFixed(1)+'%</span>';
     }
-    return '<div class="memo-card" onclick="showDetail('+m.id+')">'
-      +'<div class="mc-top">'
-      +'<div>'
-      +'<div class="mc-name">'+m.name+'</div>'
-      +closedBadge
+    html+='<div class="group-section">'
+      +'<div class="group-header">'
+      +'<span class="group-name-txt" id="gname-'+g.id+'" onclick="startEditGroupName('+g.id+')">'+escHtml(g.name)+'</span>'
+      +'<span class="group-stats-badge">'+badge+'</span>'
+      +'<button class="group-btn danger" onclick="ungroupGroup('+g.id+')">해제</button>'
       +'</div>'
-      +'<div class="mc-right">'
-      +'<span class="mc-date">'+( m.buyDate||m.date)+'</span>'
-      +'<span class="badge '+(m.status==='active'?'b-on':'b-off')+'">'+(m.status==='active'?'보유중':'종료')+'</span>'
-      +'</div></div>'
-      +'<div class="mc-divider"></div>'
-      +'<div class="mc-meta">'+rows+'</div>'
-      +(m.memo?'<div class="mc-memo-txt" style="margin-top:10px">📝 '+m.memo+'</div>':'')
+      +gMemos.map(renderCard).join('')
       +'</div>';
-  }).join('')+'</div>';
+  });
+  // 미분류 (groupId 없거나 존재하지 않는 그룹)
+  var ungrouped=memos.filter(m=>!m.groupId||!validGroupIds.has(m.groupId));
+  if(ungrouped.length){
+    if(groups.length){
+      html+='<div class="ungrouped-header">'
+        +'<span class="ungrouped-lbl">미분류</span>'
+        +'<span class="group-stats-badge">'+ungrouped.length+'종목</span>'
+        +'</div>';
+    }
+    html+=ungrouped.map(renderCard).join('');
+  }
+  la.innerHTML=html;
+}
+
+// ── 통계 ─────────────────────────────────────────────────
+function renderStat(){
+  var el=document.getElementById('stat-area');
+  var allClosed=memos.filter(m=>m.status==='closed'&&m.sellPrice&&m.buy);
+  if(!memos.length){
+    el.innerHTML='<div class="empty">📊 기록이 없습니다.<br>거래를 저장하면 통계가 생성됩니다.</div>';return;
+  }
+
+  // ── 전체 KPI ──
+  var totalBuy=allClosed.reduce((s,m)=>s+m.buy*(m.qty||1),0);
+  var totalProfit=allClosed.reduce((s,m)=>s+(m.sellPrice-m.buy)*(m.qty||1),0);
+  var wins=allClosed.filter(m=>m.sellPrice>m.buy).length;
+  var winRate=allClosed.length?Math.round(wins/allClosed.length*100):null;
+  var totalPct=totalBuy?(totalProfit/totalBuy*100):null;
+
+  var kpiHtml='<div class="stat-summary-row">'
+    +'<div class="stat-kpi"><div class="stat-kpi-val">'+(memos.length)+'</div><div class="stat-kpi-lbl">총 거래 수</div></div>'
+    +'<div class="stat-kpi"><div class="stat-kpi-val '+(winRate!==null?(winRate>=50?'up':'dn'):'')+'">'+( winRate!==null?winRate+'%':'—')+'</div><div class="stat-kpi-lbl">승률</div></div>'
+    +'<div class="stat-kpi"><div class="stat-kpi-val '+(totalPct!==null?(totalPct>=0?'up':'dn'):'')+'">'+( totalPct!==null?(totalPct>=0?'+':'')+totalPct.toFixed(1)+'%':'—')+'</div><div class="stat-kpi-lbl">누적수익률</div></div>'
+    +'</div>'
+    +'<div style="text-align:center;font-size:13px;color:var(--text2);margin-bottom:16px">'
+    +'누적 손익금액: <b style="color:'+(totalProfit>=0?'var(--green-text)':'var(--red-text)')+'">'+( totalProfit>=0?'+':'')+fmt(Math.round(totalProfit))+'원</b>'
+    +'<br><span style="font-size:11px">청산 '+allClosed.length+'/'+memos.length+'종목 기준</span>'
+    +'</div>';
+
+  // ── 회차별 카드 ──
+  var validGroupIds=new Set(groups.map(g=>g.id));
+  var groupsHtml='';
+
+  if(groups.length){
+    groupsHtml+='<div class="stat-section"><div class="stat-sec-title">📊 회차별 손익</div>';
+
+    // 그룹 카드
+    var groupRows='';
+    var grandBuy=0,grandProfit=0,grandWins=0,grandClosed=0,grandTotal=0;
+
+    groups.forEach(function(g){
+      var gMemos=memos.filter(m=>m.groupId===g.id);
+      var gClosed=gMemos.filter(m=>m.status==='closed'&&m.sellPrice&&m.buy);
+      var buyAmt=gClosed.reduce((s,m)=>s+m.buy*(m.qty||1),0);
+      var profit=gClosed.reduce((s,m)=>s+(m.sellPrice-m.buy)*(m.qty||1),0);
+      var gWins=gClosed.filter(m=>m.sellPrice>m.buy).length;
+      var gWinRate=gClosed.length?Math.round(gWins/gClosed.length*100):null;
+      var gPct=buyAmt?(profit/buyAmt*100):null;
+      grandBuy+=buyAmt;grandProfit+=profit;grandWins+=gWins;grandClosed+=gClosed.length;grandTotal+=gMemos.length;
+
+      groupRows+='<div class="stat-group-card">'
+        +'<div class="stat-gc-header">'
+        +'<span class="stat-gc-name">'+escHtml(g.name)+'</span>'
+        +'<span class="stat-gc-count">'+gMemos.length+'종목 · 청산 '+gClosed.length+'</span>'
+        +'</div>'
+        +'<div class="stat-gc-rows">'
+        +'<div class="stat-gc-row"><span class="stat-gc-lbl">승률</span><span class="stat-gc-val '+(gWinRate!==null?(gWinRate>=50?'up':'dn'):'')+'">'+( gWinRate!==null?gWinRate+'%':'데이터 없음')+'</span></div>'
+        +'<div class="stat-gc-row"><span class="stat-gc-lbl">수익률</span><span class="stat-gc-val '+(gPct!==null?(gPct>=0?'up':'dn'):'')+'">'+( gPct!==null?(gPct>=0?'+':'')+gPct.toFixed(2)+'%':'—')+'</span></div>'
+        +'<div class="stat-gc-row"><span class="stat-gc-lbl">손익금액</span><span class="stat-gc-val '+(gClosed.length?(profit>=0?'up':'dn'):'')+'">'+( gClosed.length?(profit>=0?'+':'')+fmt(Math.round(profit))+'원':'—')+'</span></div>'
+        +'</div></div>';
+    });
+
+    // 미분류
+    var ungrouped=memos.filter(m=>!m.groupId||!validGroupIds.has(m.groupId));
+    var uClosed=ungrouped.filter(m=>m.status==='closed'&&m.sellPrice&&m.buy);
+    if(uClosed.length){
+      var uBuy=uClosed.reduce((s,m)=>s+m.buy*(m.qty||1),0);
+      var uProfit=uClosed.reduce((s,m)=>s+(m.sellPrice-m.buy)*(m.qty||1),0);
+      var uWins=uClosed.filter(m=>m.sellPrice>m.buy).length;
+      var uWinRate=Math.round(uWins/uClosed.length*100);
+      var uPct=uBuy?(uProfit/uBuy*100):0;
+      grandBuy+=uBuy;grandProfit+=uProfit;grandWins+=uWins;grandClosed+=uClosed.length;grandTotal+=ungrouped.length;
+      groupRows+='<div class="stat-group-card" style="opacity:0.75">'
+        +'<div class="stat-gc-header">'
+        +'<span class="stat-gc-name" style="color:var(--text2)">미분류</span>'
+        +'<span class="stat-gc-count">'+ungrouped.length+'종목 · 청산 '+uClosed.length+'</span>'
+        +'</div>'
+        +'<div class="stat-gc-rows">'
+        +'<div class="stat-gc-row"><span class="stat-gc-lbl">승률</span><span class="stat-gc-val '+(uWinRate>=50?'up':'dn')+'">'+uWinRate+'%</span></div>'
+        +'<div class="stat-gc-row"><span class="stat-gc-lbl">수익률</span><span class="stat-gc-val '+(uPct>=0?'up':'dn')+'">'+(uPct>=0?'+':'')+uPct.toFixed(2)+'%</span></div>'
+        +'<div class="stat-gc-row"><span class="stat-gc-lbl">손익금액</span><span class="stat-gc-val '+(uProfit>=0?'up':'dn')+'">'+(uProfit>=0?'+':'')+fmt(Math.round(uProfit))+'원</span></div>'
+        +'</div></div>';
+    }
+
+    // 합계 카드
+    var grandPct=grandBuy?(grandProfit/grandBuy*100):null;
+    var grandWR=grandClosed?Math.round(grandWins/grandClosed*100):null;
+    groupRows+='<div class="stat-total-card">'
+      +'<div class="stat-total-label">전체 합계</div>'
+      +'<div class="stat-gc-rows">'
+      +'<div class="stat-gc-row"><span class="stat-gc-lbl">승률</span><span class="stat-gc-val '+(grandWR!==null?(grandWR>=50?'up':'dn'):'')+'">'+( grandWR!==null?grandWR+'%':'—')+'</span></div>'
+      +'<div class="stat-gc-row"><span class="stat-gc-lbl">누적수익률</span><span class="stat-gc-val '+(grandPct!==null?(grandPct>=0?'up':'dn'):'')+'">'+( grandPct!==null?(grandPct>=0?'+':'')+grandPct.toFixed(2)+'%':'—')+'</span></div>'
+      +'<div class="stat-gc-row"><span class="stat-gc-lbl">누적손익</span><span class="stat-gc-val '+(grandProfit>=0?'up':'dn')+'">'+( grandProfit>=0?'+':'')+fmt(Math.round(grandProfit))+'원</span></div>'
+      +'</div></div>';
+
+    groupsHtml+=groupRows+'</div>';
+  }else{
+    groupsHtml='<div style="background:var(--bg2);border-radius:var(--radius);padding:16px;margin-bottom:14px;border:1px solid var(--border);text-align:center">'
+      +'<div style="font-size:13px;color:var(--text2);line-height:1.8">아직 그룹이 없어요.<br>목록 탭에서 종목을 선택해 회차를 만들면<br>여기에 회차별 통계가 표시됩니다.</div>'
+      +'<button onclick="sw(\'list\')" style="margin-top:12px;padding:9px 18px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:13px;cursor:pointer;font-family:inherit">목록으로 이동</button>'
+      +'</div>';
+  }
+
+  el.innerHTML='<div>'+kpiHtml+groupsHtml+'</div>';
 }
 
 function closeDetail(){document.getElementById("detail-area").innerHTML="";}
