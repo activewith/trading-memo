@@ -45,9 +45,9 @@
     "memo": "삼성전자 계약뉴스는 5.28. 반응은 1주 후 오늘. 나가리인듯. 역시 신중하게 며칠 지켜보다 결정할 것.",
     "buyDate": "2026-06-04",
     "date": "2026. 6. 4.",
-    "status": "active",
-    "sellPrice": null,
-    "sellDate": null,
-    "sellTotal": null
+    "status": "closed",
+    "sellPrice": 12350,
+    "sellDate": "2026-06-08",
+    "sellTotal": 123500
   }
 ]
