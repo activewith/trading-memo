@@ -208,11 +208,12 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 
 /* ── 관심종목 태그 입력 ─────────────────────────────────── */
 .w-name-row{display:flex;gap:8px;align-items:stretch}
-.w-name-row .field-inp{flex:1;padding:11px 13px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:15px;font-family:inherit;-webkit-appearance:none}
+.w-name-row input{width:auto}
+.w-name-row .field-inp{flex:1;min-width:0;padding:11px 13px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:15px;font-family:inherit;-webkit-appearance:none}
 .w-name-row .field-inp:focus{outline:2px solid rgba(128,128,128,0.2);outline-offset:-1px}
-.w-tag-inp{width:4.8em;padding:11px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:14px;font-family:inherit;-webkit-appearance:none;text-align:center}
+.w-tag-inp{width:56px;padding:11px 6px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:14px;font-family:inherit;-webkit-appearance:none;text-align:center;flex-shrink:0}
 .w-tag-inp:focus{outline:2px solid rgba(128,128,128,0.2);outline-offset:-1px}
-.w-tag-inp::placeholder{font-size:12px;color:var(--text3)}
+.w-tag-inp::placeholder{font-size:11px;color:var(--text3)}
 
 /* ── 관심목록 카드 ───────────────────────────────────────── */
 .wl-tag{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:8px;background:var(--blue-bg);color:var(--blue-text);margin-left:6px;vertical-align:middle}
@@ -307,7 +308,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
       <div class="topbar-sub" id="count-badge"></div>
     </div>
     <div class="tabs">
-      <button class="tab on" onclick="sw('watch')">관심종목</button>
+      <button class="tab on" onclick="sw('watch')">관심등록</button>
       <button class="tab" onclick="sw('wlist')">관심목록</button>
       <button class="tab" onclick="sw('new')">새 기록</button>
       <button class="tab" onclick="sw('list')">목록</button>
@@ -446,8 +447,32 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 
     <div id="pane-watch" class="content">
 
+      <div class="scan-area">
+        <input type="file" accept="image/*" id="w-file-input" onchange="onWatchImg(this)">
+        <div class="scan-icon">📷</div>
+        <div class="scan-label">MTS 화면 촬영 / 스크린샷 선택</div>
+        <div class="scan-sub">삼성증권 매매내역 또는 시세 화면</div>
+      </div>
+
+      <img id="w-img-preview" class="img-prev">
+
+      <div class="analyzing" id="w-analyzing">
+        <div class="spin"></div>
+        <div class="analyzing-txt" id="w-analyzing-txt">화면 인식 중...</div>
+        <div class="analyzing-detail" id="w-analyzing-detail">최초 1회 인터넷 필요 — 이후 오프라인 가능</div>
+      </div>
+
+      <div class="pick-banner" id="w-pick-banner">
+        <div class="pick-header">📋 종목을 선택하세요</div>
+        <div class="pick-list" id="w-pick-list"></div>
+      </div>
+
+      <div class="ok-banner" id="w-ok-banner"></div>
+
+      <div id="w-ocr-error" style="display:none;background:var(--red-bg);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:12px;border-left:3px solid var(--red);font-size:13px;color:var(--red-text);line-height:1.6"></div>
+
       <div class="section">
-        <div class="section-title">관심종목 등록</div>
+        <div class="section-title">관심등록</div>
         <div class="field">
           <label>등록일</label>
           <input id="w-date" type="date">
@@ -1605,7 +1630,75 @@ async function toggleStat(id){const m=memos.find(m=>m.id===id);if(m){m.status=m.
 
 async function delMemo(id){if(!confirm('삭제할까요?'))return;memos=memos.filter(m=>m.id!==id);await persist();updateBadge();renderList();document.getElementById('detail-area').innerHTML='';}
 
-// ── 관심종목 (단순 4필드) ─────────────────────────────────
+// ── 관심등록 OCR ─────────────────────────────────────────
+async function onWatchImg(inp){
+  if(!inp.files||!inp.files[0])return;
+  const file=inp.files[0];
+  const imgEl=document.getElementById('w-img-preview');
+  imgEl.src=URL.createObjectURL(file);imgEl.style.display='block';
+  document.getElementById('w-pick-banner').style.display='none';
+  document.getElementById('w-ok-banner').style.display='none';
+  document.getElementById('w-ocr-error').style.display='none';
+  setWatchAnalyzing(true,'화면 인식 중...','OCR 엔진 로딩 중 (최초 1회만 약 10초)');
+  try{
+    const result=await Tesseract.recognize(file,'kor',{
+      logger:m=>{
+        if(m.status==='loading language traineddata')
+          setWatchAnalyzing(true,'언어 데이터 다운로드 중...','처음 한 번만 — Wi-Fi 권장');
+        else if(m.status==='recognizing text')
+          setWatchAnalyzing(true,'인식 중...','분석 중 '+Math.round((m.progress||0)*100)+'%');
+      }
+    });
+    setWatchAnalyzing(false);
+    const raw=result.data.text||'';
+    if(!raw.trim()){showWatchOcrError('인식 결과가 없습니다.');return;}
+    const parsed=parseSamsungMTS(raw);
+    if(parsed.type==='none'){showWatchOcrError('종목 정보를 찾지 못했습니다.');return;}
+    if(parsed.type==='single'){
+      fillWatchForm(parsed.items[0]);
+      var ob=document.getElementById('w-ok-banner');
+      ob.textContent='✓ 인식 완료 — 내용을 확인하고 저장하세요';ob.style.display='block';
+    }
+    if(parsed.type==='multi'){
+      window._wParsed=parsed.items;
+      var html=parsed.items.map(function(item,i){
+        return '<div class="pick-check-item">'
+          +'<div class="pci-top" onclick="fillWatchForm((window._wParsed||[])['+i+']);document.getElementById(\'w-pick-banner\').style.display=\'none\';var ob=document.getElementById(\'w-ok-banner\');ob.textContent=\'✓ \'+escHtml(\''+(item.name||'').replace(/'/g,'')+'\')+\' 채움\';ob.style.display=\'block\';">'
+          +'<div class="pci-check"></div>'
+          +'<div class="pci-info">'
+          +'<div class="pci-name">'+escHtml(item.name||'')+'</div>'
+          +'<div class="pci-meta">'+(item.price?'현재가 <b>'+fmt(Number(item.price))+'원</b>':'')+'</div>'
+          +'</div></div></div>';
+      }).join('');
+      html+='<div class="pick-actions"><button class="pick-act-btn" onclick="document.getElementById(\'w-pick-banner\').style.display=\'none\'">닫기</button></div>';
+      document.getElementById('w-pick-list').innerHTML=html;
+      document.getElementById('w-pick-banner').style.display='block';
+    }
+  }catch(e){
+    setWatchAnalyzing(false);
+    showWatchOcrError('OCR 오류: '+(e&&e.message?e.message:String(e)));
+  }
+}
+function setWatchAnalyzing(on,txt,detail){
+  document.getElementById('w-analyzing').style.display=on?'block':'none';
+  if(txt)document.getElementById('w-analyzing-txt').textContent=txt;
+  if(detail)document.getElementById('w-analyzing-detail').textContent=detail;
+}
+function showWatchOcrError(msg){
+  var el=document.getElementById('w-ocr-error');
+  el.innerHTML=msg+'<br><button onclick="document.getElementById(\'w-ocr-error\').style.display=\'none\'" style="margin-top:8px;padding:4px 12px;border-radius:8px;border:1px solid var(--red-text);background:none;color:var(--red-text);cursor:pointer;font-size:12px;font-family:inherit">닫기</button>';
+  el.style.display='block';
+}
+function fillWatchForm(item){
+  if(item.name)document.getElementById('w-name').value=item.name;
+  if(item.price){
+    var p=String(item.price).replace(/[^0-9]/g,'');
+    document.getElementById('w-price').value=parseInt(p).toLocaleString('ko-KR');
+  }
+}
+
+// ── 관심등록 저장/초기화 ──────────────────────────────────
+
 function fmtWPrice(){
   var el=document.getElementById('w-price');
   var raw=el.value.replace(/,/g,'').replace(/[^0-9]/g,'');
@@ -1628,6 +1721,12 @@ async function doWatchSave(){
 function clearWatchF(){
   ['w-name','w-tag','w-price','w-memo'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('w-date').value='';
+  document.getElementById('w-img-preview').style.display='none';
+  document.getElementById('w-pick-banner').style.display='none';
+  document.getElementById('w-ok-banner').style.display='none';
+  document.getElementById('w-ocr-error').style.display='none';
+  document.getElementById('w-analyzing').style.display='none';
+  document.getElementById('w-file-input').value='';
 }
 function showWatchNotice(txt,type){
   const el=document.getElementById('w-notice');
@@ -1639,7 +1738,7 @@ function showWatchNotice(txt,type){
 function renderWatchlist(){
   var la=document.getElementById('wl-list-area');
   if(!watchlist.length){
-    la.innerHTML='<div class="empty">📋 관심종목이 없습니다.<br>관심종목 탭에서 추가하세요.</div>';return;
+    la.innerHTML='<div class="empty">📋 관심등록 항목이 없습니다.<br>관심등록 탭에서 추가하세요.</div>';return;
   }
   la.innerHTML='<div class="memo-list">'+watchlist.map(function(w){
     var tagBadge=w.tag?'<span class="wl-tag">'+escHtml(w.tag)+'</span>':'';
