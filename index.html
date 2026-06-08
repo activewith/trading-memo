@@ -454,7 +454,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
         <div class="scan-sub">삼성증권 매매내역 또는 시세 화면</div>
       </div>
 
-      <img id="w-img-preview" class="img-prev">
+      <img id="w-img-preview" style="width:100%;border-radius:var(--radius-sm);margin-bottom:12px;display:none;object-fit:contain;max-height:260px">
 
       <div class="analyzing" id="w-analyzing">
         <div class="spin"></div>
@@ -477,13 +477,18 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
           <label>등록일</label>
           <input id="w-date" type="date">
         </div>
-        <div class="field">
-          <label>종목명</label>
-          <div class="w-name-row">
-            <input class="field-inp" id="w-name" type="text" placeholder="예: 네오셈" autocomplete="off">
-            <input class="w-tag-inp" id="w-tag" type="text" placeholder="태그" maxlength="6">
+
+        <!-- 종목명+분류: .field 밖 인라인 스타일로 width:100% 글로벌 CSS 완전 우회 -->
+        <div style="margin-bottom:14px">
+          <label style="display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px;letter-spacing:0.03em;text-transform:uppercase">종목명</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input id="w-name" type="text" placeholder="예: 제룡전기" autocomplete="off"
+              style="flex:1;min-width:0;padding:11px 13px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:15px;font-family:inherit;-webkit-appearance:none;outline:none;-webkit-tap-highlight-color:transparent">
+            <input id="w-tag" type="text" placeholder="분류" maxlength="6"
+              style="width:52px;flex-shrink:0;padding:11px 4px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit;-webkit-appearance:none;text-align:center;outline:none;-webkit-tap-highlight-color:transparent">
           </div>
         </div>
+
         <div class="field">
           <label>현재가</label>
           <input id="w-price" type="text" inputmode="numeric" placeholder="0" oninput="fmtWPrice()">
@@ -653,6 +658,10 @@ function sw(p){
   if(p==='wlist')renderWatchlist();
   if(p==='stat')renderStat();
   if(p!=='list')clearSelection();
+  if(p==='watch'){
+    const d=document.getElementById('w-date');
+    if(!d.value)d.value=new Date().toISOString().slice(0,10);
+  }
 }
 
 // ── 계산 헬퍼 ───────────────────────────────────────────
@@ -806,28 +815,50 @@ function cleanName(n){
 // ── 관심목록/시세 다종목 화면 파서 ───────────────────────
 function parseWatchlistScreen(lines){
   const stocks=[];
+  // 카테고리/헤더 줄 스킵 키워드
+  const SKIP=/KOSPI|KOSDAQ|KQ|12H|HOME|메뉴|설정|검색|잔고|주문|차트|종료|보유종목|최근조회|투잡트레이딩|통합|현재가|뉴스|등락률|종목추가|장종료|해외|랭킹|종합|6\.00|7\.76|8\.14|8\.90|11\.12|11\.89/;
+
   for(let i=0;i<lines.length;i++){
     const l=lines[i];
-    if(!/[▼▲]/.test(l))continue;
-    // ▼▲ 앞 부분에서 가격(마지막 숫자) 추출
-    const before=l.split(/[▼▲]/)[0].trim();
-    const priceNums=before.match(/[\d,]{4,}/g)||[];
-    if(!priceNums.length)continue;
-    const price=parseInt(priceNums[priceNums.length-1].replace(/,/g,''));
-    if(!price||price<100||price>9999999)continue;
-    // 종목명: 같은 줄의 숫자 앞 텍스트 or 바로 이전 줄
-    let name=null;
-    const namePart=before.replace(/[\d,\s]+$/,'').trim();
-    if(namePart.length>=2&&/[가-힣A-Za-z]/.test(namePart)&&namePart.length<=25)
-      name=cleanName(namePart);
-    if(!name&&i>0){
-      const prev=lines[i-1].replace(/[▼▲\d,.%\s]+/g,' ').trim();
-      if(prev.length>=2&&prev.length<=25&&/[가-힣A-Za-z]/.test(prev))
-        name=cleanName(prev);
+    if(SKIP.test(l))continue;
+    if(/^[\d,.\s▼▲%]+$/.test(l))continue; // 숫자/기호만 있는 줄
+    if(/^\d/.test(l))continue;              // 숫자로 시작하는 줄
+    if(/%$/.test(l))continue;               // % 로 끝나는 줄
+    if(!/[가-힣A-Za-z]/.test(l))continue;  // 한글/영문 없는 줄
+    if(l.length<2||l.length>60)continue;
+
+    // 종목명 추출: 줄 앞부분에서 숫자/기호 제거
+    const namePart=l.replace(/[\d,▼▲\s\.%]+$/,'').trim();
+    const name=cleanName(namePart);
+    if(!name||name.length<2||SKIP.test(name))continue;
+
+    // 현재가: 이 줄의 첫 번째 4자리이상 숫자 (파랗고 굵은 현재가가 항상 첫 번째로 등장)
+    const nums=l.match(/[\d,]{4,}/g)||[];
+    let price=null;
+    if(nums.length>0){
+      const p=parseInt(nums[0].replace(/,/g,''));
+      if(p>=100&&p<=9999999)price=p;
     }
-    if(name&&!stocks.find(s=>s.name===name))
+
+    // 같은 줄에 가격이 없으면 바로 다음 줄에서 탐색 (줄바꿈 OCR)
+    if(!price){
+      for(let k=i+1;k<Math.min(i+3,lines.length);k++){
+        const nl=lines[k];
+        if(SKIP.test(nl))break;
+        if(/[가-힣]/.test(nl)&&!(/^\d/.test(nl)))break; // 다음 종목명 만나면 중단
+        const nn=nl.match(/[\d,]{4,}/g)||[];
+        if(nn.length>0){
+          const p=parseInt(nn[0].replace(/,/g,''));
+          if(p>=100&&p<=9999999){price=p;break;}
+        }
+      }
+    }
+
+    if(price&&!stocks.find(s=>s.name===name)){
       stocks.push({name,price:String(price)});
+    }
   }
+
   if(stocks.length===1)return{type:'single',items:stocks};
   if(stocks.length>1)return{type:'multi',items:stocks};
   return{type:'none',items:[]};
@@ -1687,6 +1718,9 @@ async function onWatchImg(inp){
   document.getElementById('w-ok-banner').style.display='none';
   document.getElementById('w-ocr-error').style.display='none';
   setWatchAnalyzing(true,'화면 인식 중...','OCR 엔진 로딩 중 (최초 1회만 약 10초)');
+  // 등록일 자동 오늘 날짜
+  const wd=document.getElementById('w-date');
+  if(!wd.value)wd.value=new Date().toISOString().slice(0,10);
   try{
     const result=await Tesseract.recognize(file,'kor',{
       logger:m=>{
@@ -1851,7 +1885,14 @@ function showInstallHint(){
   }
 }
 
-(async()=>{await load();upPrev();sw('watch');})();
+(async()=>{
+  await load();
+  upPrev();
+  sw('watch');
+  // 관심등록 오늘 날짜 초기화
+  const d=document.getElementById('w-date');
+  if(d&&!d.value)d.value=new Date().toISOString().slice(0,10);
+})();
 </script>
 </body>
 </html>
