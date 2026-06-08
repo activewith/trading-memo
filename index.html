@@ -1901,11 +1901,52 @@ function showWatchDetail(id){
     +(w.memo?detailRow('메모',escHtml(w.memo)):'')
     +'</div>'
     +'<div class="act-row">'
+    +'<button class="act-btn act-edit" onclick="editWatchDetail('+id+')">수정</button>'
     +'<button class="act-btn act-del" onclick="delWatch('+id+')">삭제</button>'
     +'</div></div>';
   da.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
+function editWatchDetail(id){
+  var w=watchlist.find(function(w){return w.id===id;});if(!w)return;
+  var da=document.getElementById('wl-detail-area');
+  da.innerHTML='<div class="wl-detail">'
+    +'<div class="wl-d-header">'
+    +'<span class="wl-d-name" style="font-size:16px">수정</span>'
+    +'<button class="close-x" onclick="showWatchDetail('+id+')">✕</button>'
+    +'</div>'
+    +'<div class="edit-section">'
+    +'<div class="edit-field"><label>등록일</label>'
+    +'<input id="we-date" type="date" value="'+(w.date||'')+'"></div>'
+    +'<div class="edit-field"><label>종목명</label>'
+    +'<input id="we-name" type="text" value="'+escHtml(w.name||'')+'"></div>'
+    +'<div class="edit-field"><label>분류 태그</label>'
+    +'<input id="we-tag" type="text" value="'+escHtml(w.tag||'')+'" placeholder="예: 반도체" maxlength="10"></div>'
+    +'<div class="edit-field"><label>현재가 (원)</label>'
+    +'<input id="we-price" type="text" inputmode="numeric" value="'+(w.price?fmt(w.price):'')+'" oninput="var r=this.value.replace(/,/g,\'\').replace(/[^0-9]/g,\'\');this.value=r?parseInt(r).toLocaleString(\'ko-KR\'):\'\';"></div>'
+    +'<div class="edit-field"><label>메모</label>'
+    +'<input id="we-memo" type="text" value="'+escHtml(w.memo||'')+'" placeholder="관심 이유, 매수 조건..."></div>'
+    +'</div>'
+    +'<div class="act-row">'
+    +'<button class="act-btn act-edit" onclick="saveWatchEdit('+id+')">저장</button>'
+    +'<button class="act-btn" onclick="showWatchDetail('+id+')">취소</button>'
+    +'</div></div>';
+  da.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+async function saveWatchEdit(id){
+  var w=watchlist.find(function(w){return w.id===id;});if(!w)return;
+  var name=(document.getElementById('we-name').value||'').trim();
+  if(!name){alert('종목명은 필수입니다.');return;}
+  w.name=name;
+  w.tag=(document.getElementById('we-tag').value||'').trim();
+  var raw=(document.getElementById('we-price').value||'').replace(/,/g,'');
+  w.price=parseInt(raw)||null;
+  w.memo=(document.getElementById('we-memo').value||'').trim();
+  w.date=document.getElementById('we-date').value||w.date;
+  await persist();
+  renderWatchlist();
+  showWatchDetail(id);
+}
 async function delWatch(id){
   if(!confirm('삭제할까요?'))return;
   watchlist=watchlist.filter(w=>w.id!==id);
