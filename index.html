@@ -829,22 +829,19 @@ function parseWatchlistScreen(lines){
     if(/%$/.test(l))continue;                // % 로 끝나는 줄
     if(!/[가-힣A-Za-z]/.test(l))continue;   // 한글/영문 없는 줄
 
-    // 현재가: 줄에서 4자리 이상 숫자 추출
-    const nums=l.match(/[\d,]{4,}/g)||[];
-    if(nums.length===0)continue; // 가격 없으면 헤더성 줄
-    const p=parseInt(nums[0].replace(/,/g,''));
+    // 현재가: 콤마 포함 4자리이상 숫자열 (예: 9,800 / 48,150)
+    // \d[\d,]{3,} → "9,800"(O), "200"(X, 3자뿐)
+    const priceReg=/\d[\d,]{3,}/g;
+    const priceMatch=priceReg.exec(l);
+    if(!priceMatch)continue;
+    const p=parseInt(priceMatch[0].replace(/,/g,''));
     if(p<100||p>9999999)continue;
     const price=p;
 
-    // 종목명: 첫 번째 4자리이상 숫자 등장 위치 이전 텍스트
-    // (Tesseract가 ▼를 v로 OCR해도 안전하게 처리)
-    const firstNumIdx=l.search(/\d{4,}/);
-    let namePart;
-    if(firstNumIdx>0){
-      namePart=l.slice(0,firstNumIdx).replace(/[\s,▼▲vV\.%]+$/,'').trim();
-    }else{
-      namePart=l.replace(/[\d,▼▲vV\s\.%]+$/,'').trim();
-    }
+    // 종목명: 가격 시작 위치 이전 텍스트만 사용
+    let namePart=l.slice(0,priceMatch.index)
+      .replace(/[^가-힣A-Za-z0-9\s]+$/,'')  // trailing 특수문자 제거
+      .trim();
     const name=cleanName(namePart);
     if(!name||name.length<2||SKIP.test(name))continue;
 
@@ -1757,18 +1754,19 @@ async function onWatchImg(inp){
     }
     if(parsed.type==='multi'){
       window._wParsed=parsed.items;
-      // 체크박스 일괄 저장 UI
+      window._wChecked=parsed.items.map(function(){return true;});
+      // 커스텀 원형 체크 UI (onclick 방식 - HTML checkbox 대신)
       var html=parsed.items.map(function(item,i){
-        return '<label class="pick-check-item" style="display:flex;align-items:center;gap:12px;padding:11px 13px;cursor:pointer;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px;background:var(--bg)">'
-          +'<input type="checkbox" id="wpi-'+i+'" checked style="width:18px;height:18px;accent-color:var(--text);flex-shrink:0">'
-          +'<div>'
+        return '<div id="wpci-'+i+'" onclick="toggleWatchCheck('+i+')" style="display:flex;align-items:center;gap:12px;padding:12px 13px;cursor:pointer;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px;background:var(--bg);-webkit-tap-highlight-color:transparent">'
+          +'<div id="wpck-'+i+'" style="width:22px;height:22px;border-radius:50%;border:2px solid var(--text);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;background:var(--text);color:var(--bg)">✓</div>'
+          +'<div style="flex:1;min-width:0">'
           +'<div style="font-size:14px;font-weight:600;color:var(--text)">'+escHtml(item.name||'')+'</div>'
           +'<div style="font-size:12px;color:var(--text2);margin-top:2px">'+(item.price?'현재가 <b style="color:var(--text)">'+fmt(Number(item.price))+'원</b>':'가격 미인식')+'</div>'
-          +'</div></label>';
+          +'</div></div>';
       }).join('');
-      html+='<div class="pick-actions" style="display:flex;gap:8px;margin-top:4px">'
-        +'<button class="pick-act-btn" style="flex:1;padding:12px;border-radius:var(--radius-sm);background:var(--text);color:var(--bg);border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit" onclick="doWatchBulkSave()">선택 항목 저장</button>'
-        +'<button class="pick-act-btn" style="padding:12px 16px;border-radius:var(--radius-sm);background:none;border:1px solid var(--border);color:var(--text2);font-size:13px;cursor:pointer;font-family:inherit" onclick="document.getElementById(\'w-pick-banner\').style.display=\'none\'">닫기</button>'
+      html+='<div style="display:flex;gap:8px;margin-top:8px">'
+        +'<button style="flex:1;padding:13px;border-radius:var(--radius-sm);background:var(--text);color:var(--bg);border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit" onclick="doWatchBulkSave()">선택 항목 저장</button>'
+        +'<button style="padding:13px 16px;border-radius:var(--radius-sm);background:none;border:1px solid var(--border);color:var(--text2);font-size:13px;cursor:pointer;font-family:inherit" onclick="document.getElementById(\'w-pick-banner\').style.display=\'none\'">닫기</button>'
         +'</div>';
       document.getElementById('w-pick-list').innerHTML=html;
       document.getElementById('w-pick-banner').style.display='block';
@@ -1827,13 +1825,25 @@ function clearWatchF(){
   document.getElementById('w-analyzing').style.display='none';
   document.getElementById('w-file-input').value='';
 }
+function toggleWatchCheck(i){
+  var arr=window._wChecked;
+  if(!arr)return;
+  arr[i]=!arr[i];
+  var ck=document.getElementById('wpck-'+i);
+  if(!ck)return;
+  if(arr[i]){
+    ck.style.background='var(--text)';ck.style.borderColor='var(--text)';ck.style.color='var(--bg)';ck.textContent='✓';
+  }else{
+    ck.style.background='transparent';ck.style.borderColor='var(--border2)';ck.style.color='transparent';ck.textContent='';
+  }
+}
 async function doWatchBulkSave(){
   var items=window._wParsed||[];
+  var checked=window._wChecked||items.map(function(){return true;});
   var today=new Date().toISOString().slice(0,10);
   var saved=0;
   items.forEach(function(item,i){
-    var cb=document.getElementById('wpi-'+i);
-    if(!cb||!cb.checked)return;
+    if(!checked[i])return;
     if(!item.name)return;
     watchlist.unshift({id:Date.now()+i,name:item.name,tag:'',price:item.price?parseInt(item.price):null,memo:'',date:today});
     saved++;
