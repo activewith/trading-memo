@@ -1746,8 +1746,7 @@ async function onWatchImg(inp){
     const raw=result.data.text||'';
     // OCR 원문 디버그 출력 (관심등록 탭)
     const wDbg=document.getElementById('w-ocr-debug');
-    if(wDbg){wDbg.textContent='[ OCR 원문 ]
-'+raw;wDbg.style.display='block';}
+    if(wDbg){wDbg.textContent='[ OCR 원문 ]\n'+raw;wDbg.style.display='block';}
     if(!raw.trim()){showWatchOcrError('인식 결과가 없습니다.');return;}
     const parsed=parseSamsungMTS(raw);
     if(parsed.type==='none'){showWatchOcrError('종목 정보를 찾지 못했습니다.');return;}
