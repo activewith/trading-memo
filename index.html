@@ -208,10 +208,10 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 
 /* ── 관심종목 태그 입력 ─────────────────────────────────── */
 .w-name-row{display:flex;gap:8px;align-items:stretch}
-.w-name-row input{width:auto}
+.w-name-row input{width:auto!important}
 .w-name-row .field-inp{flex:1;min-width:0;padding:11px 13px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:15px;font-family:inherit;-webkit-appearance:none}
 .w-name-row .field-inp:focus{outline:2px solid rgba(128,128,128,0.2);outline-offset:-1px}
-.w-tag-inp{width:56px;padding:11px 6px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:14px;font-family:inherit;-webkit-appearance:none;text-align:center;flex-shrink:0}
+.w-tag-inp{width:56px!important;padding:11px 6px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:14px;font-family:inherit;-webkit-appearance:none;text-align:center;flex-shrink:0}
 .w-tag-inp:focus{outline:2px solid rgba(128,128,128,0.2);outline-offset:-1px}
 .w-tag-inp::placeholder{font-size:11px;color:var(--text3)}
 
@@ -789,15 +789,79 @@ function setAnalyzing(on,txt,detail){
 function parseSamsungMTS(text){
   const lines=text.split('\n').map(l=>l.trim()).filter(l=>l.length>0);
   const isTradingHistory=lines.some(l=>/(매매내역|체결내역|체결단가|현금매수|신용매수|KOSDAQ매수|KOSDAQ매도|매수|매도)/.test(l));
-  return isTradingHistory ? parseTradingHistory(lines) : parseStockDetail(lines);
+  if(isTradingHistory)return parseTradingHistory(lines);
+  // 관심목록/시세 화면: ▼▲ 가 2줄 이상이면 다종목 목록
+  const arrowLines=lines.filter(l=>/[▼▲]/.test(l));
+  if(arrowLines.length>=2)return parseWatchlistScreen(lines);
+  return parseStockDetail(lines);
 }
 
 function cleanName(n){
   if(!n)return n;
-  // OCR 앞 숫자 노이즈 제거 ("1668 시반도체" → "시반도체")
   n=n.replace(/^\d{1,6}\s+/,'');
   n=n.replace(/^[^가-힣A-Za-z0-9]+/,'').trim();
   return n;
+}
+
+// ── 관심목록/시세 다종목 화면 파서 ───────────────────────
+function parseWatchlistScreen(lines){
+  const stocks=[];
+  for(let i=0;i<lines.length;i++){
+    const l=lines[i];
+    if(!/[▼▲]/.test(l))continue;
+    // ▼▲ 앞 부분에서 가격(마지막 숫자) 추출
+    const before=l.split(/[▼▲]/)[0].trim();
+    const priceNums=before.match(/[\d,]{4,}/g)||[];
+    if(!priceNums.length)continue;
+    const price=parseInt(priceNums[priceNums.length-1].replace(/,/g,''));
+    if(!price||price<100||price>9999999)continue;
+    // 종목명: 같은 줄의 숫자 앞 텍스트 or 바로 이전 줄
+    let name=null;
+    const namePart=before.replace(/[\d,\s]+$/,'').trim();
+    if(namePart.length>=2&&/[가-힣A-Za-z]/.test(namePart)&&namePart.length<=25)
+      name=cleanName(namePart);
+    if(!name&&i>0){
+      const prev=lines[i-1].replace(/[▼▲\d,.%\s]+/g,' ').trim();
+      if(prev.length>=2&&prev.length<=25&&/[가-힣A-Za-z]/.test(prev))
+        name=cleanName(prev);
+    }
+    if(name&&!stocks.find(s=>s.name===name))
+      stocks.push({name,price:String(price)});
+  }
+  if(stocks.length===1)return{type:'single',items:stocks};
+  if(stocks.length>1)return{type:'multi',items:stocks};
+  return{type:'none',items:[]};
+}
+
+// ── 단일 종목 시세 화면 파서 ─────────────────────────────
+function parseStockDetail(lines){
+  let name=null,price=null;
+  for(const l of lines){
+    if(/(←|→|HOME|메뉴|설정|검색|관심|잔고|주문|차트|종료|설정)/.test(l))continue;
+    if(/^\d/.test(l))continue;
+    if(l.length>=2&&l.length<=20&&/[가-힣A-Za-z]/.test(l)){name=l;break;}
+  }
+  // ▼▲ 있는 줄의 첫 번째 숫자 = 현재가 (Math.max 대신)
+  for(const l of lines){
+    if(/[▼▲]/.test(l)){
+      const m=l.match(/[\d,]{4,}/);
+      if(m){
+        const p=parseInt(m[0].replace(/,/g,''));
+        if(p>=100&&p<=9999999){price=String(p);break;}
+      }
+    }
+  }
+  // ▼▲ 없으면 전체에서 첫 번째 합리적 범위 숫자
+  if(!price){
+    const all=lines.join(' ').match(/\d{1,3}(?:,\d{3})+/g)||[];
+    for(const n of all){
+      const v=parseInt(n.replace(/,/g,''));
+      if(v>=100&&v<=9999999){price=String(v);break;}
+    }
+  }
+  const chgM=lines.join(' ').match(/[▲▼+\-]?\s*\d+\.\d+%/);
+  const change=chgM?chgM[0].replace(/\s/g,''):null;
+  return(name||price)?{type:'single',items:[{name,price,change}]}:{type:'none',items:[]};
 }
 
 function parseTradingHistory(lines){
@@ -867,23 +931,6 @@ function parseTradingHistory(lines){
   return{type:stocks.length>0?'multi':'none',items:stocks};
 }
 
-
-function parseStockDetail(lines){
-  let name=null,price=null,change=null;
-  for(const l of lines){
-    if(/(←|→|HOME|메뉴|설정|검색|관심|잔고|주문|차트|종료|설정)/.test(l))continue;
-    if(/^\d/.test(l))continue;
-    if(l.length>=2&&l.length<=20&&/[가-힣A-Za-z]/.test(l)){name=l;break;}
-  }
-  const priceMatches=lines.join(' ').match(/\d{1,3}(?:,\d{3})+/g)||[];
-  if(priceMatches.length>0){
-    const nums=priceMatches.map(p=>parseInt(p.replace(/,/g,'')));
-    price=String(Math.max(...nums));
-  }
-  const chgM=lines.join(' ').match(/[▲▼+\-]?\s*\d+\.\d+%/);
-  if(chgM)change=chgM[0].replace(/\s/g,'');
-  return(name||price)?{type:'single',items:[{name,price,change}]}:{type:'none',items:[]};
-}
 
 // ── 결과 표시 ────────────────────────────────────────────
 function showParsed(parsed){
