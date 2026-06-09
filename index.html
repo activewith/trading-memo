@@ -66,7 +66,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 .tab{flex:1;padding:10px 0 8px;font-size:11px;font-weight:500;text-align:center;cursor:pointer;color:var(--text2);border:none;background:none;border-bottom:2px solid transparent;transition:all 0.2s}
 .tab.on{color:var(--text);border-bottom-color:var(--text)}
 .scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
-.content{padding:16px 16px calc(env(safe-area-inset-bottom)+80px)}
+.content{padding:16px 16px max(calc(env(safe-area-inset-bottom) + 80px), 120px)}
 
 .scan-area{border:1.5px dashed var(--border2);border-radius:var(--radius);padding:20px 16px;text-align:center;cursor:pointer;background:var(--bg2);margin-bottom:14px;position:relative}
 .scan-area:active{background:var(--bg3)}
@@ -387,14 +387,13 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
     </div>
     <div class="tabs">
       <button class="tab on" onclick="sw('wlist')">관심목록</button>
-      <button class="tab" onclick="sw('new')">새 기록</button>
-      <button class="tab" onclick="sw('list')">목록</button>
+      <button class="tab" onclick="sw('trade')">매매목록</button>
       <button class="tab" onclick="sw('stat')">통계</button>
     </div>
   </div>
 
   <div class="scroll">
-    <div id="pane-new" class="content">
+    <div id="pane-trade" class="content" style="display:none">
 
       <div id="install-hint" class="install-hint" style="display:none">
         <button class="ih-close" onclick="document.getElementById('install-hint').style.display='none'">✕</button>
@@ -414,10 +413,11 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
         </div>
       </div>
 
-      <div class="scan-area">
+      <!-- 스캔 영역 (compact) -->
+      <div class="scan-area" style="padding:10px 16px;margin-bottom:14px">
         <input type="file" accept="image/*" id="file-input" onchange="onImg(this)">
-        <div class="scan-icon">📷</div>
-        <div class="scan-label">MTS 화면 촬영 / 스크린샷 선택</div>
+        <div class="scan-icon" style="font-size:22px;margin-bottom:3px">📷</div>
+        <div class="scan-label">MTS 매매내역 스크린샷 선택</div>
         <div class="scan-sub">삼성증권 매매내역 또는 시세 화면</div>
       </div>
 
@@ -438,7 +438,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
       <!-- 단일 인식 성공 -->
       <div class="ok-banner" id="ok-banner"></div>
 
-      <!-- OCR 에러 (persistent) -->
+      <!-- OCR 에러 -->
       <div id="ocr-error" style="display:none;background:var(--red-bg);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:12px;border-left:3px solid var(--red);font-size:13px;color:var(--red-text);line-height:1.6"></div>
 
       <!-- OCR 원문 디버그 -->
@@ -515,14 +515,15 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
       <button class="btn-save" onclick="doSave()">저장하기</button>
       <button class="btn-clear" onclick="clearF()">초기화</button>
       <div class="notice" id="notice"></div>
-    </div>
 
-    <div id="pane-list" class="content" style="display:none">
-<div id="detail-area"></div>
+      <!-- 매매 목록 구분선 -->
+      <div style="display:flex;align-items:center;gap:8px;margin:8px 0 12px">
+        <span style="font-size:12px;font-weight:700;color:var(--text2);white-space:nowrap">매매 목록</span>
+        <div style="flex:1;border-top:1px solid var(--border)"></div>
+      </div>
+      <div id="detail-area"></div>
       <div id="list-area"></div>
     </div>
-
-    <div id="pane-watch" style="display:none"></div>
 
     <div id="pane-wlist" class="content" style="display:none">
       <!-- 스캔 영역 (compact) -->
@@ -702,20 +703,15 @@ async function persist(){
 function sw(p){
   const tabs=document.querySelectorAll('.tab');
   tabs[0].classList.toggle('on',p==='wlist');
-  tabs[1].classList.toggle('on',p==='new');
-  tabs[2].classList.toggle('on',p==='list');
-  tabs[3].classList.toggle('on',p==='stat');
+  tabs[1].classList.toggle('on',p==='trade');
+  tabs[2].classList.toggle('on',p==='stat');
   document.getElementById('pane-wlist').style.display=p==='wlist'?'block':'none';
-  document.getElementById('pane-new').style.display=p==='new'?'block':'none';
-  document.getElementById('pane-list').style.display=p==='list'?'block':'none';
+  document.getElementById('pane-trade').style.display=p==='trade'?'block':'none';
   document.getElementById('pane-stat').style.display=p==='stat'?'block':'none';
-  if(p==='list')renderList();
+  if(p==='trade'){renderList();applySettingsDefaults();}
   if(p==='wlist')renderWatchlist();
   if(p==='stat')renderStat();
-  if(p!=='list')clearSelection();
-  if(p==='new'){
-    applySettingsDefaults();
-  }
+  if(p!=='trade')clearSelection();
 }
 
 // ── 계산 헬퍼 ───────────────────────────────────────────
@@ -1301,7 +1297,7 @@ function renderCard(m){
 // ── 목록 ─────────────────────────────────────────────────
 function renderList(){
   var la=document.getElementById('list-area');
-  if(!memos.length){la.innerHTML='<div class="empty">📋 저장된 기록이 없습니다.<br>새 기록 탭에서 추가하세요.</div>';return;}
+  if(!memos.length){la.innerHTML='<div class="empty">📋 저장된 기록이 없습니다.<br>위 스캔 영역에서 추가하세요.</div>';return;}
   var html='';
   var validGroupIds=new Set(groups.map(g=>g.id));
   // 그룹별 렌더 (활성 종목이 있는 회차만 표시)
@@ -1442,7 +1438,7 @@ function renderStat(){
   }else{
     groupsHtml='<div style="background:var(--bg2);border-radius:var(--radius);padding:16px;margin-bottom:14px;border:1px solid var(--border);text-align:center">'
       +'<div style="font-size:13px;color:var(--text2);line-height:1.8">아직 그룹이 없어요.<br>목록 탭에서 종목을 선택해 회차를 만들면<br>여기에 회차별 통계가 표시됩니다.</div>'
-      +'<button onclick="sw(\'list\')" style="margin-top:12px;padding:9px 18px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:13px;cursor:pointer;font-family:inherit">목록으로 이동</button>'
+      +'<button onclick="sw(\'trade\')" style="margin-top:12px;padding:9px 18px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:13px;cursor:pointer;font-family:inherit">목록으로 이동</button>'
       +'</div>';
   }
 
@@ -1806,7 +1802,7 @@ async function onWatchImg(inp){
           +'<div id="wpck-'+i+'" style="width:22px;height:22px;border-radius:50%;border:2px solid var(--text);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;background:var(--text);color:var(--bg)">✓</div>'
           +'<div style="flex:1;min-width:0">'
           +'<div style="font-size:15px;font-weight:600;color:var(--text)">'+escHtml(item.name||'')+'</div>'
-          +'<div style="font-size:12px;color:var(--text2);margin-top:2px">'+(item.price?'현재가 <b style="color:var(--text)">'+fmt(Number(item.price))+'원</b>':'가격 미인식')+'</div>'
+          +'<div style="font-size:12px;color:var(--text2);margin-top:2px">'+(item.price?'기준가 <b style="color:var(--text)">'+fmt(Number(item.price))+'원</b>':'가격 미인식')+'</div>'
           +'</div>'
           +'</div>';
       }).join('');
@@ -1890,7 +1886,7 @@ function renderWatchlist(){
       +'</div>'
       +(w.price||w.memo?'<div class="mc-divider"></div>':'')
       +'<div class="mc-meta">'
-      +(w.price?'<div class="mc-meta-row"><span><span class="lbl">현재가</span><span class="val">'+fmt(w.price)+'원</span></span></div>':'')
+      +(w.price?'<div class="mc-meta-row"><span><span class="lbl">기준가</span><span class="val">'+fmt(w.price)+'원</span></span></div>':'')
       +(w.memo?'<div class="mc-memo-txt" style="margin-top:'+(w.price?'6':'0')+'px">📝 '+escHtml(w.memo)+'</div>':'')
       +'</div>'
       +'</div>';
@@ -1913,7 +1909,7 @@ function showWatchDetail(id){
     +'<div class="wl-d-rows">'
     +detailRow('등록일',w.date)
     +detailRow('종목명',escHtml(w.name)+(w.tag?' ['+escHtml(w.tag)+']':''))
-    +(w.price?detailRow('현재가',fmt(w.price)+'원'):'')
+    +(w.price?detailRow('기준가',fmt(w.price)+'원'):'')
     +(w.memo?detailRow('메모',escHtml(w.memo)):'')
     +'</div>'
     +'<div class="act-row">'
@@ -1938,7 +1934,7 @@ function editWatchDetail(id){
     +'<input id="we-name" type="text" value="'+escHtml(w.name||'')+'"></div>'
     +'<div class="edit-field"><label>분류 태그</label>'
     +'<input id="we-tag" type="text" value="'+escHtml(w.tag||'')+'" placeholder="예: 반도체" maxlength="10"></div>'
-    +'<div class="edit-field"><label>현재가 (원)</label>'
+    +'<div class="edit-field"><label>기준가 (원)</label>'
     +'<input id="we-price" type="text" inputmode="numeric" value="'+(w.price?fmt(w.price):'')+'" oninput="var r=this.value.replace(/,/g,\'\').replace(/[^0-9]/g,\'\');this.value=r?parseInt(r).toLocaleString(\'ko-KR\'):\'\';"></div>'
     +'<div class="edit-field"><label>메모</label>'
     +'<input id="we-memo" type="text" value="'+escHtml(w.memo||'')+'" placeholder="관심 이유, 매수 조건..."></div>'
