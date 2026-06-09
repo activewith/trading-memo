@@ -105,10 +105,10 @@
     }
   ],
   "settings": {
-    "targetPct": "",
-    "stopPct": "",
-    "days": "",
-    "principle": ""
+    "targetPct": "15",
+    "stopPct": "10",
+    "days": "14",
+    "principle": "1. 익절, 손절, 보유기간 철저히. \n2. 10~20% 현금 유보\n3. 보유기간이 절반미만인데 하루에 -10% 이상일 때는 추가매수를 고려한다."
   },
   "quickNote": "에코10, 네오10, 반도체10"
 }
