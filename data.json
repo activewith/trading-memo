@@ -1,20 +1,6 @@
 {
   "memos": [
     {
-      "id": 1781015160260,
-      "name": "5에코에너지",
-      "buy": 56300,
-      "qty": 5,
-      "total": 281500,
-      "target": null,
-      "stop": null,
-      "days": null,
-      "memo": "",
-      "buyDate": "2026-06-09",
-      "date": "2026. 6. 9.",
-      "status": "active"
-    },
-    {
       "id": 1781015160254,
       "name": "71668 200 금융",
       "buy": 16980,
