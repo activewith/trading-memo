@@ -996,17 +996,24 @@ async function doTradeBulkSave(){
   var checked=window._tChecked||items.map(function(){return true;});
   var today=new Date().toISOString().slice(0,10);
   var saved=0;
+  // ── 설정 기본값 ──
+  var _defTgt=parseFloat(settings.targetPct)||0;
+  var _defStp=parseFloat(settings.stopPct)||0;
+  if(_defStp>0)_defStp=-_defStp;
+  var _defDays=parseInt(settings.days)||null;
   items.forEach(function(item,i){
     if(!checked[i])return;
     if(!item.name)return;
     var buy=parseInt((item.price||'').toString().replace(/,/g,''))||null;
     var qty=parseInt((item.qty||'').toString().replace(/,/g,''))||null;
     var total=buy&&qty?buy*qty:null;
+    var target=buy&&_defTgt?Math.round(buy*(1+_defTgt/100)):null;
+    var stop=buy&&_defStp?Math.round(buy*(1+_defStp/100)):null;
     memos.unshift({
       id:Date.now()+i,
       name:item.name,
       buy:buy,qty:qty,total:total,
-      target:null,stop:null,days:null,memo:'',
+      target:target,stop:stop,days:_defDays?String(_defDays):null,memo:'',
       buyDate:item.date||today,
       date:new Date().toLocaleDateString('ko-KR'),
       status:'active'
@@ -1469,6 +1476,34 @@ async function confirmSell(id){
 function editDetail(id){
   var m=memos.find(function(m){return m.id===id;});if(!m)return;
   var da=document.getElementById('detail-area');
+
+  // ── 기본값 계산 (설정값 → 폼 자동채움) ──
+  var _defTgt=parseFloat(settings.targetPct)||0;
+  var _defStp=parseFloat(settings.stopPct)||0;
+  if(_defStp>0)_defStp=-_defStp;
+  var _defDays=parseInt(settings.days)||0;
+
+  var _tPct='',_tAmt='',_sPct='',_sAmt='';
+  if(m.target&&m.buy){
+    var _tp=((m.target-m.buy)/m.buy*100);
+    _tPct=(_tp>0?'+':'')+_tp.toFixed(2);
+    _tAmt=fmt(m.target);
+  }else if(m.buy&&_defTgt){
+    _tPct='+'+_defTgt.toFixed(2);
+    _tAmt=Math.round(m.buy*(1+_defTgt/100)).toLocaleString('ko-KR');
+  }else if(m.target){_tAmt=fmt(m.target);}
+
+  if(m.stop&&m.buy){
+    var _sp=((m.stop-m.buy)/m.buy*100);
+    _sPct=(_sp>0?'+':'')+_sp.toFixed(2);
+    _sAmt=fmt(m.stop);
+  }else if(m.buy&&_defStp){
+    _sPct=_defStp.toFixed(2);
+    _sAmt=Math.round(m.buy*(1+_defStp/100)).toLocaleString('ko-KR');
+  }else if(m.stop){_sAmt=fmt(m.stop);}
+
+  var _dVal=m.days||(_defDays?String(_defDays):'');
+
   da.innerHTML='<div class="detail">'
     +'<div class="d-header"><span class="d-name">수정</span>'
     +'<button class="close-x" onclick="showDetail('+id+')">✕</button></div>'
@@ -1477,7 +1512,7 @@ function editDetail(id){
     +'<div class="edit-section">'
     +'<div class="edit-title">📥 매수 정보</div>'
     +'<div class="edit-field"><label>종목명</label>'
-    +'<input id="ef-name" type="text" value="'+m.name+'"></div>'
+    +'<input id="ef-name" type="text" value="'+escHtml(m.name)+'"></div>'
     +'<div class="edit-row2">'
     +'<div class="edit-field"><label>매수날짜</label>'
     +'<input id="ef-date" type="date" value="'+(m.buyDate||'')+'"></div>'
@@ -1488,14 +1523,23 @@ function editDetail(id){
     +'<div class="edit-field"><label>수량</label>'
     +'<input id="ef-qty" type="text" inputmode="numeric" value="'+(m.qty?fmt(m.qty):'')+'" oninput="fmtEditInput(this)"></div>'
     +'<div class="edit-field"><label>보유기한(일)</label>'
-    +'<input id="ef-days" type="number" value="'+(m.days||'')+'"></div>'
+    +'<input id="ef-days" type="number" value="'+_dVal+'"></div>'
     +'</div>'
-    +'<div class="edit-row2">'
-    +'<div class="edit-field"><label>목표가</label>'
-    +'<input id="ef-target" type="text" inputmode="numeric" value="'+(m.target?fmt(m.target):'')+'" oninput="fmtEditInput(this)"></div>'
-    +'<div class="edit-field"><label>손절가</label>'
-    +'<input id="ef-stop" type="text" inputmode="numeric" value="'+(m.stop?fmt(m.stop):'')+'" oninput="fmtEditInput(this)"></div>'
-    +'</div>'
+
+    +'<div class="edit-field"><label>목표가 <span style="font-size:11px;color:var(--text3);font-weight:400">% 또는 가격 입력</span></label>'
+    +'<div class="twin-input">'
+    +'<div class="ti-group"><input id="ef-target-pct" type="text" inputmode="decimal" value="'+_tPct+'" placeholder="+15" oninput="syncEditPrice(\'target\',\'pct\','+id+')"><span class="ti-unit">%</span></div>'
+    +'<div class="ti-div">→</div>'
+    +'<div class="ti-group"><input id="ef-target" type="text" inputmode="numeric" value="'+_tAmt+'" placeholder="0" oninput="syncEditPrice(\'target\',\'amt\','+id+')"><span class="ti-unit">원</span></div>'
+    +'</div></div>'
+
+    +'<div class="edit-field"><label>손절가 <span style="font-size:11px;color:var(--text3);font-weight:400">% 또는 가격 입력</span></label>'
+    +'<div class="twin-input">'
+    +'<div class="ti-group"><input id="ef-stop-pct" type="text" inputmode="decimal" value="'+_sPct+'" placeholder="-10" oninput="syncEditPrice(\'stop\',\'pct\','+id+')"><span class="ti-unit">%</span></div>'
+    +'<div class="ti-div">→</div>'
+    +'<div class="ti-group"><input id="ef-stop" type="text" inputmode="numeric" value="'+_sAmt+'" placeholder="0" oninput="syncEditPrice(\'stop\',\'amt\','+id+')"><span class="ti-unit">원</span></div>'
+    +'</div></div>'
+
     +'<div class="edit-field"><label>메모</label>'
     +'<input id="ef-memo" type="text" value="'+(m.memo||'')+'"></div>'
     +'</div>'
@@ -1520,6 +1564,31 @@ function editDetail(id){
   // 매도가 이미 있으면 수익 미리 표시
   if(m.sellPrice) updateEditSellCalc(id);
   da.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function syncEditPrice(field,from,id){
+  var m=memos.find(function(m){return m.id===id;});
+  var buy=parseInt((document.getElementById('ef-buy').value||'').replace(/,/g,''))||(m?m.buy:0);
+  if(!buy)return;
+  var pctEl=document.getElementById('ef-'+field+'-pct');
+  var amtEl=document.getElementById('ef-'+field);
+  if(!pctEl||!amtEl)return;
+  if(from==='pct'){
+    var raw=pctEl.value.replace(/\s/g,'');
+    if(field==='stop'&&raw&&raw!=='-'&&parseFloat(raw)>0)raw='-'+raw;
+    var p=parseFloat(raw);
+    if(!isNaN(p)){
+      amtEl.value=Math.round(buy*(1+p/100)).toLocaleString('ko-KR');
+    }else{amtEl.value='';}
+  }else{
+    var r=amtEl.value.replace(/,/g,'').replace(/[^0-9]/g,'');
+    if(r)amtEl.value=parseInt(r).toLocaleString('ko-KR');else amtEl.value='';
+    var a=parseInt(r)||0;
+    if(a>0){
+      var pp=((a-buy)/buy*100).toFixed(2);
+      pctEl.value=(parseFloat(pp)>0?'+':'')+pp;
+    }else{pctEl.value=field==='stop'?'-':'';}
+  }
 }
 
 function updateEditSellCalc(id){
