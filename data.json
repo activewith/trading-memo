@@ -103,5 +103,12 @@
       "memo": "미국전력장비 수요를 믿는다. 근거빈약.",
       "date": "2026-06-08"
     }
-  ]
+  ],
+  "settings": {
+    "targetPct": "",
+    "stopPct": "",
+    "days": "",
+    "principle": ""
+  },
+  "quickNote": "에코"
 }
