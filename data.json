@@ -1,6 +1,20 @@
 {
   "memos": [
     {
+      "id": 1781042787159,
+      "name": "71668 200 금융",
+      "buy": 16980,
+      "qty": 20,
+      "total": 339600,
+      "target": null,
+      "stop": null,
+      "days": null,
+      "memo": "",
+      "buyDate": "2026-06-09",
+      "date": "2026. 6. 10.",
+      "status": "active"
+    },
+    {
       "id": 1780977028177,
       "name": "Sol 미ai전력인프라",
       "buy": 23870,
