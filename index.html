@@ -35,6 +35,10 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 .topbar-inner{display:flex;align-items:center;justify-content:space-between;padding:12px 18px}
 .topbar-title{font-size:17px;font-weight:600;letter-spacing:-0.3px}
 .topbar-sub{font-size:12px;color:var(--text2)}
+.topbar-note{padding:6px 18px 8px;position:relative}
+.topbar-note textarea{width:100%;resize:none;border:none;border-radius:8px;background:var(--bg3);color:var(--text);font-size:13px;font-family:inherit;padding:7px 10px;line-height:1.45;outline:none;display:block;overflow:hidden;min-height:32px;max-height:90px;-webkit-appearance:none}
+.topbar-note textarea::placeholder{color:var(--text3)}
+.topbar-note textarea:focus{background:var(--bg2);outline:1px solid var(--border2)}
 .tabs{display:flex;padding:0 6px}
 .tab{flex:1;padding:10px 0 8px;font-size:11px;font-weight:500;text-align:center;cursor:pointer;color:var(--text2);border:none;background:none;border-bottom:2px solid transparent;transition:all 0.2s}
 .tab.on{color:var(--text);border-bottom-color:var(--text)}
@@ -306,6 +310,9 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
     <div class="topbar-inner">
       <div class="topbar-title">📊 트레이딩 메모</div>
       <div class="topbar-sub" id="count-badge"></div>
+    </div>
+    <div class="topbar-note">
+      <textarea id="quick-note" rows="1" placeholder="📝 단기 메모..." oninput="saveQuickNote(this)"></textarea>
     </div>
     <div class="tabs">
       <button class="tab on" onclick="sw('watch')">관심등록</button>
@@ -1970,8 +1977,22 @@ function showInstallHint(){
   }
 }
 
+function saveQuickNote(el){
+  localStorage.setItem('quick_note_v1',el.value);
+  el.style.height='auto';
+  el.style.height=Math.min(el.scrollHeight,90)+'px';
+}
+function loadQuickNote(){
+  var el=document.getElementById('quick-note');
+  if(!el)return;
+  var val=localStorage.getItem('quick_note_v1')||'';
+  el.value=val;
+  if(val){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,90)+'px';}
+}
+
 (async()=>{
   try{await load();}catch(e){console.error('load error',e);}
+  try{loadQuickNote();}catch(e){console.error('quicknote error',e);}
   try{upPrev();}catch(e){console.error('upPrev error',e);}
   try{
     sw('watch');
