@@ -35,10 +35,33 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 .topbar-inner{display:flex;align-items:center;justify-content:space-between;padding:12px 18px}
 .topbar-title{font-size:17px;font-weight:600;letter-spacing:-0.3px}
 .topbar-sub{font-size:12px;color:var(--text2)}
+.topbar-principle{padding:8px 18px 2px;display:none}
+.topbar-principle-text{font-size:14px;font-weight:700;color:var(--text);line-height:1.55;letter-spacing:-0.2px}
 .topbar-note{padding:6px 18px 8px;position:relative}
 .topbar-note textarea{width:100%;resize:none;border:none;border-radius:8px;background:var(--bg3);color:var(--text);font-size:13px;font-family:inherit;padding:7px 10px;line-height:1.45;outline:none;display:block;overflow:hidden;min-height:32px;max-height:90px;-webkit-appearance:none}
 .topbar-note textarea::placeholder{color:var(--text3)}
 .topbar-note textarea:focus{background:var(--bg2);outline:1px solid var(--border2)}
+.settings-btn{background:none;border:none;cursor:pointer;padding:4px 2px;font-size:20px;color:var(--text2);display:flex;align-items:center;line-height:1;-webkit-tap-highlight-color:transparent}
+.settings-btn:active{opacity:0.5}
+/* 설정 오버레이 */
+.settings-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9990;align-items:flex-end;justify-content:center}
+.settings-sheet{background:var(--bg);border-radius:var(--radius) var(--radius) 0 0;width:100%;max-width:430px;max-height:88vh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom)}
+.settings-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg)}
+.settings-title{font-size:16px;font-weight:700}
+.settings-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--text2);padding:0 2px;line-height:1}
+.settings-body{padding:16px 20px 24px}
+.settings-sec{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.07em;margin:18px 0 10px;padding-top:16px;border-top:1px solid var(--border)}
+.settings-sec:first-child{margin-top:0;padding-top:0;border-top:none}
+.settings-field{margin-bottom:12px}
+.settings-field label{display:block;font-size:12px;color:var(--text2);margin-bottom:5px}
+.settings-field input{width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);font-size:15px;font-family:inherit;-webkit-appearance:none}
+.settings-field input:focus{outline:2px solid rgba(128,128,128,0.2);outline-offset:-1px}
+.settings-field textarea{width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);font-size:14px;font-family:inherit;resize:none;line-height:1.55;min-height:80px;-webkit-appearance:none}
+.settings-field textarea:focus{outline:2px solid rgba(128,128,128,0.2);outline-offset:-1px}
+.settings-row2{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.settings-save{width:100%;padding:14px;border-radius:var(--radius);background:var(--text);color:var(--bg);font-size:15px;font-weight:600;border:none;cursor:pointer;font-family:inherit;margin-top:4px}
+.settings-save:active{opacity:0.7}
+.settings-notice{text-align:center;font-size:13px;color:var(--green);min-height:20px;margin-top:8px;font-weight:500}
 .tabs{display:flex;padding:0 6px}
 .tab{flex:1;padding:10px 0 8px;font-size:11px;font-weight:500;text-align:center;cursor:pointer;color:var(--text2);border:none;background:none;border-bottom:2px solid transparent;transition:all 0.2s}
 .tab.on{color:var(--text);border-bottom-color:var(--text)}
@@ -305,14 +328,62 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
     <button onclick="localStorage.removeItem('gh_token_v1');hideTokenSetup();load();" style="width:100%;padding:10px;margin-top:8px;border-radius:var(--radius);background:transparent;border:1px solid var(--border);color:var(--text2);font-size:13px;cursor:pointer;font-family:inherit">나중에 설정 (로컬만 사용)</button>
   </div>
 </div>
+<!-- 설정 오버레이 -->
+<div id="settings-overlay" class="settings-overlay" onclick="if(event.target===this)closeSettings()">
+  <div class="settings-sheet">
+    <div class="settings-header">
+      <div class="settings-title">⚙️ 설정</div>
+      <button class="settings-close" onclick="closeSettings()">✕</button>
+    </div>
+    <div class="settings-body">
+
+      <div class="settings-sec">원칙</div>
+      <div class="settings-field">
+        <label>트레이딩 원칙 문구</label>
+        <textarea id="cfg-principle" placeholder="예: 손절가 도달 즉시 이유 불문 매도&#10;욕심 부리지 말 것" rows="3"></textarea>
+      </div>
+
+      <div class="settings-sec">새 기록 기본값</div>
+      <div class="settings-row2">
+        <div class="settings-field">
+          <label>익절 (%)</label>
+          <input id="cfg-target-pct" type="text" inputmode="decimal" placeholder="예: 7">
+        </div>
+        <div class="settings-field">
+          <label>손절 (%)</label>
+          <input id="cfg-stop-pct" type="text" inputmode="decimal" placeholder="예: -4">
+        </div>
+        <div class="settings-field">
+          <label>보유기간 (일)</label>
+          <input id="cfg-days" type="number" inputmode="numeric" placeholder="예: 5">
+        </div>
+      </div>
+
+      <div class="settings-sec">GitHub 토큰</div>
+      <div class="settings-field">
+        <label>Personal Access Token</label>
+        <input id="cfg-token" type="password" placeholder="ghp_xxxxxxxxxxxx">
+      </div>
+
+      <button class="settings-save" onclick="saveSettings()">저장</button>
+      <div class="settings-notice" id="settings-notice"></div>
+    </div>
+  </div>
+</div>
 <div class="app">
   <div class="topbar">
     <div class="topbar-inner">
       <div class="topbar-title">📊 트레이딩 메모</div>
-      <div class="topbar-sub" id="count-badge"></div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="topbar-sub" id="count-badge"></div>
+        <button class="settings-btn" onclick="openSettings()" title="설정">⚙️</button>
+      </div>
+    </div>
+    <div class="topbar-principle" id="principle-bar">
+      <div class="topbar-principle-text" id="principle-text"></div>
     </div>
     <div class="topbar-note">
-      <textarea id="quick-note" rows="1" placeholder="📝 단기 메모..." oninput="saveQuickNote(this)"></textarea>
+      <textarea id="quick-note" rows="1" placeholder="📝 단기 메모..." oninput="onQuickNoteInput(this)"></textarea>
     </div>
     <div class="tabs">
       <button class="tab on" onclick="sw('watch')">관심등록</button>
@@ -559,6 +630,9 @@ let memos=[];
 let groups=[]; // {id, name, createdAt}
 let watchlist=[]; // 관심종목
 let selectedMemos=new Set(); // 체크된 메모 ID
+let settings={targetPct:'',stopPct:'',days:'',principle:''};
+let quickNote='';
+let _qnTimer=null; // quickNote 디바운스 타이머
 const GH_OWNER='activewith';
 const GH_REPO='trading-memo';
 const GH_FILE='data.json';
@@ -602,7 +676,7 @@ async function load(){
       const parsed=JSON.parse(decoded);
       // 하위호환: 이전 버전은 배열 형태였음
       if(Array.isArray(parsed)){memos=parsed;groups=[];watchlist=[];}
-      else{memos=parsed.memos||[];groups=parsed.groups||[];watchlist=parsed.watchlist||[];}
+      else{memos=parsed.memos||[];groups=parsed.groups||[];watchlist=parsed.watchlist||[];settings=parsed.settings||{targetPct:'',stopPct:'',days:'',principle:''};quickNote=parsed.quickNote||'';}
     } else if(res.status===401){
       localStorage.removeItem(TOKEN_KEY);
       showTokenSetup();
@@ -613,12 +687,14 @@ async function load(){
     // 오프라인 등 → localStorage 캐시로 폴백
     try{
       const d=localStorage.getItem('tm_cache');
-      if(d){const p=JSON.parse(d);if(Array.isArray(p)){memos=p;groups=[];watchlist=[];}else{memos=p.memos||[];groups=p.groups||[];watchlist=p.watchlist||[];}}
+      if(d){const p=JSON.parse(d);if(Array.isArray(p)){memos=p;groups=[];watchlist=[];}else{memos=p.memos||[];groups=p.groups||[];watchlist=p.watchlist||[];settings=p.settings||{targetPct:'',stopPct:'',days:'',principle:''};quickNote=p.quickNote||'';}}
     }catch(e2){memos=[];groups=[];}
   }
   // 캐시 저장
-  try{localStorage.setItem('tm_cache',JSON.stringify({memos,groups,watchlist}));}catch(e){}
+  try{localStorage.setItem('tm_cache',JSON.stringify({memos,groups,watchlist,settings,quickNote}));}catch(e){}
   renderList();updateBadge();showInstallHint();
+  applyPrinciple();
+  applyQuickNote();
   if(!localStorage.getItem('ocr_ready')&&!localStorage.getItem('ocr_hint_dismissed')){
     document.getElementById('first-time-banner').style.display='block';
   }
@@ -626,7 +702,7 @@ async function load(){
 
 async function persist(){
   // 로컬 캐시 즉시 저장
-  try{localStorage.setItem('tm_cache',JSON.stringify({memos,groups,watchlist}));}catch(e){}
+  try{localStorage.setItem('tm_cache',JSON.stringify({memos,groups,watchlist,settings,quickNote}));}catch(e){}
   const token=getToken();
   if(!token)return;
   // 저장 전 항상 최신 SHA를 GitHub에서 가져옴 (다른 기기에서 변경됐을 수 있으므로)
@@ -639,7 +715,7 @@ async function persist(){
       ghSha=null;
     }
   }catch(e){}
-  const content=btoa(unescape(encodeURIComponent(JSON.stringify({memos,groups,watchlist},null,2))));
+  const content=btoa(unescape(encodeURIComponent(JSON.stringify({memos,groups,watchlist,settings,quickNote},null,2))));
   const body={message:'update data',content:content};
   if(ghSha)body.sha=ghSha;
   try{
@@ -670,6 +746,9 @@ function sw(p){
   if(p==='watch'){
     const d=document.getElementById('w-date');
     if(!d.value)d.value=new Date().toISOString().slice(0,10);
+  }
+  if(p==='new'){
+    applySettingsDefaults();
   }
 }
 
@@ -1109,8 +1188,9 @@ function clearF(){
   document.getElementById('ocr-error').style.display='none';
   document.getElementById('ocr-debug').style.display='none';
   document.getElementById('analyzing').style.display='none';
-
   document.getElementById('file-input').value='';
+  // 설정 기본값 적용
+  applySettingsDefaults();
   upPrev();
 }
 
@@ -1977,22 +2057,99 @@ function showInstallHint(){
   }
 }
 
-function saveQuickNote(el){
-  localStorage.setItem('quick_note_v1',el.value);
+// ── 단기메모 ─────────────────────────────────────────────
+function onQuickNoteInput(el){
+  quickNote=el.value;
+  // 높이 자동조절
   el.style.height='auto';
   el.style.height=Math.min(el.scrollHeight,90)+'px';
+  // 로컬 캐시 즉시 반영
+  try{const c=JSON.parse(localStorage.getItem('tm_cache')||'{}');c.quickNote=quickNote;localStorage.setItem('tm_cache',JSON.stringify(c));}catch(e){}
+  // 서버 저장은 디바운스 (1.5초)
+  clearTimeout(_qnTimer);
+  _qnTimer=setTimeout(()=>persist(),1500);
 }
-function loadQuickNote(){
+function applyQuickNote(){
   var el=document.getElementById('quick-note');
   if(!el)return;
-  var val=localStorage.getItem('quick_note_v1')||'';
-  el.value=val;
-  if(val){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,90)+'px';}
+  el.value=quickNote||'';
+  if(quickNote){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,90)+'px';}
+}
+
+// ── 원칙 표시 ─────────────────────────────────────────────
+function applyPrinciple(){
+  var bar=document.getElementById('principle-bar');
+  var txt=document.getElementById('principle-text');
+  if(!bar||!txt)return;
+  var p=settings.principle||'';
+  if(p.trim()){
+    txt.textContent=p;
+    bar.style.display='block';
+  } else {
+    bar.style.display='none';
+  }
+}
+
+// ── 설정 기본값 적용 ──────────────────────────────────────
+function applySettingsDefaults(){
+  if(settings.targetPct!==''&&settings.targetPct!=null){
+    var v=String(settings.targetPct);
+    document.getElementById('f-target-pct').value=(parseFloat(v)>0&&v.charAt(0)!=='+'?'+':'')+v;
+  }
+  if(settings.stopPct!==''&&settings.stopPct!=null){
+    var v2=String(settings.stopPct);
+    document.getElementById('f-stop-pct').value=v2;
+  }
+  if(settings.days!==''&&settings.days!=null){
+    document.getElementById('f-days').value=settings.days;
+  }
+}
+
+// ── 설정 열기/닫기/저장 ──────────────────────────────────
+function openSettings(){
+  // 현재 값으로 폼 채우기
+  document.getElementById('cfg-principle').value=settings.principle||'';
+  document.getElementById('cfg-target-pct').value=settings.targetPct!=null?settings.targetPct:'';
+  document.getElementById('cfg-stop-pct').value=settings.stopPct!=null?settings.stopPct:'';
+  document.getElementById('cfg-days').value=settings.days!=null?settings.days:'';
+  document.getElementById('cfg-token').value=getToken();
+  document.getElementById('settings-notice').textContent='';
+  var ov=document.getElementById('settings-overlay');
+  ov.style.display='flex';
+}
+function closeSettings(){
+  document.getElementById('settings-overlay').style.display='none';
+}
+async function saveSettings(){
+  var principle=(document.getElementById('cfg-principle').value||'').trim();
+  var targetPct=(document.getElementById('cfg-target-pct').value||'').trim();
+  var stopPct=(document.getElementById('cfg-stop-pct').value||'').trim();
+  var days=(document.getElementById('cfg-days').value||'').trim();
+  var token=(document.getElementById('cfg-token').value||'').trim();
+
+  // 토큰 변경
+  if(token&&token!==getToken()){
+    localStorage.setItem(TOKEN_KEY,token);
+  }
+
+  settings.principle=principle;
+  settings.targetPct=targetPct;
+  settings.stopPct=stopPct;
+  settings.days=days;
+
+  applyPrinciple();
+
+  await persist();
+
+  var n=document.getElementById('settings-notice');
+  n.textContent='저장됐습니다 ✓';
+  n.style.color='var(--green)';
+  setTimeout(()=>{n.textContent='';},2500);
 }
 
 (async()=>{
   try{await load();}catch(e){console.error('load error',e);}
-  try{loadQuickNote();}catch(e){console.error('quicknote error',e);}
+  try{applyQuickNote();applyPrinciple();}catch(e){console.error('apply error',e);}
   try{upPrev();}catch(e){console.error('upPrev error',e);}
   try{
     sw('watch');
