@@ -421,22 +421,12 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
         <div class="scan-sub">삼성증권 매매내역 또는 시세 화면</div>
       </div>
 
-      <img id="img-preview" class="img-prev">
-
+      <!-- OCR 로딩 -->
       <div class="analyzing" id="analyzing">
         <div class="spin"></div>
         <div class="analyzing-txt" id="analyzing-txt">화면 인식 중...</div>
         <div class="analyzing-detail" id="analyzing-detail">최초 1회 인터넷 필요 — 이후 오프라인 가능</div>
       </div>
-
-      <!-- 여러 종목 선택 -->
-      <div class="pick-banner" id="pick-banner">
-        <div class="pick-header">📋 종목을 선택하세요 — 이름이 다르면 직접 수정하세요</div>
-        <div class="pick-list" id="pick-list"></div>
-      </div>
-
-      <!-- 단일 인식 성공 -->
-      <div class="ok-banner" id="ok-banner"></div>
 
       <!-- OCR 에러 -->
       <div id="ocr-error" style="display:none;background:var(--red-bg);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:12px;border-left:3px solid var(--red);font-size:13px;color:var(--red-text);line-height:1.6"></div>
@@ -444,80 +434,20 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
       <!-- OCR 원문 디버그 -->
       <div id="ocr-debug" style="display:none;background:var(--bg3);border-radius:var(--radius-sm);padding:10px;font-size:10px;font-family:monospace;color:var(--text3);margin-bottom:10px;max-height:120px;overflow-y:auto;white-space:pre-wrap;word-break:break-all"></div>
 
-      <div class="section">
-        <div class="section-title">매수 정보</div>
-        <div class="field">
-          <label>매수날짜</label>
-          <input id="f-date" type="date" oninput="upPrev()">
-        </div>
-        <div class="field">
-          <label>종목명</label>
-          <input id="f-name" type="text" placeholder="예: TIGER 200 금융" oninput="upPrev()" autocomplete="off">
-        </div>
-        <div class="row2">
-          <div class="field">
-            <label>매수가</label>
-            <input id="f-buy" type="text" inputmode="numeric" placeholder="0" oninput="onBuyInput()">
-          </div>
-          <div class="field">
-            <label>수량</label>
-            <input id="f-qty" type="text" inputmode="numeric" placeholder="0" oninput="onQtyInput()">
-          </div>
-        </div>
-        <div class="field">
-          <label>매수총액</label>
-          <input id="f-total" type="text" readonly placeholder="매수가 × 수량">
+      <!-- 저장할 종목 선택 -->
+      <div id="trade-pick-banner" style="display:none;border-radius:var(--radius);margin-bottom:14px;overflow:hidden;border:1px solid var(--border)">
+        <div class="pick-header">📋 저장할 종목을 선택하세요</div>
+        <div id="trade-pick-list" style="padding:8px 8px 0"></div>
+        <div style="display:flex;gap:8px;padding:8px">
+          <button style="flex:1;padding:13px;border-radius:var(--radius-sm);background:var(--text);color:var(--bg);border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit" onclick="doTradeBulkSave()">매매목록에 저장</button>
+          <button style="padding:13px 16px;border-radius:var(--radius-sm);background:none;border:1px solid var(--border);color:var(--text2);font-size:13px;cursor:pointer;font-family:inherit" onclick="resetTradeScan()">초기화</button>
         </div>
       </div>
 
-      <div class="section">
-        <div class="section-title">목표가 / 손절가 / 보유기한</div>
-        <div class="field">
-          <label>목표가</label>
-          <div class="twin-input">
-            <div class="ti-group">
-              <input id="f-target-pct" type="text" inputmode="decimal" placeholder="+0.0" oninput="syncPrice('target','pct')">
-              <span class="ti-unit">%</span>
-            </div>
-            <span class="ti-div">↔</span>
-            <div class="ti-group">
-              <input id="f-target-amt" type="text" inputmode="numeric" placeholder="금액" oninput="syncPrice('target','amt')">
-              <span class="ti-unit">원</span>
-            </div>
-          </div>
-        </div>
-        <div class="field">
-          <label>손절가</label>
-          <div class="twin-input">
-            <div class="ti-group">
-              <input id="f-stop-pct" type="text" inputmode="decimal" placeholder="-0.0" onfocus="if(!this.value)this.value='-'" oninput="syncPrice('stop','pct')">
-              <span class="ti-unit">%</span>
-            </div>
-            <span class="ti-div">↔</span>
-            <div class="ti-group">
-              <input id="f-stop-amt" type="text" inputmode="numeric" placeholder="금액" oninput="syncPrice('stop','amt')">
-              <span class="ti-unit">원</span>
-            </div>
-          </div>
-        </div>
-        <div class="field">
-          <label>보유기한 (일)</label>
-          <input id="f-days" type="number" inputmode="numeric" placeholder="예: 5" oninput="upPrev()">
-        </div>
-      </div>
-
-      <div class="field">
-        <label>메모</label>
-        <input id="f-memo" type="text" placeholder="매수 근거, 뉴스, 주의사항..." style="width:100%">
-      </div>
-
-      <div class="preview" id="prev">항목을 입력하면 양식이 자동으로 채워집니다.</div>
-      <button class="btn-save" onclick="doSave()">저장하기</button>
-      <button class="btn-clear" onclick="clearF()">초기화</button>
       <div class="notice" id="notice"></div>
 
       <!-- 매매 목록 구분선 -->
-      <div style="display:flex;align-items:center;gap:8px;margin:8px 0 12px">
+      <div style="display:flex;align-items:center;gap:8px;margin:4px 0 12px">
         <span style="font-size:12px;font-weight:700;color:var(--text2);white-space:nowrap">매매 목록</span>
         <div style="flex:1;border-top:1px solid var(--border)"></div>
       </div>
@@ -708,7 +638,7 @@ function sw(p){
   document.getElementById('pane-wlist').style.display=p==='wlist'?'block':'none';
   document.getElementById('pane-trade').style.display=p==='trade'?'block':'none';
   document.getElementById('pane-stat').style.display=p==='stat'?'block':'none';
-  if(p==='trade'){renderList();applySettingsDefaults();}
+  if(p==='trade'){renderList();}
   if(p==='wlist')renderWatchlist();
   if(p==='stat')renderStat();
   if(p!=='trade')clearSelection();
@@ -794,12 +724,8 @@ function upPrev(){
 async function onImg(inp){
   if(!inp.files||!inp.files[0])return;
   const file=inp.files[0];
-  const imgEl=document.getElementById('img-preview');
-  imgEl.src=URL.createObjectURL(file);
-  imgEl.style.display='block';
   setAnalyzing(true,'화면 인식 중...','OCR 엔진 로딩 중 (최초 1회만 약 10초)');
-  document.getElementById('pick-banner').style.display='none';
-  document.getElementById('ok-banner').style.display='none';
+  resetTradeScan();
   document.getElementById('ocr-error').style.display='none';
   document.getElementById('ocr-debug').style.display='none';
   try{
@@ -1023,138 +949,92 @@ function parseTradingHistory(lines){
 // ── 결과 표시 ────────────────────────────────────────────
 function showParsed(parsed){
   if(parsed.type==='none'||!parsed.items.length){
-    showNotice('인식 결과가 없습니다. 직접 입력해주세요.','err');return;
+    showNotice('인식 결과가 없습니다. 스크린샷을 다시 시도해주세요.','err');return;
   }
-  if(parsed.type==='single'){
-    fillForm(parsed.items[0]);
-    document.getElementById('ok-banner').textContent='✓ 인식 완료 — 내용을 확인하고 저장하세요';
-    document.getElementById('ok-banner').style.display='block';
-  }
-  if(parsed.type==='multi'){
-    window._parsedItems=parsed.items;
-    window._savedItems={};
-    renderPickList();
-    document.getElementById('pick-banner').style.display='block';
-  }
+  renderTradePick(parsed.items);
 }
 
-function hidePick(){document.getElementById("pick-banner").style.display="none";}
-function renderPickList(){
-  var items=window._parsedItems||[];
-  var saved=window._savedItems||{};
-  var sel=window._selectedIdx;
-  var html=items.map(function(item,idx){
+function renderTradePick(items){
+  window._tParsed=items;
+  window._tChecked=items.map(function(){return true;});
+  var html=items.map(function(item,i){
     var p=Number(item.price)||0;
     var q=Number(item.qty)||0;
     var total=p&&q?p*q:0;
-    var isSaved=saved[idx];
-    var cls='pick-check-item'+(isSaved?' saved':'');
-    var checkIcon=isSaved?'✓':'';
-    return '<div class="'+cls+'" id="pci-'+idx+'">'
-      +'<div class="pci-top" onclick="togglePick('+idx+')">'
-      +'<div class="pci-check">'+checkIcon+'</div>'
-      +'<div class="pci-info">'
-      +'<div class="pci-name">'+(isSaved?'<s>':'')+item.name+(isSaved?'</s> ✓ 저장됨':'')+'</div>'
-      +'<div class="pci-meta">'
+    return '<div id="tpci-'+i+'" onclick="toggleTradePick('+i+')" style="display:flex;align-items:center;gap:12px;padding:11px 13px;cursor:pointer;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px;background:var(--bg);-webkit-tap-highlight-color:transparent">'
+      +'<div id="tpck-'+i+'" style="width:22px;height:22px;border-radius:50%;border:2px solid var(--text);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;background:var(--text);color:var(--bg)">✓</div>'
+      +'<div style="flex:1;min-width:0">'
+      +'<div style="font-size:15px;font-weight:600;color:var(--text)">'+(item.name||'—')+'</div>'
+      +'<div style="font-size:12px;color:var(--text2);margin-top:2px">'
       +(item.date?'📅 '+item.date+' &nbsp;':'')
-      +'매수가 <b>'+fmt(p)+'원</b>'
-      +(q?' &nbsp;수량 <b>'+fmt(q)+'주</b>':'')
-      +(total?' &nbsp;총액 <b>'+fmt(total)+'원</b>':'')
-      +'</div></div></div>'
-      +(!isSaved?'<button class="pci-fill-btn" onclick="pickAndFill('+idx+')">↓ 이 종목으로 양식 채우기</button>':'')
+      +(p?'매수가 <b style="color:var(--text)">'+fmt(p)+'원</b>':'가격 미인식')
+      +(q?' &nbsp;수량 <b style="color:var(--text)">'+fmt(q)+'주</b>':'')
+      +(total?' &nbsp;총액 <b style="color:var(--text)">'+fmt(total)+'원</b>':'')
+      +'</div>'
+      +'</div>'
       +'</div>';
   }).join('');
-  html+='<div class="pick-actions">'
-    +'<button class="pick-act-btn" onclick="hidePick()">닫기</button>'
-    +'</div>';
-  document.getElementById('pick-list').innerHTML=html;
+  document.getElementById('trade-pick-list').innerHTML=html;
+  document.getElementById('trade-pick-banner').style.display='block';
 }
 
-function togglePick(idx){
-  // 저장된 항목은 토글 불가
-  if((window._savedItems||{})[idx])return;
-  pickAndFill(idx);
-}
-
-function pickAndFill(idx){
-  var item=(window._parsedItems||[])[idx];
-  if(!item)return;
-  fillForm(item);
-  document.getElementById('ok-banner').textContent='↓ "'+item.name+'" 양식 채움 — 목표가/손절가 입력 후 저장하세요';
-  document.getElementById('ok-banner').style.display='block';
-  // 아래 폼으로 스크롤
-  document.getElementById('f-name').scrollIntoView({behavior:'smooth',block:'center'});
-}
-
-function fillForm(item){
-  if(item.name)document.getElementById('f-name').value=item.name;
-  if(item.price){
-    var p=String(item.price).replace(/[^0-9]/g,'');
-    document.getElementById('f-buy').value=parseInt(p).toLocaleString('ko-KR');
+function toggleTradePick(i){
+  var arr=window._tChecked;
+  if(!arr)return;
+  arr[i]=!arr[i];
+  var ck=document.getElementById('tpck-'+i);
+  if(!ck)return;
+  if(arr[i]){
+    ck.style.background='var(--text)';ck.style.borderColor='var(--text)';ck.style.color='var(--bg)';ck.textContent='✓';
+  }else{
+    ck.style.background='transparent';ck.style.borderColor='var(--border2)';ck.style.color='transparent';ck.textContent='';
   }
-  if(item.qty){
-    var q=String(item.qty).replace(/[^0-9]/g,'');
-    document.getElementById('f-qty').value=parseInt(q).toLocaleString('ko-KR');
-  }
-  if(item.date)document.getElementById('f-date').value=item.date;
-  upPrev();
 }
 
-// ── 저장/초기화 ──────────────────────────────────────────
-async function doSave(){
-  const name=document.getElementById('f-name').value.trim();
-  const buy=numVal('f-buy');
-  if(!name||!buy){showNotice('종목명과 매수가는 필수입니다.','err');return;}
-  const qty=numVal('f-qty')||null;
-  const total=buy&&qty?buy*qty:null;
-  memos.unshift({
-    id:Date.now(),name,buy,qty,total,
-    target:numVal('f-target-amt')||null,
-    stop:numVal('f-stop-amt')||null,
-    days:document.getElementById('f-days').value||null,
-    memo:document.getElementById('f-memo').value.trim(),
-    buyDate:document.getElementById('f-date').value||null,
-    date:new Date().toLocaleDateString('ko-KR'),
-    status:'active'
+async function doTradeBulkSave(){
+  var items=window._tParsed||[];
+  var checked=window._tChecked||items.map(function(){return true;});
+  var today=new Date().toISOString().slice(0,10);
+  var saved=0;
+  items.forEach(function(item,i){
+    if(!checked[i])return;
+    if(!item.name)return;
+    var buy=parseInt((item.price||'').toString().replace(/,/g,''))||null;
+    var qty=parseInt((item.qty||'').toString().replace(/,/g,''))||null;
+    var total=buy&&qty?buy*qty:null;
+    memos.unshift({
+      id:Date.now()+i,
+      name:item.name,
+      buy:buy,qty:qty,total:total,
+      target:null,stop:null,days:null,memo:'',
+      buyDate:item.date||today,
+      date:new Date().toLocaleDateString('ko-KR'),
+      status:'active'
+    });
+    saved++;
   });
- await persist();updateBadge();
-  // 픽 리스트에서 현재 채운 항목 저장됨 표시
-  var items=window._parsedItems||[];
-  var curName=name;
-  items.forEach(function(item,idx){
-    if(item.name===curName||(item.price&&item.price==buy)){
-      if(!window._savedItems)window._savedItems={};
-      window._savedItems[idx]=true;
-    }
-  });
-  if(items.length>0) renderPickList();
-  // 폼만 초기화 (픽 배너는 유지)
-  clearFormOnly();
-  showNotice('저장되었습니다! ✓');
+  if(!saved){showNotice('선택된 항목이 없습니다.','err');return;}
+  await persist();
+  updateBadge();
+  resetTradeScan();
+  renderList();
+  showNotice(saved+'개 저장됐습니다 ✓');
 }
 
-function clearFormOnly(){
-  ['f-name','f-buy','f-qty','f-target-pct','f-target-amt','f-stop-pct','f-stop-amt','f-days','f-memo'].forEach(function(id){document.getElementById(id).value='';});
-  document.getElementById('f-date').value='';
-  document.getElementById('f-total').value='';
-  document.getElementById('ok-banner').style.display='none';
-  upPrev();
-}
-function clearF(){
-  ['f-name','f-buy','f-qty','f-target-pct','f-target-amt','f-stop-pct','f-stop-amt','f-days','f-memo'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('f-date').value='';
-  document.getElementById('f-total').value='';
-  document.getElementById('img-preview').style.display='none';
-  document.getElementById('pick-banner').style.display='none';
-  document.getElementById('ok-banner').style.display='none';
+function resetTradeScan(){
+  document.getElementById('trade-pick-banner').style.display='none';
+  document.getElementById('trade-pick-list').innerHTML='';
   document.getElementById('ocr-error').style.display='none';
   document.getElementById('ocr-debug').style.display='none';
   document.getElementById('analyzing').style.display='none';
   document.getElementById('file-input').value='';
-  // 설정 기본값 적용
-  applySettingsDefaults();
-  upPrev();
+  window._tParsed=[];window._tChecked=[];
 }
+
+// ── 저장/초기화 ──────────────────────────────────────────
+// doSave / clearFormOnly : 폼 제거로 불사용 (doTradeBulkSave 대체)
+function doSave(){}
+function clearF(){resetTradeScan();}
 
 function showError(msg){
   setAnalyzing(false);
@@ -2017,17 +1897,7 @@ function applyPrinciple(){
 
 // ── 설정 기본값 적용 ──────────────────────────────────────
 function applySettingsDefaults(){
-  if(settings.targetPct!==''&&settings.targetPct!=null){
-    var v=String(settings.targetPct);
-    document.getElementById('f-target-pct').value=(parseFloat(v)>0&&v.charAt(0)!=='+'?'+':'')+v;
-  }
-  if(settings.stopPct!==''&&settings.stopPct!=null){
-    var v2=String(settings.stopPct);
-    document.getElementById('f-stop-pct').value=v2;
-  }
-  if(settings.days!==''&&settings.days!=null){
-    document.getElementById('f-days').value=settings.days;
-  }
+  // 등록폼 제거로 no-op (설정 기본값은 수정 화면에서 직접 입력)
 }
 
 // ── 설정 열기/닫기/저장 ──────────────────────────────────
@@ -2075,7 +1945,6 @@ async function saveSettings(){
 (async()=>{
   try{await load();}catch(e){console.error('load error',e);}
   try{applyQuickNote();applyPrinciple();}catch(e){console.error('apply error',e);}
-  try{upPrev();}catch(e){console.error('upPrev error',e);}
   try{
     sw('wlist');
   }catch(e){
