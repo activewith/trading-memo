@@ -263,10 +263,9 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 .ungrouped-lbl{font-size:13px;font-weight:600;color:var(--text2);flex:1}
 
 /* ── 카드 체크박스 래퍼 ─────────────────────────────────── */
-.card-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
-.card-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--border2);flex-shrink:0;margin-top:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:var(--bg);transition:all 0.15s;font-size:12px;color:transparent}
+.card-row{margin-bottom:12px}
+.card-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;background:var(--bg);transition:all 0.15s;font-size:12px;color:transparent}
 .card-check.checked{background:var(--blue);border-color:var(--blue);color:#fff}
-.card-row .memo-card{flex:1;margin-bottom:0}
 
 /* ── 선택 액션바 ────────────────────────────────────────── */
 .select-bar{display:none;position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--text);color:var(--bg);padding:14px 18px calc(14px + env(safe-area-inset-bottom,0px));z-index:200;border-radius:16px 16px 0 0;box-shadow:0 -4px 20px rgba(0,0,0,0.15)}
@@ -1175,9 +1174,9 @@ function renderCard(m){
   }
   var cardHtml='<div class="memo-card" onclick="showDetail('+m.id+')">'
     +'<div class="mc-top">'
-    +'<div>'
-    +'<div class="mc-name">'+m.name+'</div>'
-    +closedBadge
+    +'<div style="display:flex;align-items:center;gap:9px">'
+    +'<div class="card-check'+(isChecked?' checked':'')+'" onclick="event.stopPropagation();toggleCheck('+m.id+')">'+(isChecked?'✓':'')+'</div>'
+    +'<div><div class="mc-name">'+m.name+'</div>'+closedBadge+'</div>'
     +'</div>'
     +'<div class="mc-right">'
     +'<span class="mc-date">'+(m.buyDate||m.date)+'</span>'
@@ -1187,10 +1186,7 @@ function renderCard(m){
     +'<div class="mc-meta">'+rows+'</div>'
     +(m.memo?'<div class="mc-memo-txt" style="margin-top:10px">📝 '+m.memo+'</div>':'')
     +'</div>';
-  return '<div class="card-row">'
-    +'<div class="card-check'+(isChecked?' checked':'')+'" onclick="event.stopPropagation();toggleCheck('+m.id+')">'+(isChecked?'✓':'')+'</div>'
-    +cardHtml
-    +'</div>';
+  return '<div class="card-row">'+cardHtml+'</div>';
 }
 
 // ── 목록 ─────────────────────────────────────────────────
