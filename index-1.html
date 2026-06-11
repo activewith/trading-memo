@@ -1,0 +1,2039 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="트레이딩 메모">
+<meta name="theme-color" content="#111111">
+<title>트레이딩 메모</title>
+<style>
+:root{
+  --bg:#ffffff;--bg2:#f5f5f4;--bg3:#eeece8;
+  --text:#111111;--text2:#777770;--text3:#aaa;
+  --border:#e0ddd8;--border2:#ccc;
+  --green:#1D9E75;--green-bg:#EAF3DE;--green-text:#3B6D11;
+  --red:#E24B4A;--red-bg:#FCEBEB;--red-text:#A32D2D;
+  --blue:#185FA5;--blue-bg:#E6F1FB;--blue-text:#0C447C;
+  --radius:14px;--radius-sm:10px;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#1a1a1a;--bg2:#242424;--bg3:#2e2e2e;
+    --text:#f0f0ee;--text2:#909088;--text3:#555;
+    --border:#333;--border2:#444;
+    --green-bg:#0a2e1a;--green-text:#6ECA9F;
+    --red-bg:#2e0f0f;--red-text:#F09595;
+    --blue-bg:#0a1e35;--blue-text:#85B7EB;
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;overflow:hidden}
+.app{height:100vh;display:flex;flex-direction:column;max-width:430px;margin:0 auto}
+.topbar{padding:env(safe-area-inset-top) 0 0;background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0}
+.topbar-inner{display:flex;align-items:center;justify-content:space-between;padding:12px 18px}
+.topbar-title{font-size:17px;font-weight:600;letter-spacing:-0.3px}
+.topbar-sub{font-size:12px;color:var(--text2)}
+.topbar-principle{padding:8px 18px 2px;display:none}
+.topbar-principle-text{font-size:14px;font-weight:700;color:var(--text);line-height:1.55;letter-spacing:-0.2px}
+.topbar-note{padding:6px 18px 8px;position:relative}
+.topbar-note textarea{width:100%;resize:none;border:none;border-radius:8px;background:var(--bg3);color:var(--text);font-size:13px;font-family:inherit;padding:7px 10px;line-height:1.45;outline:none;display:block;overflow:hidden;min-height:32px;max-height:90px;-webkit-appearance:none}
+.topbar-note textarea::placeholder{color:var(--text3)}
+.topbar-note textarea:focus{background:var(--bg2);outline:1px solid var(--border2)}
+.settings-btn{background:none;border:none;cursor:pointer;padding:4px 2px;font-size:20px;color:var(--text2);display:flex;align-items:center;line-height:1;-webkit-tap-highlight-color:transparent}
+.settings-btn:active{opacity:0.5}
+/* 설정 오버레이 */
+.settings-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9990;align-items:flex-end;justify-content:center}
+.settings-sheet{background:var(--bg);border-radius:var(--radius) var(--radius) 0 0;width:100%;max-width:430px;max-height:88vh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom)}
+.settings-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg)}
+.settings-title{font-size:16px;font-weight:700}
+.settings-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--text2);padding:0 2px;line-height:1}
+.settings-body{padding:16px 20px 24px}
+.settings-sec{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.07em;margin:18px 0 10px;padding-top:16px;border-top:1px solid var(--border)}
+.settings-sec:first-child{margin-top:0;padding-top:0;border-top:none}
+.settings-field{margin-bottom:12px}
+.settings-field label{display:block;font-size:12px;color:var(--text2);margin-bottom:5px}
+.settings-field input{width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);font-size:15px;font-family:inherit;-webkit-appearance:none}
+.settings-field input:focus{outline:2px solid rgba(128,128,128,0.2);outline-offset:-1px}
+.settings-field textarea{width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);font-size:14px;font-family:inherit;resize:none;line-height:1.55;min-height:80px;-webkit-appearance:none}
+.settings-field textarea:focus{outline:2px solid rgba(128,128,128,0.2);outline-offset:-1px}
+.settings-row2{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.settings-save{width:100%;padding:14px;border-radius:var(--radius);background:var(--text);color:var(--bg);font-size:15px;font-weight:600;border:none;cursor:pointer;font-family:inherit;margin-top:4px}
+.settings-save:active{opacity:0.7}
+.settings-notice{text-align:center;font-size:13px;color:var(--green);min-height:20px;margin-top:8px;font-weight:500}
+.tabs{display:flex;padding:0 6px}
+.tab{flex:1;padding:10px 0 8px;font-size:11px;font-weight:500;text-align:center;cursor:pointer;color:var(--text2);border:none;background:none;border-bottom:2px solid transparent;transition:all 0.2s}
+.tab.on{color:var(--text);border-bottom-color:var(--text)}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.content{padding:16px 16px max(calc(env(safe-area-inset-bottom) + 80px), 120px)}
+
+.scan-area{border:1.5px dashed var(--border2);border-radius:var(--radius);padding:20px 16px;text-align:center;cursor:pointer;background:var(--bg2);margin-bottom:14px;position:relative}
+.scan-area:active{background:var(--bg3)}
+.scan-area input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;font-size:16px}
+.scan-icon{font-size:28px;margin-bottom:6px}
+.scan-label{font-size:14px;font-weight:500;margin-bottom:3px}
+.scan-sub{font-size:12px;color:var(--text2);line-height:1.4}
+.img-prev{width:100%;border-radius:var(--radius-sm);max-height:150px;object-fit:cover;margin-bottom:12px;display:none}
+
+.analyzing{display:none;text-align:center;padding:16px;background:var(--bg2);border-radius:var(--radius);margin-bottom:12px}
+.spin{display:inline-block;width:20px;height:20px;border:2.5px solid var(--border2);border-top-color:var(--text);border-radius:50%;animation:spin 0.7s linear infinite;margin-bottom:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.analyzing-txt{font-size:13px;color:var(--text2)}
+.analyzing-detail{font-size:11px;color:var(--text3);margin-top:3px}
+
+/* 종목 선택 배너 */
+.pick-banner{display:none;border-radius:var(--radius);margin-bottom:14px;overflow:hidden;border:1px solid var(--border)}
+.pick-header{background:var(--bg2);padding:10px 14px;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em}
+.pick-list{padding:8px}
+.pick-btn{display:block;width:100%;text-align:left;padding:12px 13px;margin-bottom:6px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);cursor:pointer;font-family:inherit;transition:background 0.1s}
+.pick-btn:last-child{margin-bottom:0}
+.pick-btn:active{background:var(--bg3)}
+.pb-name{font-size:14px;font-weight:600;color:var(--text);display:block;margin-bottom:4px}
+.pb-meta{display:flex;gap:10px;flex-wrap:wrap}
+.pb-tag{font-size:12px;color:var(--text2)}
+.pb-tag b{color:var(--text)}
+
+/* 인식 성공 배너 */
+.ok-banner{display:none;background:var(--green-bg);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:12px;border-left:3px solid var(--green);font-size:13px;color:var(--green-text);font-weight:500}
+
+.section{background:var(--bg2);border-radius:var(--radius);padding:14px 14px 6px;margin-bottom:12px}
+.section-title{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px}
+.field{margin-bottom:12px}
+.field label{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);margin-bottom:5px}
+.field input{width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:15px;font-family:inherit;-webkit-appearance:none}
+.field input:focus{outline:2px solid rgba(128,128,128,0.2);outline-offset:-1px}
+.field input[readonly]{background:var(--bg3);color:var(--text2)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+
+.pct{font-size:11px;font-weight:600;padding:2px 7px;border-radius:12px}
+.pct-up{background:var(--green-bg);color:var(--green-text)}
+.pct-dn{background:var(--red-bg);color:var(--red-text)}
+
+.preview{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:13px;font-size:12px;font-family:'Menlo','Courier New',monospace;line-height:2;color:var(--text2);margin-bottom:14px;white-space:pre-wrap}
+
+.btn-save{width:100%;padding:15px;border-radius:var(--radius);background:var(--text);color:var(--bg);font-size:15px;font-weight:600;border:none;cursor:pointer;font-family:inherit;margin-bottom:8px}
+.btn-save:active{opacity:0.7}
+.btn-clear{width:100%;padding:12px;border-radius:var(--radius);background:transparent;border:1px solid var(--border);color:var(--text2);font-size:13px;cursor:pointer;font-family:inherit}
+.notice{text-align:center;font-size:13px;color:var(--green);padding:8px 0;min-height:22px;font-weight:500}
+.notice.err{color:var(--red-text)}
+
+/* 목록 */
+.memo-list{display:flex;flex-direction:column;gap:12px}
+.memo-card{background:var(--bg2);border-radius:var(--radius);padding:16px;cursor:pointer;border:1px solid var(--border)}
+.memo-card:active{background:var(--bg3)}
+.mc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.mc-name{font-size:19px;font-weight:700;letter-spacing:-0.5px;color:var(--text)}
+.mc-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+.mc-date{font-size:13px;font-weight:500;color:var(--text2)}
+.badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px}
+.b-on{background:var(--blue-bg);color:var(--blue-text)}
+.b-off{background:var(--bg3);color:var(--text2)}
+.mc-meta{display:flex;flex-wrap:wrap;gap:8px 0;flex-direction:column;margin-top:2px}
+.mc-meta-row{display:flex;gap:16px;font-size:14px;color:var(--text2);flex-wrap:nowrap}
+.mc-meta-row>span{white-space:nowrap;flex-shrink:0}
+.mc-meta-row .lbl{font-size:12px;color:var(--text3);margin-right:3px}
+.mc-meta-row .val{color:var(--text);font-weight:600}
+.mc-meta-row .val-up{color:var(--green-text);font-weight:700;font-size:15px}
+.mc-meta-row .val-dn{color:var(--red-text);font-weight:700;font-size:15px}
+.mc-divider{height:1px;background:var(--border);margin:10px 0}
+.mc-memo-txt{font-size:13px;color:var(--text2);line-height:1.5}
+.empty{text-align:center;padding:60px 0;color:var(--text2);font-size:14px;line-height:2}
+.mc-closed-rate{font-size:15px;font-weight:700;margin-top:3px;letter-spacing:-0.3px}
+.mc-cr-up{color:var(--green-text)}
+.mc-cr-dn{color:var(--red-text)}
+
+
+.detail{background:var(--bg2);border-radius:var(--radius);padding:18px;margin-bottom:12px;border:1px solid var(--border2)}
+.d-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.d-name{font-size:20px;font-weight:700;letter-spacing:-0.5px}
+.close-x{background:none;border:none;font-size:22px;cursor:pointer;color:var(--text2);width:34px;height:34px;display:flex;align-items:center;justify-content:center}
+.d-rows{background:var(--bg);border-radius:var(--radius-sm);border:1px solid var(--border);overflow:hidden;margin-bottom:14px}
+.d-row{display:flex;align-items:baseline;padding:11px 14px;border-bottom:1px solid var(--border)}
+.d-row:last-child{border-bottom:none}
+.d-lbl{font-size:13px;color:var(--text2);width:72px;flex-shrink:0}
+.d-val{font-size:16px;font-weight:600;color:var(--text);flex:1}
+.d-val.up{color:var(--green-text);font-size:17px}
+.d-val.dn{color:var(--red-text);font-size:17px}
+.d-sub{font-size:12px;color:var(--text2);margin-left:6px;font-weight:400}
+.act-row{display:flex;gap:8px;margin-bottom:10px}
+.act-btn{flex:1;padding:13px;border-radius:var(--radius-sm);font-size:14px;font-weight:600;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;font-family:inherit}
+.act-del{color:var(--red-text);border-color:var(--red-bg)}
+.act-edit{background:var(--text);color:var(--bg);border-color:var(--text)}
+/* 매도 섹션 */
+.sell-section{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:12px}
+.sell-title{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px}
+.sell-row{display:flex;gap:10px;margin-bottom:10px}
+.sell-field{flex:1}
+.sell-field label{display:block;font-size:12px;color:var(--text2);margin-bottom:5px}
+.sell-field input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);font-size:15px;font-family:inherit;-webkit-appearance:none}
+.sell-field input:focus{outline:2px solid rgba(128,128,128,0.2);outline-offset:-1px}
+.profit-box{border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:12px;text-align:center}
+.profit-box.pos{background:var(--green-bg);border:1px solid var(--green)}
+.profit-box.neg{background:var(--red-bg);border:1px solid var(--red)}
+.profit-rate{font-size:24px;font-weight:800;letter-spacing:-0.5px}
+.profit-rate.pos{color:var(--green-text)}
+.profit-rate.neg{color:var(--red-text)}
+.profit-detail{font-size:13px;margin-top:4px}
+.profit-detail.pos{color:var(--green-text)}
+.profit-detail.neg{color:var(--red-text)}
+.손절-badge{display:inline-block;background:var(--red-text);color:#fff;font-size:12px;font-weight:700;padding:2px 8px;border-radius:10px;margin-left:8px;vertical-align:middle}
+.btn-sell-confirm{width:100%;padding:12px;border-radius:var(--radius-sm);background:var(--text);color:var(--bg);font-size:14px;font-weight:600;border:none;cursor:pointer;font-family:inherit}
+/* 수정 폼 */
+.edit-section{background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:14px;margin-bottom:12px}
+.edit-title{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px}
+.edit-field{margin-bottom:10px}
+.edit-field label{display:block;font-size:12px;color:var(--text2);margin-bottom:4px}
+.edit-field input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);font-size:15px;font-family:inherit;-webkit-appearance:none}
+.edit-row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.edit-acts{display:flex;gap:8px}
+.edit-save{flex:2;padding:12px;border-radius:var(--radius-sm);background:var(--text);color:var(--bg);font-size:14px;font-weight:600;border:none;cursor:pointer;font-family:inherit}
+.edit-cancel{flex:1;padding:12px;border-radius:var(--radius-sm);background:transparent;color:var(--text2);font-size:14px;border:1px solid var(--border);cursor:pointer;font-family:inherit}
+
+.pick-check-item{border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--bg);margin-bottom:8px;overflow:hidden;transition:border-color 0.15s}
+.pick-check-item.selected{border-color:var(--blue);background:var(--blue-bg)}
+.pick-check-item.saved{border-color:var(--green);background:var(--green-bg);opacity:0.7}
+.pci-top{display:flex;align-items:flex-start;gap:10px;padding:12px 13px;cursor:pointer}
+.pci-check{width:20px;height:20px;border-radius:5px;border:1.5px solid var(--border2);background:var(--bg);flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px;font-size:13px}
+.pick-check-item.selected .pci-check{background:var(--blue);border-color:var(--blue);color:#fff}
+.pick-check-item.saved .pci-check{background:var(--green);border-color:var(--green);color:#fff}
+.pci-info{flex:1;min-width:0}
+.pci-name{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
+.pci-meta{font-size:12px;color:var(--text2)}
+.pci-fill-btn{width:100%;padding:9px;border:none;border-top:1px solid var(--border);background:var(--blue-bg);color:var(--blue-text);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit}
+.pick-actions{display:flex;gap:8px;padding:8px;border-top:1px solid var(--border);background:var(--bg2)}
+.pick-act-btn{flex:1;padding:10px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;border:1px solid var(--border);background:var(--bg);color:var(--text)}
+.pick-act-btn.primary{background:var(--text);color:var(--bg);border-color:var(--text)}
+.twin-input{display:flex;align-items:center;gap:8px}
+.ti-group{flex:1;position:relative}
+.ti-group input{width:100%;padding:11px 30px 11px 13px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:15px;font-family:inherit;-webkit-appearance:none}
+.ti-group input:focus{outline:2px solid rgba(128,128,128,0.2);outline-offset:-1px}
+.ti-unit{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--text2);pointer-events:none;font-weight:500}
+.ti-div{font-size:18px;color:var(--text3);flex-shrink:0;line-height:1}
+.install-hint{background:var(--blue-bg);border-radius:var(--radius);padding:14px;margin-bottom:12px}
+.ih-title{font-size:13px;font-weight:600;color:var(--blue-text);margin-bottom:5px}
+.ih-body{font-size:12px;color:var(--text2);line-height:1.6}
+.ih-close{float:right;background:none;border:none;cursor:pointer;color:var(--text2);font-size:14px;padding:0;margin:-2px -2px 0 6px}
+/* 추가매수 스캔 버튼 (상세화면) */
+.add-buy-scan{border:1.5px dashed var(--border2);border-radius:var(--radius-sm);padding:7px 16px;text-align:center;cursor:pointer;background:var(--bg2);margin-bottom:10px;position:relative;display:block;width:100%}
+.add-buy-scan:active{background:var(--bg3)}
+.add-buy-scan input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;font-size:16px}
+.add-buy-scan .ab-icon{font-size:20px;margin-bottom:2px}
+.add-buy-scan .ab-label{font-size:13px;font-weight:500;color:var(--text)}
+.ab-analyzing{text-align:center;padding:10px;background:var(--bg2);border-radius:var(--radius-sm);margin-bottom:10px}
+.ab-result-box{background:var(--blue-bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;font-size:13px;line-height:2;margin-bottom:10px}
+.ab-result-title{font-weight:600;color:var(--blue-text);margin-bottom:4px;font-size:13px}
+.ab-result-row{display:flex;justify-content:space-between;align-items:center;padding:2px 0}
+.ab-arrow{color:var(--text3);margin:0 6px}
+.ab-old{color:var(--text2)}
+.ab-new{font-weight:700}
+.ab-new-up{color:var(--green-text);font-weight:700}
+.ab-new-dn{color:var(--red-text);font-weight:700}
+.ab-new-blue{color:var(--blue-text);font-weight:700}
+.ab-apply-btn{width:100%;padding:11px;border-radius:var(--radius-sm);background:var(--text);color:var(--bg);font-size:14px;font-weight:600;border:none;cursor:pointer;font-family:inherit;margin-top:8px}
+.ab-cancel-btn{width:100%;padding:9px;border-radius:var(--radius-sm);background:transparent;border:1px solid var(--border);color:var(--text2);font-size:13px;cursor:pointer;font-family:inherit;margin-top:6px}
+
+/* ── 관심종목 태그 입력 ─────────────────────────────────── */
+.w-name-row{display:flex;gap:8px;align-items:stretch}
+.w-name-row input{width:auto!important}
+.w-name-row .field-inp{flex:1;min-width:0;padding:11px 13px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:15px;font-family:inherit;-webkit-appearance:none}
+.w-name-row .field-inp:focus{outline:2px solid rgba(128,128,128,0.2);outline-offset:-1px}
+.w-tag-inp{width:56px!important;padding:11px 6px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:14px;font-family:inherit;-webkit-appearance:none;text-align:center;flex-shrink:0}
+.w-tag-inp:focus{outline:2px solid rgba(128,128,128,0.2);outline-offset:-1px}
+.w-tag-inp::placeholder{font-size:11px;color:var(--text3)}
+
+/* ── 관심목록 카드 ───────────────────────────────────────── */
+.wl-tag{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:8px;background:var(--blue-bg);color:var(--blue-text);margin-left:6px;vertical-align:middle}
+.wl-detail{background:var(--bg2);border-radius:var(--radius);padding:16px;margin-bottom:12px;border:1px solid var(--border2)}
+.wl-d-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.wl-d-name{font-size:18px;font-weight:700}
+.wl-d-rows{background:var(--bg);border-radius:var(--radius-sm);border:1px solid var(--border);overflow:hidden;margin-bottom:12px}
+
+.group-section{margin-bottom:18px}
+.group-header{display:flex;align-items:center;gap:8px;padding:6px 2px 8px;border-bottom:2px solid var(--border);margin-bottom:10px}
+.group-name-txt{font-size:14px;font-weight:700;color:var(--text);flex:1;cursor:pointer;padding:2px 0}
+.group-name-txt:hover{color:var(--blue-text)}
+.group-name-input{font-size:14px;font-weight:700;color:var(--text);flex:1;border:none;background:transparent;font-family:inherit;border-bottom:2px solid var(--blue-text);padding:2px 0;outline:none;-webkit-appearance:none}
+.group-stats-badge{font-size:11px;padding:3px 9px;border-radius:10px;background:var(--bg3);color:var(--text2);white-space:nowrap}
+.group-btn{background:none;border:1px solid var(--border);cursor:pointer;font-size:12px;color:var(--text2);padding:4px 10px;border-radius:8px;font-family:inherit}
+.group-btn:active{background:var(--bg3)}
+.group-btn.danger{color:var(--red-text);border-color:var(--red-bg)}
+.ungrouped-header{display:flex;align-items:center;gap:8px;padding:6px 2px 8px;border-bottom:1px dashed var(--border);margin-bottom:10px}
+.ungrouped-lbl{font-size:13px;font-weight:600;color:var(--text2);flex:1}
+
+/* ── 카드 체크박스 래퍼 ─────────────────────────────────── */
+.card-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
+.card-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--border2);flex-shrink:0;margin-top:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:var(--bg);transition:all 0.15s;font-size:12px;color:transparent}
+.card-check.checked{background:var(--blue);border-color:var(--blue);color:#fff}
+.card-row .memo-card{flex:1;margin-bottom:0}
+
+/* ── 선택 액션바 ────────────────────────────────────────── */
+.select-bar{display:none;position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--text);color:var(--bg);padding:14px 18px calc(14px + env(safe-area-inset-bottom,0px));z-index:200;border-radius:16px 16px 0 0;box-shadow:0 -4px 20px rgba(0,0,0,0.15)}
+.select-bar.show{display:flex;align-items:center;gap:10px}
+.select-bar-info{flex:1;font-size:14px;font-weight:600}
+.select-bar-sub{font-size:11px;font-weight:400;opacity:0.7;margin-top:2px}
+.select-bar-btn{background:rgba(255,255,255,0.18);color:#fff;border:none;padding:9px 14px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
+.select-bar-btn:active{background:rgba(255,255,255,0.3)}
+.select-bar-cancel{background:transparent;color:rgba(255,255,255,0.6);border:none;font-size:13px;cursor:pointer;font-family:inherit;padding:8px 6px}
+
+/* ── 그룹 만들기 모달 ───────────────────────────────────── */
+.gmodal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;align-items:flex-end}
+.gmodal-overlay.show{display:flex}
+.gmodal-box{background:var(--bg);border-radius:20px 20px 0 0;padding:22px 20px calc(22px + env(safe-area-inset-bottom,0px));width:100%;max-width:430px;margin:0 auto}
+.gmodal-title{font-size:16px;font-weight:700;margin-bottom:14px}
+.gmodal-input{width:100%;padding:13px 14px;border:1.5px solid var(--border2);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);font-size:16px;font-family:inherit;-webkit-appearance:none;outline:none;margin-bottom:14px}
+.gmodal-input:focus{border-color:var(--blue-text)}
+.gmodal-acts{display:flex;gap:8px}
+.gmodal-ok{flex:2;padding:13px;border-radius:var(--radius-sm);background:var(--text);color:var(--bg);font-size:15px;font-weight:600;border:none;cursor:pointer;font-family:inherit}
+.gmodal-cancel{flex:1;padding:13px;border-radius:var(--radius-sm);background:transparent;border:1px solid var(--border);color:var(--text2);font-size:14px;cursor:pointer;font-family:inherit}
+
+/* ── 통계 탭 ────────────────────────────────────────────── */
+.stat-summary-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+.stat-kpi{background:var(--bg2);border-radius:var(--radius);padding:14px 12px;border:1px solid var(--border);text-align:center}
+.stat-kpi-val{font-size:20px;font-weight:800;letter-spacing:-0.5px;margin-bottom:3px}
+.stat-kpi-lbl{font-size:11px;color:var(--text2);font-weight:500}
+.stat-kpi-val.up{color:var(--green-text)}
+.stat-kpi-val.dn{color:var(--red-text)}
+.stat-section{background:var(--bg2);border-radius:var(--radius);padding:16px;margin-bottom:14px;border:1px solid var(--border)}
+.stat-sec-title{font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px}
+.stat-group-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:13px 14px;margin-bottom:10px}
+.stat-group-card:last-child{margin-bottom:0}
+.stat-gc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.stat-gc-name{font-size:15px;font-weight:700}
+.stat-gc-count{font-size:12px;color:var(--text2)}
+.stat-gc-rows{display:flex;flex-direction:column;gap:0}
+.stat-gc-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}
+.stat-gc-row:last-child{border-bottom:none}
+.stat-gc-lbl{color:var(--text2)}
+.stat-gc-val{font-weight:600;color:var(--text)}
+.stat-gc-val.up{color:var(--green-text);font-weight:700}
+.stat-gc-val.dn{color:var(--red-text);font-weight:700}
+.stat-total-card{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:13px 14px;margin-top:4px}
+.stat-total-label{font-size:13px;font-weight:700;margin-bottom:8px;color:var(--text)}
+</style>
+</head>
+<body>
+
+<!-- GitHub 토큰 설정 오버레이 -->
+<div id="token-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;padding:24px">
+  <div style="background:var(--bg);border-radius:var(--radius);padding:24px;width:100%;max-width:360px">
+    <div style="font-size:17px;font-weight:700;margin-bottom:6px">🔑 GitHub 토큰 설정</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6">
+      데이터를 기기간 동기화하려면<br>GitHub Personal Access Token이 필요합니다.<br>
+      토큰은 이 기기에만 저장됩니다.
+    </div>
+    <div id="token-msg" style="font-size:12px;color:var(--red-text);margin-bottom:8px;min-height:16px"></div>
+    <input id="token-input" type="password" placeholder="ghp_xxxxxxxxxxxx" style="width:100%;padding:12px 13px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);font-size:14px;font-family:inherit;margin-bottom:12px;-webkit-appearance:none">
+    <button onclick="saveToken()" style="width:100%;padding:14px;border-radius:var(--radius);background:var(--text);color:var(--bg);font-size:15px;font-weight:600;border:none;cursor:pointer;font-family:inherit">저장하고 시작하기</button>
+    <button onclick="localStorage.removeItem('gh_token_v1');hideTokenSetup();load();" style="width:100%;padding:10px;margin-top:8px;border-radius:var(--radius);background:transparent;border:1px solid var(--border);color:var(--text2);font-size:13px;cursor:pointer;font-family:inherit">나중에 설정 (로컬만 사용)</button>
+  </div>
+</div>
+<!-- 설정 오버레이 -->
+<div id="settings-overlay" class="settings-overlay" onclick="if(event.target===this)closeSettings()">
+  <div class="settings-sheet">
+    <div class="settings-header">
+      <div class="settings-title">⚙️ 설정</div>
+      <button class="settings-close" onclick="closeSettings()">✕</button>
+    </div>
+    <div class="settings-body">
+
+      <div class="settings-sec">원칙</div>
+      <div class="settings-field">
+        <label>트레이딩 원칙 문구</label>
+        <textarea id="cfg-principle" placeholder="예: 손절가 도달 즉시 이유 불문 매도&#10;욕심 부리지 말 것" rows="3"></textarea>
+      </div>
+
+      <div class="settings-sec">새 기록 기본값</div>
+      <div class="settings-row2">
+        <div class="settings-field">
+          <label>익절 (%)</label>
+          <input id="cfg-target-pct" type="text" inputmode="decimal" placeholder="예: 7">
+        </div>
+        <div class="settings-field">
+          <label>손절 (%)</label>
+          <input id="cfg-stop-pct" type="text" inputmode="decimal" placeholder="예: -4">
+        </div>
+        <div class="settings-field">
+          <label>보유기간 (일)</label>
+          <input id="cfg-days" type="number" inputmode="numeric" placeholder="예: 5">
+        </div>
+      </div>
+
+      <div class="settings-sec">GitHub 토큰</div>
+      <div class="settings-field">
+        <label>Personal Access Token</label>
+        <input id="cfg-token" type="password" placeholder="ghp_xxxxxxxxxxxx">
+      </div>
+
+      <button class="settings-save" onclick="saveSettings()">저장</button>
+      <div class="settings-notice" id="settings-notice"></div>
+    </div>
+  </div>
+</div>
+<div class="app">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="topbar-title">📊 트레이딩 메모</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="topbar-sub" id="count-badge"></div>
+        <button class="settings-btn" onclick="openSettings()" title="설정">⚙️</button>
+      </div>
+    </div>
+    <div class="topbar-principle" id="principle-bar">
+      <div class="topbar-principle-text" id="principle-text"></div>
+    </div>
+    <div class="topbar-note">
+      <textarea id="quick-note" rows="1" placeholder="📝 단기 메모..." oninput="onQuickNoteInput(this)"></textarea>
+    </div>
+    <div class="tabs">
+      <button class="tab on" onclick="sw('wlist')">관심목록</button>
+      <button class="tab" onclick="sw('trade')">매매목록</button>
+      <button class="tab" onclick="sw('stat')">통계</button>
+    </div>
+  </div>
+
+  <div class="scroll">
+    <div id="pane-trade" class="content" style="display:none">
+
+      <div id="install-hint" class="install-hint" style="display:none">
+        <button class="ih-close" onclick="document.getElementById('install-hint').style.display='none'">✕</button>
+        <div class="ih-title">📲 홈 화면에 추가하기</div>
+        <div class="ih-body" id="install-hint-body"></div>
+      </div>
+
+      <div id="first-time-banner" style="display:none;background:var(--blue-bg);border-radius:var(--radius);padding:13px 14px;margin-bottom:12px;border-left:3px solid var(--blue)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div style="font-size:13px;font-weight:600;color:var(--blue-text);margin-bottom:5px">📥 최초 1회 설정 필요</div>
+          <button onclick="document.getElementById('first-time-banner').style.display='none';localStorage.setItem('ocr_hint_dismissed','1')" style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:14px;padding:0">✕</button>
+        </div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.6">
+          OCR 한글 인식 데이터 (약 7MB)를<br>
+          <b>Wi-Fi 연결 상태</b>에서 처음 한 번 다운로드합니다.<br>
+          이후에는 <b>인터넷 없이 완전 오프라인</b>으로 동작해요.
+        </div>
+      </div>
+
+      <!-- 스캔 영역 (compact) -->
+      <div class="scan-area" style="padding:10px 16px;margin-bottom:14px">
+        <input type="file" accept="image/*" id="file-input" onchange="onImg(this)">
+        <div class="scan-icon" style="font-size:22px;margin-bottom:3px">📷</div>
+        <div class="scan-label">MTS 매매내역 스크린샷 선택</div>
+        <div class="scan-sub">삼성증권 매매내역 또는 시세 화면</div>
+      </div>
+
+      <!-- OCR 로딩 -->
+      <div class="analyzing" id="analyzing">
+        <div class="spin"></div>
+        <div class="analyzing-txt" id="analyzing-txt">화면 인식 중...</div>
+        <div class="analyzing-detail" id="analyzing-detail">최초 1회 인터넷 필요 — 이후 오프라인 가능</div>
+      </div>
+
+      <!-- OCR 에러 -->
+      <div id="ocr-error" style="display:none;background:var(--red-bg);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:12px;border-left:3px solid var(--red);font-size:13px;color:var(--red-text);line-height:1.6"></div>
+
+      <!-- OCR 원문 디버그 -->
+      <div id="ocr-debug" style="display:none;background:var(--bg3);border-radius:var(--radius-sm);padding:10px;font-size:10px;font-family:monospace;color:var(--text3);margin-bottom:10px;max-height:120px;overflow-y:auto;white-space:pre-wrap;word-break:break-all"></div>
+
+      <!-- 저장할 종목 선택 -->
+      <div id="trade-pick-banner" style="display:none;border-radius:var(--radius);margin-bottom:14px;overflow:hidden;border:1px solid var(--border)">
+        <div class="pick-header">📋 저장할 종목을 선택하세요</div>
+        <div id="trade-pick-list" style="padding:8px 8px 0"></div>
+        <div style="display:flex;gap:8px;padding:8px">
+          <button style="flex:1;padding:13px;border-radius:var(--radius-sm);background:var(--text);color:var(--bg);border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit" onclick="doTradeBulkSave()">매매목록에 저장</button>
+          <button style="padding:13px 16px;border-radius:var(--radius-sm);background:none;border:1px solid var(--border);color:var(--text2);font-size:13px;cursor:pointer;font-family:inherit" onclick="resetTradeScan()">초기화</button>
+        </div>
+      </div>
+
+      <div class="notice" id="notice"></div>
+
+      <!-- 매매 목록 구분선 -->
+      <div style="display:flex;align-items:center;gap:8px;margin:4px 0 12px">
+        <span style="font-size:12px;font-weight:700;color:var(--text2);white-space:nowrap">매매 목록</span>
+        <div style="flex:1;border-top:1px solid var(--border)"></div>
+      </div>
+      <div id="detail-area"></div>
+      <div id="list-area"></div>
+    </div>
+
+    <div id="pane-wlist" class="content" style="display:none">
+      <!-- 스캔 영역 (compact) -->
+      <div class="scan-area" style="padding:10px 16px;margin-bottom:14px">
+        <input type="file" accept="image/*" id="w-file-input" onchange="onWatchImg(this)">
+        <div class="scan-icon" style="font-size:22px;margin-bottom:3px">📷</div>
+        <div class="scan-label">관심종목 화면 스크린샷 선택</div>
+      </div>
+
+      <!-- OCR 로딩 -->
+      <div class="analyzing" id="w-analyzing">
+        <div class="spin"></div>
+        <div class="analyzing-txt" id="w-analyzing-txt">화면 인식 중...</div>
+        <div class="analyzing-detail" id="w-analyzing-detail">최초 1회 인터넷 필요 — 이후 오프라인 가능</div>
+      </div>
+
+      <!-- OCR 에러 -->
+      <div id="w-ocr-error" style="display:none;background:var(--red-bg);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:12px;border-left:3px solid var(--red);font-size:13px;color:var(--red-text);line-height:1.6"></div>
+
+      <!-- 저장할 종목 선택 -->
+      <div id="w-pick-banner" style="display:none;border-radius:var(--radius);margin-bottom:14px;overflow:hidden;border:1px solid var(--border)">
+        <div class="pick-header">📋 저장할 종목을 선택하세요</div>
+        <div id="w-pick-list" style="padding:8px 8px 0"></div>
+        <div style="display:flex;gap:8px;padding:8px">
+          <button style="flex:1;padding:13px;border-radius:var(--radius-sm);background:var(--text);color:var(--bg);border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit" onclick="doWatchBulkSave()">관심목록에 저장</button>
+          <button style="padding:13px 16px;border-radius:var(--radius-sm);background:none;border:1px solid var(--border);color:var(--text2);font-size:13px;cursor:pointer;font-family:inherit" onclick="resetWatchScan()">초기화</button>
+        </div>
+      </div>
+
+      <div class="notice" id="w-notice"></div>
+      <div id="wl-detail-area"></div>
+      <div style="display:flex;align-items:center;gap:8px;margin:4px 0 12px">
+        <span style="font-size:12px;font-weight:700;color:var(--text2);white-space:nowrap">목록</span>
+        <div style="flex:1;border-top:1px solid var(--border)"></div>
+      </div>
+      <div id="wl-list-area"></div>
+    </div>
+
+    <div id="pane-stat" class="content" style="display:none">
+      <div id="stat-area"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 선택 액션바 -->
+<div class="select-bar" id="select-bar">
+  <div class="select-bar-info">
+    <div id="select-bar-txt">0개 선택됨</div>
+    <div class="select-bar-sub">그룹으로 묶어 회차별 통계를 확인하세요</div>
+  </div>
+  <button class="select-bar-cancel" onclick="clearSelection()">✕</button>
+  <button class="select-bar-btn" onclick="startGroupCreate()">그룹 만들기</button>
+</div>
+
+<!-- 그룹 이름 모달 -->
+<div class="gmodal-overlay" id="gmodal-overlay" onclick="if(event.target===this)cancelGroupCreate()">
+  <div class="gmodal-box">
+    <div class="gmodal-title">📁 그룹 이름 입력</div>
+    <input class="gmodal-input" id="gmodal-input" type="text" placeholder="예: 1회차" maxlength="30"
+      onkeydown="if(event.key==='Enter')confirmGroupCreate()">
+    <div class="gmodal-acts">
+      <button class="gmodal-cancel" onclick="cancelGroupCreate()">취소</button>
+      <button class="gmodal-ok" onclick="confirmGroupCreate()">만들기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Tesseract.js v5 인라인 (worker는 CDN 캐시) ─────────────
+/*! For license information please see tesseract.min.js.LICENSE.txt */
+!function(t,r){"object"==typeof exports&&"object"==typeof module?module.exports=r():"function"==typeof define&&define.amd?define([],r):"object"==typeof exports?exports.Tesseract=r():t.Tesseract=r()}(self,(()=>(()=>{var t={30:(t,r,e)=>{function n(t){return n="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol&&t!==Symbol.prototype?"symbol":typeof t},n(t)}var o=function(t){"use strict";var r,e=Object.prototype,o=e.hasOwnProperty,i=Object.defineProperty||function(t,r,e){t[r]=e.value},a="function"==typeof Symbol?Symbol:{},c=a.iterator||"@@iterator",u=a.asyncIterator||"@@asyncIterator",f=a.toStringTag||"@@toStringTag";function s(t,r,e){return Object.defineProperty(t,r,{value:e,enumerable:!0,configurable:!0,writable:!0}),t[r]}try{s({},"")}catch(t){s=function(t,r,e){return t[r]=e}}function l(t,r,e,n){var o=r&&r.prototype instanceof m?r:m,a=Object.create(o.prototype),c=new N(n||[]);return i(a,"_invoke",{value:P(t,e,c)}),a}function h(t,r,e){try{return{type:"normal",arg:t.call(r,e)}}catch(t){return{type:"throw",arg:t}}}t.wrap=l;var p="suspendedStart",y="suspendedYield",v="executing",d="completed",g={};function m(){}function b(){}function w(){}var L={};s(L,c,(function(){return this}));var x=Object.getPrototypeOf,E=x&&x(x(A([])));E&&E!==e&&o.call(E,c)&&(L=E);var O=w.prototype=m.prototype=Object.create(L);function S(t){["next","throw","return"].forEach((function(r){s(t,r,(function(t){return this._invoke(r,t)}))}))}function j(t,r){function e(i,a,c,u){var f=h(t[i],t,a);if("throw"!==f.type){var s=f.arg,l=s.value;return l&&"object"===n(l)&&o.call(l,"__await")?r.resolve(l.__await).then((function(t){e("next",t,c,u)}),(function(t){e("throw",t,c,u)})):r.resolve(l).then((function(t){s.value=t,c(s)}),(function(t){return e("throw",t,c,u)}))}u(f.arg)}var a;i(this,"_invoke",{value:function(t,n){function o(){return new r((function(r,o){e(t,n,r,o)}))}return a=a?a.then(o,o):o()}})}function P(t,r,e){var n=p;return function(o,i){if(n===v)throw new Error("Generator is already running");if(n===d){if("throw"===o)throw i;return G()}for(e.method=o,e.arg=i;;){var a=e.delegate;if(a){var c=_(a,e);if(c){if(c===g)continue;return c}}if("next"===e.method)e.sent=e._sent=e.arg;else if("throw"===e.method){if(n===p)throw n=d,e.arg;e.dispatchException(e.arg)}else"return"===e.method&&e.abrupt("return",e.arg);n=v;var u=h(t,r,e);if("normal"===u.type){if(n=e.done?d:y,u.arg===g)continue;return{value:u.arg,done:e.done}}"throw"===u.type&&(n=d,e.method="throw",e.arg=u.arg)}}}function _(t,e){var n=e.method,o=t.iterator[n];if(o===r)return e.delegate=null,"throw"===n&&t.iterator.return&&(e.method="return",e.arg=r,_(t,e),"throw"===e.method)||"return"!==n&&(e.method="throw",e.arg=new TypeError("The iterator does not provide a '"+n+"' method")),g;var i=h(o,t.iterator,e.arg);if("throw"===i.type)return e.method="throw",e.arg=i.arg,e.delegate=null,g;var a=i.arg;return a?a.done?(e[t.resultName]=a.value,e.next=t.nextLoc,"return"!==e.method&&(e.method="next",e.arg=r),e.delegate=null,g):a:(e.method="throw",e.arg=new TypeError("iterator result is not an object"),e.delegate=null,g)}function k(t){var r={tryLoc:t[0]};1 in t&&(r.catchLoc=t[1]),2 in t&&(r.finallyLoc=t[2],r.afterLoc=t[3]),this.tryEntries.push(r)}function T(t){var r=t.completion||{};r.type="normal",delete r.arg,t.completion=r}function N(t){this.tryEntries=[{tryLoc:"root"}],t.forEach(k,this),this.reset(!0)}function A(t){if(t){var e=t[c];if(e)return e.call(t);if("function"==typeof t.next)return t;if(!isNaN(t.length)){var n=-1,i=function e(){for(;++n<t.length;)if(o.call(t,n))return e.value=t[n],e.done=!1,e;return e.value=r,e.done=!0,e};return i.next=i}}return{next:G}}function G(){return{value:r,done:!0}}return b.prototype=w,i(O,"constructor",{value:w,configurable:!0}),i(w,"constructor",{value:b,configurable:!0}),b.displayName=s(w,f,"GeneratorFunction"),t.isGeneratorFunction=function(t){var r="function"==typeof t&&t.constructor;return!!r&&(r===b||"GeneratorFunction"===(r.displayName||r.name))},t.mark=function(t){return Object.setPrototypeOf?Object.setPrototypeOf(t,w):(t.__proto__=w,s(t,f,"GeneratorFunction")),t.prototype=Object.create(O),t},t.awrap=function(t){return{__await:t}},S(j.prototype),s(j.prototype,u,(function(){return this})),t.AsyncIterator=j,t.async=function(r,e,n,o,i){void 0===i&&(i=Promise);var a=new j(l(r,e,n,o),i);return t.isGeneratorFunction(e)?a:a.next().then((function(t){return t.done?t.value:a.next()}))},S(O),s(O,f,"Generator"),s(O,c,(function(){return this})),s(O,"toString",(function(){return"[object Generator]"})),t.keys=function(t){var r=Object(t),e=[];for(var n in r)e.push(n);return e.reverse(),function t(){for(;e.length;){var n=e.pop();if(n in r)return t.value=n,t.done=!1,t}return t.done=!0,t}},t.values=A,N.prototype={constructor:N,reset:function(t){if(this.prev=0,this.next=0,this.sent=this._sent=r,this.done=!1,this.delegate=null,this.method="next",this.arg=r,this.tryEntries.forEach(T),!t)for(var e in this)"t"===e.charAt(0)&&o.call(this,e)&&!isNaN(+e.slice(1))&&(this[e]=r)},stop:function(){this.done=!0;var t=this.tryEntries[0].completion;if("throw"===t.type)throw t.arg;return this.rval},dispatchException:function(t){if(this.done)throw t;var e=this;function n(n,o){return c.type="throw",c.arg=t,e.next=n,o&&(e.method="next",e.arg=r),!!o}for(var i=this.tryEntries.length-1;i>=0;--i){var a=this.tryEntries[i],c=a.completion;if("root"===a.tryLoc)return n("end");if(a.tryLoc<=this.prev){var u=o.call(a,"catchLoc"),f=o.call(a,"finallyLoc");if(u&&f){if(this.prev<a.catchLoc)return n(a.catchLoc,!0);if(this.prev<a.finallyLoc)return n(a.finallyLoc)}else if(u){if(this.prev<a.catchLoc)return n(a.catchLoc,!0)}else{if(!f)throw new Error("try statement without catch or finally");if(this.prev<a.finallyLoc)return n(a.finallyLoc)}}}},abrupt:function(t,r){for(var e=this.tryEntries.length-1;e>=0;--e){var n=this.tryEntries[e];if(n.tryLoc<=this.prev&&o.call(n,"finallyLoc")&&this.prev<n.finallyLoc){var i=n;break}}i&&("break"===t||"continue"===t)&&i.tryLoc<=r&&r<=i.finallyLoc&&(i=null);var a=i?i.completion:{};return a.type=t,a.arg=r,i?(this.method="next",this.next=i.finallyLoc,g):this.complete(a)},complete:function(t,r){if("throw"===t.type)throw t.arg;return"break"===t.type||"continue"===t.type?this.next=t.arg:"return"===t.type?(this.rval=this.arg=t.arg,this.method="return",this.next="end"):"normal"===t.type&&r&&(this.next=r),g},finish:function(t){for(var r=this.tryEntries.length-1;r>=0;--r){var e=this.tryEntries[r];if(e.finallyLoc===t)return this.complete(e.completion,e.afterLoc),T(e),g}},catch:function(t){for(var r=this.tryEntries.length-1;r>=0;--r){var e=this.tryEntries[r];if(e.tryLoc===t){var n=e.completion;if("throw"===n.type){var o=n.arg;T(e)}return o}}throw new Error("illegal catch attempt")},delegateYield:function(t,e,n){return this.delegate={iterator:A(t),resultName:e,nextLoc:n},"next"===this.method&&(this.arg=r),g}},t}("object"===n(t=e.nmd(t))?t.exports:{});try{regeneratorRuntime=o}catch(t){"object"===("undefined"==typeof globalThis?"undefined":n(globalThis))?globalThis.regeneratorRuntime=o:Function("r","regeneratorRuntime = r")(o)}},35:(t,r,e)=>{"use strict";function n(t){return n="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol&&t!==Symbol.prototype?"symbol":typeof t},n(t)}function o(t,r){var e=Object.keys(t);if(Object.getOwnPropertySymbols){var n=Object.getOwnPropertySymbols(t);r&&(n=n.filter((function(r){return Object.getOwnPropertyDescriptor(t,r).enumerable}))),e.push.apply(e,n)}return e}function i(t,r,e){return(r=function(t){var r=function(t){if("object"!=n(t)||!t)return t;var r=t[Symbol.toPrimitive];if(void 0!==r){var e=r.call(t,"string");if("object"!=n(e))return e;throw new TypeError("@@toPrimitive must return a primitive value.")}return String(t)}(t);return"symbol"==n(r)?r:r+""}(r))in t?Object.defineProperty(t,r,{value:e,enumerable:!0,configurable:!0,writable:!0}):t[r]=e,t}var a="browser"===e(938)("type")?function(t){return new URL(t,window.location.href).href}:function(t){return t};t.exports=function(t){var r=function(t){for(var r=1;r<arguments.length;r++){var e=null!=arguments[r]?arguments[r]:{};r%2?o(Object(e),!0).forEach((function(r){i(t,r,e[r])})):Object.getOwnPropertyDescriptors?Object.defineProperties(t,Object.getOwnPropertyDescriptors(e)):o(Object(e)).forEach((function(r){Object.defineProperty(t,r,Object.getOwnPropertyDescriptor(e,r))}))}return t}({},t);return["corePath","workerPath","langPath"].forEach((function(e){t[e]&&(r[e]=a(r[e]))})),r}},65:function(t,r){"use strict";var e=this,n=!1;r.logging=n,r.setLogging=function(t){n=t},r.log=function(){for(var t=arguments.length,r=new Array(t),o=0;o<t;o++)r[o]=arguments[o];return n?console.log.apply(e,r):null}},70:t=>{"use strict";t.exports=function(t,r){return"".concat(t,"-").concat(r,"-").concat(Math.random().toString(16).slice(3,8))}},130:t=>{"use strict";function r(t){return r="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol&&t!==Symbol.prototype?"symbol":typeof t},r(t)}function e(){e=function(){return n};var t,n={},o=Object.prototype,i=o.hasOwnProperty,a=Object.defineProperty||function(t,r,e){t[r]=e.value},c="function"==typeof Symbol?Symbol:{},u=c.iterator||"@@iterator",f=c.asyncIterator||"@@asyncIterator",s=c.toStringTag||"@@toStringTag";function l(t,r,e){return Object.defineProperty(t,r,{value:e,enumerable:!0,configurable:!0,writable:!0}),t[r]}try{l({},"")}catch(t){l=function(t,r,e){return t[r]=e}}function h(t,r,e,n){var o=r&&r.prototype instanceof b?r:b,i=Object.create(o.prototype),c=new A(n||[]);return a(i,"_invoke",{value:_(t,e,c)}),i}function p(t,r,e){try{return{type:"normal",arg:t.call(r,e)}}catch(t){return{type:"throw",arg:t}}}n.wrap=h;var y="suspendedStart",v="suspendedYield",d="executing",g="completed",m={};function b(){}function w(){}function L(){}var x={};l(x,u,(function(){return this}));var E=Object.getPrototypeOf,O=E&&E(E(G([])));O&&O!==o&&i.call(O,u)&&(x=O);var S=L.prototype=b.prototype=Object.create(x);function j(t){["next","throw","return"].forEach((function(r){l(t,r,(function(t){return this._invoke(r,t)}))}))}function P(t,e){function n(o,a,c,u){var f=p(t[o],t,a);if("throw"!==f.type){var s=f.arg,l=s.value;return l&&"object"==r(l)&&i.call(l,"__await")?e.resolve(l.__await).then((function(t){n("next",t,c,u)}),(function(t){n("throw",t,c,u)})):e.resolve(l).then((function(t){s.value=t,c(s)}),(function(t){return n("throw",t,c,u)}))}u(f.arg)}var o;a(this,"_invoke",{value:function(t,r){function i(){return new e((function(e,o){n(t,r,e,o)}))}return o=o?o.then(i,i):i()}})}function _(r,e,n){var o=y;return function(i,a){if(o===d)throw Error("Generator is already running");if(o===g){if("throw"===i)throw a;return{value:t,done:!0}}for(n.method=i,n.arg=a;;){var c=n.delegate;if(c){var u=k(c,n);if(u){if(u===m)continue;return u}}if("next"===n.method)n.sent=n._sent=n.arg;else if("throw"===n.method){if(o===y)throw o=g,n.arg;n.dispatchException(n.arg)}else"return"===n.method&&n.abrupt("return",n.arg);o=d;var f=p(r,e,n);if("normal"===f.type){if(o=n.done?g:v,f.arg===m)continue;return{value:f.arg,done:n.done}}"throw"===f.type&&(o=g,n.method="throw",n.arg=f.arg)}}}function k(r,e){var n=e.method,o=r.iterator[n];if(o===t)return e.delegate=null,"throw"===n&&r.iterator.return&&(e.method="return",e.arg=t,k(r,e),"throw"===e.method)||"return"!==n&&(e.method="throw",e.arg=new TypeError("The iterator does not provide a '"+n+"' method")),m;var i=p(o,r.iterator,e.arg);if("throw"===i.type)return e.method="throw",e.arg=i.arg,e.delegate=null,m;var a=i.arg;return a?a.done?(e[r.resultName]=a.value,e.next=r.nextLoc,"return"!==e.method&&(e.method="next",e.arg=t),e.delegate=null,m):a:(e.method="throw",e.arg=new TypeError("iterator result is not an object"),e.delegate=null,m)}function T(t){var r={tryLoc:t[0]};1 in t&&(r.catchLoc=t[1]),2 in t&&(r.finallyLoc=t[2],r.afterLoc=t[3]),this.tryEntries.push(r)}function N(t){var r=t.completion||{};r.type="normal",delete r.arg,t.completion=r}function A(t){this.tryEntries=[{tryLoc:"root"}],t.forEach(T,this),this.reset(!0)}function G(e){if(e||""===e){var n=e[u];if(n)return n.call(e);if("function"==typeof e.next)return e;if(!isNaN(e.length)){var o=-1,a=function r(){for(;++o<e.length;)if(i.call(e,o))return r.value=e[o],r.done=!1,r;return r.value=t,r.done=!0,r};return a.next=a}}throw new TypeError(r(e)+" is not iterable")}return w.prototype=L,a(S,"constructor",{value:L,configurable:!0}),a(L,"constructor",{value:w,configurable:!0}),w.displayName=l(L,s,"GeneratorFunction"),n.isGeneratorFunction=function(t){var r="function"==typeof t&&t.constructor;return!!r&&(r===w||"GeneratorFunction"===(r.displayName||r.name))},n.mark=function(t){return Object.setPrototypeOf?Object.setPrototypeOf(t,L):(t.__proto__=L,l(t,s,"GeneratorFunction")),t.prototype=Object.create(S),t},n.awrap=function(t){return{__await:t}},j(P.prototype),l(P.prototype,f,(function(){return this})),n.AsyncIterator=P,n.async=function(t,r,e,o,i){void 0===i&&(i=Promise);var a=new P(h(t,r,e,o),i);return n.isGeneratorFunction(r)?a:a.next().then((function(t){return t.done?t.value:a.next()}))},j(S),l(S,s,"Generator"),l(S,u,(function(){return this})),l(S,"toString",(function(){return"[object Generator]"})),n.keys=function(t){var r=Object(t),e=[];for(var n in r)e.push(n);return e.reverse(),function t(){for(;e.length;){var n=e.pop();if(n in r)return t.value=n,t.done=!1,t}return t.done=!0,t}},n.values=G,A.prototype={constructor:A,reset:function(r){if(this.prev=0,this.next=0,this.sent=this._sent=t,this.done=!1,this.delegate=null,this.method="next",this.arg=t,this.tryEntries.forEach(N),!r)for(var e in this)"t"===e.charAt(0)&&i.call(this,e)&&!isNaN(+e.slice(1))&&(this[e]=t)},stop:function(){this.done=!0;var t=this.tryEntries[0].completion;if("throw"===t.type)throw t.arg;return this.rval},dispatchException:function(r){if(this.done)throw r;var e=this;function n(n,o){return c.type="throw",c.arg=r,e.next=n,o&&(e.method="next",e.arg=t),!!o}for(var o=this.tryEntries.length-1;o>=0;--o){var a=this.tryEntries[o],c=a.completion;if("root"===a.tryLoc)return n("end");if(a.tryLoc<=this.prev){var u=i.call(a,"catchLoc"),f=i.call(a,"finallyLoc");if(u&&f){if(this.prev<a.catchLoc)return n(a.catchLoc,!0);if(this.prev<a.finallyLoc)return n(a.finallyLoc)}else if(u){if(this.prev<a.catchLoc)return n(a.catchLoc,!0)}else{if(!f)throw Error("try statement without catch or finally");if(this.prev<a.finallyLoc)return n(a.finallyLoc)}}}},abrupt:function(t,r){for(var e=this.tryEntries.length-1;e>=0;--e){var n=this.tryEntries[e];if(n.tryLoc<=this.prev&&i.call(n,"finallyLoc")&&this.prev<n.finallyLoc){var o=n;break}}o&&("break"===t||"continue"===t)&&o.tryLoc<=r&&r<=o.finallyLoc&&(o=null);var a=o?o.completion:{};return a.type=t,a.arg=r,o?(this.method="next",this.next=o.finallyLoc,m):this.complete(a)},complete:function(t,r){if("throw"===t.type)throw t.arg;return"break"===t.type||"continue"===t.type?this.next=t.arg:"return"===t.type?(this.rval=this.arg=t.arg,this.method="return",this.next="end"):"normal"===t.type&&r&&(this.next=r),m},finish:function(t){for(var r=this.tryEntries.length-1;r>=0;--r){var e=this.tryEntries[r];if(e.finallyLoc===t)return this.complete(e.completion,e.afterLoc),N(e),m}},catch:function(t){for(var r=this.tryEntries.length-1;r>=0;--r){var e=this.tryEntries[r];if(e.tryLoc===t){var n=e.completion;if("throw"===n.type){var o=n.arg;N(e)}return o}}throw Error("illegal catch attempt")},delegateYield:function(r,e,n){return this.delegate={iterator:G(r),resultName:e,nextLoc:n},"next"===this.method&&(this.arg=t),m}},n}function n(t,r,e,n,o,i,a){try{var c=t[i](a),u=c.value}catch(t){return void e(t)}c.done?r(u):Promise.resolve(u).then(n,o)}function o(t){return function(){var r=this,e=arguments;return new Promise((function(o,i){var a=t.apply(r,e);function c(t){n(a,o,i,c,u,"next",t)}function u(t){n(a,o,i,c,u,"throw",t)}c(void 0)}))}}var i=function(t){return new Promise((function(r,e){var n=new FileReader;n.onload=function(){r(n.result)},n.onerror=function(t){var r=t.target.error.code;e(Error("File could not be read! Code=".concat(r)))},n.readAsArrayBuffer(t)}))},a=function(){var t=o(e().mark((function t(r){var n,c,u;return e().wrap((function(t){for(;;)switch(t.prev=t.next){case 0:if(n=r,void 0!==r){t.next=3;break}return t.abrupt("return","undefined");case 3:if("string"!=typeof r){t.next=16;break}if(!/data:image\/([a-zA-Z]*);base64,([^"]*)/.test(r)){t.next=8;break}n=atob(r.split(",")[1]).split("").map((function(t){return t.charCodeAt(0)})),t.next=14;break;case 8:return t.next=10,fetch(r);case 10:return c=t.sent,t.next=13,c.arrayBuffer();case 13:n=t.sent;case 14:t.next=43;break;case 16:if(!("undefined"!=typeof HTMLElement&&r instanceof HTMLElement)){t.next=30;break}if("IMG"!==r.tagName){t.next=21;break}return t.next=20,a(r.src);case 20:n=t.sent;case 21:if("VIDEO"!==r.tagName){t.next=25;break}return t.next=24,a(r.poster);case 24:n=t.sent;case 25:if("CANVAS"!==r.tagName){t.next=28;break}return t.next=28,new Promise((function(t){r.toBlob(function(){var r=o(e().mark((function r(o){return e().wrap((function(r){for(;;)switch(r.prev=r.next){case 0:return r.next=2,i(o);case 2:n=r.sent,t();case 4:case"end":return r.stop()}}),r)})));return function(t){return r.apply(this,arguments)}}())}));case 28:t.next=43;break;case 30:if(!("undefined"!=typeof OffscreenCanvas&&r instanceof OffscreenCanvas)){t.next=39;break}return t.next=33,r.convertToBlob();case 33:return u=t.sent,t.next=36,i(u);case 36:n=t.sent,t.next=43;break;case 39:if(!(r instanceof File||r instanceof Blob)){t.next=43;break}return t.next=42,i(r);case 42:n=t.sent;case 43:return t.abrupt("return",new Uint8Array(n));case 44:case"end":return t.stop()}}),t)})));return function(r){return t.apply(this,arguments)}}();t.exports=a},192:t=>{"use strict";t.exports={AFR:"afr",AMH:"amh",ARA:"ara",ASM:"asm",AZE:"aze",AZE_CYRL:"aze_cyrl",BEL:"bel",BEN:"ben",BOD:"bod",BOS:"bos",BUL:"bul",CAT:"cat",CEB:"ceb",CES:"ces",CHI_SIM:"chi_sim",CHI_TRA:"chi_tra",CHR:"chr",CYM:"cym",DAN:"dan",DEU:"deu",DZO:"dzo",ELL:"ell",ENG:"eng",ENM:"enm",EPO:"epo",EST:"est",EUS:"eus",FAS:"fas",FIN:"fin",FRA:"fra",FRK:"frk",FRM:"frm",GLE:"gle",GLG:"glg",GRC:"grc",GUJ:"guj",HAT:"hat",HEB:"heb",HIN:"hin",HRV:"hrv",HUN:"hun",IKU:"iku",IND:"ind",ISL:"isl",ITA:"ita",ITA_OLD:"ita_old",JAV:"jav",JPN:"jpn",KAN:"kan",KAT:"kat",KAT_OLD:"kat_old",KAZ:"kaz",KHM:"khm",KIR:"kir",KOR:"kor",KUR:"kur",LAO:"lao",LAT:"lat",LAV:"lav",LIT:"lit",MAL:"mal",MAR:"mar",MKD:"mkd",MLT:"mlt",MSA:"msa",MYA:"mya",NEP:"nep",NLD:"nld",NOR:"nor",ORI:"ori",PAN:"pan",POL:"pol",POR:"por",PUS:"pus",RON:"ron",RUS:"rus",SAN:"san",SIN:"sin",SLK:"slk",SLV:"slv",SPA:"spa",SPA_OLD:"spa_old",SQI:"sqi",SRP:"srp",SRP_LATN:"srp_latn",SWA:"swa",SWE:"swe",SYR:"syr",TAM:"tam",TEL:"tel",TGK:"tgk",TGL:"tgl",THA:"tha",TIR:"tir",TUR:"tur",UIG:"uig",UKR:"ukr",URD:"urd",UZB:"uzb",UZB_CYRL:"uzb_cyrl",VIE:"vie",YID:"yid"}},286:t=>{"use strict";t.exports={workerBlobURL:!0,logger:function(){}}},318:t=>{"use strict";t.exports=function(t){var r,e=t.workerPath,n=t.workerBlobURL;if(Blob&&URL&&n){var o=new Blob(['importScripts("'.concat(e,'");')],{type:"application/javascript"});r=new Worker(URL.createObjectURL(o))}else r=new Worker(e);return r}},330:t=>{"use strict";t.exports={rE:"7.0.0"}},364:function(t,r,e){"use strict";function n(t){return n="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol&&t!==Symbol.prototype?"symbol":typeof t},n(t)}var o=this;function i(){i=function(){return r};var t,r={},e=Object.prototype,o=e.hasOwnProperty,a=Object.defineProperty||function(t,r,e){t[r]=e.value},c="function"==typeof Symbol?Symbol:{},u=c.iterator||"@@iterator",f=c.asyncIterator||"@@asyncIterator",s=c.toStringTag||"@@toStringTag";function l(t,r,e){return Object.defineProperty(t,r,{value:e,enumerable:!0,configurable:!0,writable:!0}),t[r]}try{l({},"")}catch(t){l=function(t,r,e){return t[r]=e}}function h(t,r,e,n){var o=r&&r.prototype instanceof b?r:b,i=Object.create(o.prototype),c=new A(n||[]);return a(i,"_invoke",{value:_(t,e,c)}),i}function p(t,r,e){try{return{type:"normal",arg:t.call(r,e)}}catch(t){return{type:"throw",arg:t}}}r.wrap=h;var y="suspendedStart",v="suspendedYield",d="executing",g="completed",m={};function b(){}function w(){}function L(){}var x={};l(x,u,(function(){return this}));var E=Object.getPrototypeOf,O=E&&E(E(G([])));O&&O!==e&&o.call(O,u)&&(x=O);var S=L.prototype=b.prototype=Object.create(x);function j(t){["next","throw","return"].forEach((function(r){l(t,r,(function(t){return this._invoke(r,t)}))}))}function P(t,r){function e(i,a,c,u){var f=p(t[i],t,a);if("throw"!==f.type){var s=f.arg,l=s.value;return l&&"object"==n(l)&&o.call(l,"__await")?r.resolve(l.__await).then((function(t){e("next",t,c,u)}),(function(t){e("throw",t,c,u)})):r.resolve(l).then((function(t){s.value=t,c(s)}),(function(t){return e("throw",t,c,u)}))}u(f.arg)}var i;a(this,"_invoke",{value:function(t,n){function o(){return new r((function(r,o){e(t,n,r,o)}))}return i=i?i.then(o,o):o()}})}function _(r,e,n){var o=y;return function(i,a){if(o===d)throw Error("Generator is already running");if(o===g){if("throw"===i)throw a;return{value:t,done:!0}}for(n.method=i,n.arg=a;;){var c=n.delegate;if(c){var u=k(c,n);if(u){if(u===m)continue;return u}}if("next"===n.method)n.sent=n._sent=n.arg;else if("throw"===n.method){if(o===y)throw o=g,n.arg;n.dispatchException(n.arg)}else"return"===n.method&&n.abrupt("return",n.arg);o=d;var f=p(r,e,n);if("normal"===f.type){if(o=n.done?g:v,f.arg===m)continue;return{value:f.arg,done:n.done}}"throw"===f.type&&(o=g,n.method="throw",n.arg=f.arg)}}}function k(r,e){var n=e.method,o=r.iterator[n];if(o===t)return e.delegate=null,"throw"===n&&r.iterator.return&&(e.method="return",e.arg=t,k(r,e),"throw"===e.method)||"return"!==n&&(e.method="throw",e.arg=new TypeError("The iterator does not provide a '"+n+"' method")),m;var i=p(o,r.iterator,e.arg);if("throw"===i.type)return e.method="throw",e.arg=i.arg,e.delegate=null,m;var a=i.arg;return a?a.done?(e[r.resultName]=a.value,e.next=r.nextLoc,"return"!==e.method&&(e.method="next",e.arg=t),e.delegate=null,m):a:(e.method="throw",e.arg=new TypeError("iterator result is not an object"),e.delegate=null,m)}function T(t){var r={tryLoc:t[0]};1 in t&&(r.catchLoc=t[1]),2 in t&&(r.finallyLoc=t[2],r.afterLoc=t[3]),this.tryEntries.push(r)}function N(t){var r=t.completion||{};r.type="normal",delete r.arg,t.completion=r}function A(t){this.tryEntries=[{tryLoc:"root"}],t.forEach(T,this),this.reset(!0)}function G(r){if(r||""===r){var e=r[u];if(e)return e.call(r);if("function"==typeof r.next)return r;if(!isNaN(r.length)){var i=-1,a=function e(){for(;++i<r.length;)if(o.call(r,i))return e.value=r[i],e.done=!1,e;return e.value=t,e.done=!0,e};return a.next=a}}throw new TypeError(n(r)+" is not iterable")}return w.prototype=L,a(S,"constructor",{value:L,configurable:!0}),a(L,"constructor",{value:w,configurable:!0}),w.displayName=l(L,s,"GeneratorFunction"),r.isGeneratorFunction=function(t){var r="function"==typeof t&&t.constructor;return!!r&&(r===w||"GeneratorFunction"===(r.displayName||r.name))},r.mark=function(t){return Object.setPrototypeOf?Object.setPrototypeOf(t,L):(t.__proto__=L,l(t,s,"GeneratorFunction")),t.prototype=Object.create(S),t},r.awrap=function(t){return{__await:t}},j(P.prototype),l(P.prototype,f,(function(){return this})),r.AsyncIterator=P,r.async=function(t,e,n,o,i){void 0===i&&(i=Promise);var a=new P(h(t,e,n,o),i);return r.isGeneratorFunction(e)?a:a.next().then((function(t){return t.done?t.value:a.next()}))},j(S),l(S,s,"Generator"),l(S,u,(function(){return this})),l(S,"toString",(function(){return"[object Generator]"})),r.keys=function(t){var r=Object(t),e=[];for(var n in r)e.push(n);return e.reverse(),function t(){for(;e.length;){var n=e.pop();if(n in r)return t.value=n,t.done=!1,t}return t.done=!0,t}},r.values=G,A.prototype={constructor:A,reset:function(r){if(this.prev=0,this.next=0,this.sent=this._sent=t,this.done=!1,this.delegate=null,this.method="next",this.arg=t,this.tryEntries.forEach(N),!r)for(var e in this)"t"===e.charAt(0)&&o.call(this,e)&&!isNaN(+e.slice(1))&&(this[e]=t)},stop:function(){this.done=!0;var t=this.tryEntries[0].completion;if("throw"===t.type)throw t.arg;return this.rval},dispatchException:function(r){if(this.done)throw r;var e=this;function n(n,o){return c.type="throw",c.arg=r,e.next=n,o&&(e.method="next",e.arg=t),!!o}for(var i=this.tryEntries.length-1;i>=0;--i){var a=this.tryEntries[i],c=a.completion;if("root"===a.tryLoc)return n("end");if(a.tryLoc<=this.prev){var u=o.call(a,"catchLoc"),f=o.call(a,"finallyLoc");if(u&&f){if(this.prev<a.catchLoc)return n(a.catchLoc,!0);if(this.prev<a.finallyLoc)return n(a.finallyLoc)}else if(u){if(this.prev<a.catchLoc)return n(a.catchLoc,!0)}else{if(!f)throw Error("try statement without catch or finally");if(this.prev<a.finallyLoc)return n(a.finallyLoc)}}}},abrupt:function(t,r){for(var e=this.tryEntries.length-1;e>=0;--e){var n=this.tryEntries[e];if(n.tryLoc<=this.prev&&o.call(n,"finallyLoc")&&this.prev<n.finallyLoc){var i=n;break}}i&&("break"===t||"continue"===t)&&i.tryLoc<=r&&r<=i.finallyLoc&&(i=null);var a=i?i.completion:{};return a.type=t,a.arg=r,i?(this.method="next",this.next=i.finallyLoc,m):this.complete(a)},complete:function(t,r){if("throw"===t.type)throw t.arg;return"break"===t.type||"continue"===t.type?this.next=t.arg:"return"===t.type?(this.rval=this.arg=t.arg,this.method="return",this.next="end"):"normal"===t.type&&r&&(this.next=r),m},finish:function(t){for(var r=this.tryEntries.length-1;r>=0;--r){var e=this.tryEntries[r];if(e.finallyLoc===t)return this.complete(e.completion,e.afterLoc),N(e),m}},catch:function(t){for(var r=this.tryEntries.length-1;r>=0;--r){var e=this.tryEntries[r];if(e.tryLoc===t){var n=e.completion;if("throw"===n.type){var o=n.arg;N(e)}return o}}throw Error("illegal catch attempt")},delegateYield:function(r,e,n){return this.delegate={iterator:G(r),resultName:e,nextLoc:n},"next"===this.method&&(this.arg=t),m}},r}function a(t,r){(null==r||r>t.length)&&(r=t.length);for(var e=0,n=Array(r);e<r;e++)n[e]=t[e];return n}function c(t,r,e,n,o,i,a){try{var c=t[i](a),u=c.value}catch(t){return void e(t)}c.done?r(u):Promise.resolve(u).then(n,o)}function u(t){return function(){var r=this,e=arguments;return new Promise((function(n,o){var i=t.apply(r,e);function a(t){c(i,n,o,a,u,"next",t)}function u(t){c(i,n,o,a,u,"throw",t)}a(void 0)}))}}var f=e(910),s=e(65).log,l=e(70),h=0;t.exports=function(){var t=l("Scheduler",h),r={},e={},n=[];h+=1;var c=function(){return Object.keys(r).length},p=function(){if(0!==n.length)for(var t=Object.keys(r),o=0;o<t.length;o+=1)if(void 0===e[t[o]]){n[0](r[t[o]]);break}},y=function(r,c){return new Promise((function(l,h){var y=f({action:r,payload:c});n.push(function(){var t=u(i().mark((function t(u){return i().wrap((function(t){for(;;)switch(t.prev=t.next){case 0:return n.shift(),e[u.id]=y,t.prev=2,t.t0=l,t.next=6,u[r].apply(o,[].concat(function(t){if(Array.isArray(t))return a(t)}(i=c)||function(t){if("undefined"!=typeof Symbol&&null!=t[Symbol.iterator]||null!=t["@@iterator"])return Array.from(t)}(i)||function(t,r){if(t){if("string"==typeof t)return a(t,r);var e={}.toString.call(t).slice(8,-1);return"Object"===e&&t.constructor&&(e=t.constructor.name),"Map"===e||"Set"===e?Array.from(t):"Arguments"===e||/^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(e)?a(t,r):void 0}}(i)||function(){throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.")}(),[y.id]));case 6:t.t1=t.sent,(0,t.t0)(t.t1),t.next=13;break;case 10:t.prev=10,t.t2=t.catch(2),h(t.t2);case 13:return t.prev=13,delete e[u.id],p(),t.finish(13);case 17:case"end":return t.stop()}var i}),t,null,[[2,10,13,17]])})));return function(r){return t.apply(this,arguments)}}()),s("[".concat(t,"]: Add ").concat(y.id," to JobQueue")),s("[".concat(t,"]: JobQueue length=").concat(n.length)),p()}))},v=function(){var r=u(i().mark((function r(e){var n,o,a,u=arguments;return i().wrap((function(r){for(;;)switch(r.prev=r.next){case 0:if(0!==c()){r.next=2;break}throw Error("[".concat(t,"]: You need to have at least one worker before adding jobs"));case 2:for(n=u.length,o=new Array(n>1?n-1:0),a=1;a<n;a++)o[a-1]=u[a];return r.abrupt("return",y(e,o));case 4:case"end":return r.stop()}}),r)})));return function(t){return r.apply(this,arguments)}}(),d=function(){var t=u(i().mark((function t(){return i().wrap((function(t){for(;;)switch(t.prev=t.next){case 0:Object.keys(r).forEach(function(){var t=u(i().mark((function t(e){return i().wrap((function(t){for(;;)switch(t.prev=t.next){case 0:return t.next=2,r[e].terminate();case 2:case"end":return t.stop()}}),t)})));return function(r){return t.apply(this,arguments)}}()),n=[];case 2:case"end":return t.stop()}}),t)})));return function(){return t.apply(this,arguments)}}();return{addWorker:function(e){return r[e.id]=e,s("[".concat(t,"]: Add ").concat(e.id)),s("[".concat(t,"]: Number of workers=").concat(c())),p(),e.id},addJob:v,terminate:d,getQueueLen:function(){return n.length},getNumWorkers:c}}},523:(t,r,e)=>{"use strict";var n=e(830),o=e(318),i=e(862),a=e(727),c=e(753),u=e(130);t.exports={defaultOptions:n,spawnWorker:o,terminateWorker:i,onMessage:a,send:c,loadImage:u}},535:(t,r,e)=>{"use strict";function n(t){return n="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol&&t!==Symbol.prototype?"symbol":typeof t},n(t)}function o(){o=function(){return r};var t,r={},e=Object.prototype,i=e.hasOwnProperty,a=Object.defineProperty||function(t,r,e){t[r]=e.value},c="function"==typeof Symbol?Symbol:{},u=c.iterator||"@@iterator",f=c.asyncIterator||"@@asyncIterator",s=c.toStringTag||"@@toStringTag";function l(t,r,e){return Object.defineProperty(t,r,{value:e,enumerable:!0,configurable:!0,writable:!0}),t[r]}try{l({},"")}catch(t){l=function(t,r,e){return t[r]=e}}function h(t,r,e,n){var o=r&&r.prototype instanceof b?r:b,i=Object.create(o.prototype),c=new A(n||[]);return a(i,"_invoke",{value:_(t,e,c)}),i}function p(t,r,e){try{return{type:"normal",arg:t.call(r,e)}}catch(t){return{type:"throw",arg:t}}}r.wrap=h;var y="suspendedStart",v="suspendedYield",d="executing",g="completed",m={};function b(){}function w(){}function L(){}var x={};l(x,u,(function(){return this}));var E=Object.getPrototypeOf,O=E&&E(E(G([])));O&&O!==e&&i.call(O,u)&&(x=O);var S=L.prototype=b.prototype=Object.create(x);function j(t){["next","throw","return"].forEach((function(r){l(t,r,(function(t){return this._invoke(r,t)}))}))}function P(t,r){function e(o,a,c,u){var f=p(t[o],t,a);if("throw"!==f.type){var s=f.arg,l=s.value;return l&&"object"==n(l)&&i.call(l,"__await")?r.resolve(l.__await).then((function(t){e("next",t,c,u)}),(function(t){e("throw",t,c,u)})):r.resolve(l).then((function(t){s.value=t,c(s)}),(function(t){return e("throw",t,c,u)}))}u(f.arg)}var o;a(this,"_invoke",{value:function(t,n){function i(){return new r((function(r,o){e(t,n,r,o)}))}return o=o?o.then(i,i):i()}})}function _(r,e,n){var o=y;return function(i,a){if(o===d)throw Error("Generator is already running");if(o===g){if("throw"===i)throw a;return{value:t,done:!0}}for(n.method=i,n.arg=a;;){var c=n.delegate;if(c){var u=k(c,n);if(u){if(u===m)continue;return u}}if("next"===n.method)n.sent=n._sent=n.arg;else if("throw"===n.method){if(o===y)throw o=g,n.arg;n.dispatchException(n.arg)}else"return"===n.method&&n.abrupt("return",n.arg);o=d;var f=p(r,e,n);if("normal"===f.type){if(o=n.done?g:v,f.arg===m)continue;return{value:f.arg,done:n.done}}"throw"===f.type&&(o=g,n.method="throw",n.arg=f.arg)}}}function k(r,e){var n=e.method,o=r.iterator[n];if(o===t)return e.delegate=null,"throw"===n&&r.iterator.return&&(e.method="return",e.arg=t,k(r,e),"throw"===e.method)||"return"!==n&&(e.method="throw",e.arg=new TypeError("The iterator does not provide a '"+n+"' method")),m;var i=p(o,r.iterator,e.arg);if("throw"===i.type)return e.method="throw",e.arg=i.arg,e.delegate=null,m;var a=i.arg;return a?a.done?(e[r.resultName]=a.value,e.next=r.nextLoc,"return"!==e.method&&(e.method="next",e.arg=t),e.delegate=null,m):a:(e.method="throw",e.arg=new TypeError("iterator result is not an object"),e.delegate=null,m)}function T(t){var r={tryLoc:t[0]};1 in t&&(r.catchLoc=t[1]),2 in t&&(r.finallyLoc=t[2],r.afterLoc=t[3]),this.tryEntries.push(r)}function N(t){var r=t.completion||{};r.type="normal",delete r.arg,t.completion=r}function A(t){this.tryEntries=[{tryLoc:"root"}],t.forEach(T,this),this.reset(!0)}function G(r){if(r||""===r){var e=r[u];if(e)return e.call(r);if("function"==typeof r.next)return r;if(!isNaN(r.length)){var o=-1,a=function e(){for(;++o<r.length;)if(i.call(r,o))return e.value=r[o],e.done=!1,e;return e.value=t,e.done=!0,e};return a.next=a}}throw new TypeError(n(r)+" is not iterable")}return w.prototype=L,a(S,"constructor",{value:L,configurable:!0}),a(L,"constructor",{value:w,configurable:!0}),w.displayName=l(L,s,"GeneratorFunction"),r.isGeneratorFunction=function(t){var r="function"==typeof t&&t.constructor;return!!r&&(r===w||"GeneratorFunction"===(r.displayName||r.name))},r.mark=function(t){return Object.setPrototypeOf?Object.setPrototypeOf(t,L):(t.__proto__=L,l(t,s,"GeneratorFunction")),t.prototype=Object.create(S),t},r.awrap=function(t){return{__await:t}},j(P.prototype),l(P.prototype,f,(function(){return this})),r.AsyncIterator=P,r.async=function(t,e,n,o,i){void 0===i&&(i=Promise);var a=new P(h(t,e,n,o),i);return r.isGeneratorFunction(e)?a:a.next().then((function(t){return t.done?t.value:a.next()}))},j(S),l(S,s,"Generator"),l(S,u,(function(){return this})),l(S,"toString",(function(){return"[object Generator]"})),r.keys=function(t){var r=Object(t),e=[];for(var n in r)e.push(n);return e.reverse(),function t(){for(;e.length;){var n=e.pop();if(n in r)return t.value=n,t.done=!1,t}return t.done=!0,t}},r.values=G,A.prototype={constructor:A,reset:function(r){if(this.prev=0,this.next=0,this.sent=this._sent=t,this.done=!1,this.delegate=null,this.method="next",this.arg=t,this.tryEntries.forEach(N),!r)for(var e in this)"t"===e.charAt(0)&&i.call(this,e)&&!isNaN(+e.slice(1))&&(this[e]=t)},stop:function(){this.done=!0;var t=this.tryEntries[0].completion;if("throw"===t.type)throw t.arg;return this.rval},dispatchException:function(r){if(this.done)throw r;var e=this;function n(n,o){return c.type="throw",c.arg=r,e.next=n,o&&(e.method="next",e.arg=t),!!o}for(var o=this.tryEntries.length-1;o>=0;--o){var a=this.tryEntries[o],c=a.completion;if("root"===a.tryLoc)return n("end");if(a.tryLoc<=this.prev){var u=i.call(a,"catchLoc"),f=i.call(a,"finallyLoc");if(u&&f){if(this.prev<a.catchLoc)return n(a.catchLoc,!0);if(this.prev<a.finallyLoc)return n(a.finallyLoc)}else if(u){if(this.prev<a.catchLoc)return n(a.catchLoc,!0)}else{if(!f)throw Error("try statement without catch or finally");if(this.prev<a.finallyLoc)return n(a.finallyLoc)}}}},abrupt:function(t,r){for(var e=this.tryEntries.length-1;e>=0;--e){var n=this.tryEntries[e];if(n.tryLoc<=this.prev&&i.call(n,"finallyLoc")&&this.prev<n.finallyLoc){var o=n;break}}o&&("break"===t||"continue"===t)&&o.tryLoc<=r&&r<=o.finallyLoc&&(o=null);var a=o?o.completion:{};return a.type=t,a.arg=r,o?(this.method="next",this.next=o.finallyLoc,m):this.complete(a)},complete:function(t,r){if("throw"===t.type)throw t.arg;return"break"===t.type||"continue"===t.type?this.next=t.arg:"return"===t.type?(this.rval=this.arg=t.arg,this.method="return",this.next="end"):"normal"===t.type&&r&&(this.next=r),m},finish:function(t){for(var r=this.tryEntries.length-1;r>=0;--r){var e=this.tryEntries[r];if(e.finallyLoc===t)return this.complete(e.completion,e.afterLoc),N(e),m}},catch:function(t){for(var r=this.tryEntries.length-1;r>=0;--r){var e=this.tryEntries[r];if(e.tryLoc===t){var n=e.completion;if("throw"===n.type){var o=n.arg;N(e)}return o}}throw Error("illegal catch attempt")},delegateYield:function(r,e,n){return this.delegate={iterator:G(r),resultName:e,nextLoc:n},"next"===this.method&&(this.arg=t),m}},r}function i(t,r,e,n,o,i,a){try{var c=t[i](a),u=c.value}catch(t){return void e(t)}c.done?r(u):Promise.resolve(u).then(n,o)}function a(t){return function(){var r=this,e=arguments;return new Promise((function(n,o){var a=t.apply(r,e);function c(t){i(a,n,o,c,u,"next",t)}function u(t){i(a,n,o,c,u,"throw",t)}c(void 0)}))}}var c=e(603),u=function(){var t=a(o().mark((function t(r,e,n){var i;return o().wrap((function(t){for(;;)switch(t.prev=t.next){case 0:return t.next=2,c(e,1,n);case 2:return i=t.sent,t.abrupt("return",i.recognize(r).finally(a(o().mark((function t(){return o().wrap((function(t){for(;;)switch(t.prev=t.next){case 0:return t.next=2,i.terminate();case 2:case"end":return t.stop()}}),t)})))));case 4:case"end":return t.stop()}}),t)})));return function(r,e,n){return t.apply(this,arguments)}}(),f=function(){var t=a(o().mark((function t(r,e){var n;return o().wrap((function(t){for(;;)switch(t.prev=t.next){case 0:return t.next=2,c("osd",0,e);case 2:return n=t.sent,t.abrupt("return",n.detect(r).finally(a(o().mark((function t(){return o().wrap((function(t){for(;;)switch(t.prev=t.next){case 0:return t.next=2,n.terminate();case 2:case"end":return t.stop()}}),t)})))));case 4:case"end":return t.stop()}}),t)})));return function(r,e){return t.apply(this,arguments)}}();t.exports={recognize:u,detect:f}},603:(t,r,e)=>{"use strict";function n(t){return n="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol&&t!==Symbol.prototype?"symbol":typeof t},n(t)}var o=["logger","errorHandler"];function i(){i=function(){return r};var t,r={},e=Object.prototype,o=e.hasOwnProperty,a=Object.defineProperty||function(t,r,e){t[r]=e.value},c="function"==typeof Symbol?Symbol:{},u=c.iterator||"@@iterator",f=c.asyncIterator||"@@asyncIterator",s=c.toStringTag||"@@toStringTag";function l(t,r,e){return Object.defineProperty(t,r,{value:e,enumerable:!0,configurable:!0,writable:!0}),t[r]}try{l({},"")}catch(t){l=function(t,r,e){return t[r]=e}}function h(t,r,e,n){var o=r&&r.prototype instanceof b?r:b,i=Object.create(o.prototype),c=new A(n||[]);return a(i,"_invoke",{value:_(t,e,c)}),i}function p(t,r,e){try{return{type:"normal",arg:t.call(r,e)}}catch(t){return{type:"throw",arg:t}}}r.wrap=h;var y="suspendedStart",v="suspendedYield",d="executing",g="completed",m={};function b(){}function w(){}function L(){}var x={};l(x,u,(function(){return this}));var E=Object.getPrototypeOf,O=E&&E(E(G([])));O&&O!==e&&o.call(O,u)&&(x=O);var S=L.prototype=b.prototype=Object.create(x);function j(t){["next","throw","return"].forEach((function(r){l(t,r,(function(t){return this._invoke(r,t)}))}))}function P(t,r){function e(i,a,c,u){var f=p(t[i],t,a);if("throw"!==f.type){var s=f.arg,l=s.value;return l&&"object"==n(l)&&o.call(l,"__await")?r.resolve(l.__await).then((function(t){e("next",t,c,u)}),(function(t){e("throw",t,c,u)})):r.resolve(l).then((function(t){s.value=t,c(s)}),(function(t){return e("throw",t,c,u)}))}u(f.arg)}var i;a(this,"_invoke",{value:function(t,n){function o(){return new r((function(r,o){e(t,n,r,o)}))}return i=i?i.then(o,o):o()}})}function _(r,e,n){var o=y;return function(i,a){if(o===d)throw Error("Generator is already running");if(o===g){if("throw"===i)throw a;return{value:t,done:!0}}for(n.method=i,n.arg=a;;){var c=n.delegate;if(c){var u=k(c,n);if(u){if(u===m)continue;return u}}if("next"===n.method)n.sent=n._sent=n.arg;else if("throw"===n.method){if(o===y)throw o=g,n.arg;n.dispatchException(n.arg)}else"return"===n.method&&n.abrupt("return",n.arg);o=d;var f=p(r,e,n);if("normal"===f.type){if(o=n.done?g:v,f.arg===m)continue;return{value:f.arg,done:n.done}}"throw"===f.type&&(o=g,n.method="throw",n.arg=f.arg)}}}function k(r,e){var n=e.method,o=r.iterator[n];if(o===t)return e.delegate=null,"throw"===n&&r.iterator.return&&(e.method="return",e.arg=t,k(r,e),"throw"===e.method)||"return"!==n&&(e.method="throw",e.arg=new TypeError("The iterator does not provide a '"+n+"' method")),m;var i=p(o,r.iterator,e.arg);if("throw"===i.type)return e.method="throw",e.arg=i.arg,e.delegate=null,m;var a=i.arg;return a?a.done?(e[r.resultName]=a.value,e.next=r.nextLoc,"return"!==e.method&&(e.method="next",e.arg=t),e.delegate=null,m):a:(e.method="throw",e.arg=new TypeError("iterator result is not an object"),e.delegate=null,m)}function T(t){var r={tryLoc:t[0]};1 in t&&(r.catchLoc=t[1]),2 in t&&(r.finallyLoc=t[2],r.afterLoc=t[3]),this.tryEntries.push(r)}function N(t){var r=t.completion||{};r.type="normal",delete r.arg,t.completion=r}function A(t){this.tryEntries=[{tryLoc:"root"}],t.forEach(T,this),this.reset(!0)}function G(r){if(r||""===r){var e=r[u];if(e)return e.call(r);if("function"==typeof r.next)return r;if(!isNaN(r.length)){var i=-1,a=function e(){for(;++i<r.length;)if(o.call(r,i))return e.value=r[i],e.done=!1,e;return e.value=t,e.done=!0,e};return a.next=a}}throw new TypeError(n(r)+" is not iterable")}return w.prototype=L,a(S,"constructor",{value:L,configurable:!0}),a(L,"constructor",{value:w,configurable:!0}),w.displayName=l(L,s,"GeneratorFunction"),r.isGeneratorFunction=function(t){var r="function"==typeof t&&t.constructor;return!!r&&(r===w||"GeneratorFunction"===(r.displayName||r.name))},r.mark=function(t){return Object.setPrototypeOf?Object.setPrototypeOf(t,L):(t.__proto__=L,l(t,s,"GeneratorFunction")),t.prototype=Object.create(S),t},r.awrap=function(t){return{__await:t}},j(P.prototype),l(P.prototype,f,(function(){return this})),r.AsyncIterator=P,r.async=function(t,e,n,o,i){void 0===i&&(i=Promise);var a=new P(h(t,e,n,o),i);return r.isGeneratorFunction(e)?a:a.next().then((function(t){return t.done?t.value:a.next()}))},j(S),l(S,s,"Generator"),l(S,u,(function(){return this})),l(S,"toString",(function(){return"[object Generator]"})),r.keys=function(t){var r=Object(t),e=[];for(var n in r)e.push(n);return e.reverse(),function t(){for(;e.length;){var n=e.pop();if(n in r)return t.value=n,t.done=!1,t}return t.done=!0,t}},r.values=G,A.prototype={constructor:A,reset:function(r){if(this.prev=0,this.next=0,this.sent=this._sent=t,this.done=!1,this.delegate=null,this.method="next",this.arg=t,this.tryEntries.forEach(N),!r)for(var e in this)"t"===e.charAt(0)&&o.call(this,e)&&!isNaN(+e.slice(1))&&(this[e]=t)},stop:function(){this.done=!0;var t=this.tryEntries[0].completion;if("throw"===t.type)throw t.arg;return this.rval},dispatchException:function(r){if(this.done)throw r;var e=this;function n(n,o){return c.type="throw",c.arg=r,e.next=n,o&&(e.method="next",e.arg=t),!!o}for(var i=this.tryEntries.length-1;i>=0;--i){var a=this.tryEntries[i],c=a.completion;if("root"===a.tryLoc)return n("end");if(a.tryLoc<=this.prev){var u=o.call(a,"catchLoc"),f=o.call(a,"finallyLoc");if(u&&f){if(this.prev<a.catchLoc)return n(a.catchLoc,!0);if(this.prev<a.finallyLoc)return n(a.finallyLoc)}else if(u){if(this.prev<a.catchLoc)return n(a.catchLoc,!0)}else{if(!f)throw Error("try statement without catch or finally");if(this.prev<a.finallyLoc)return n(a.finallyLoc)}}}},abrupt:function(t,r){for(var e=this.tryEntries.length-1;e>=0;--e){var n=this.tryEntries[e];if(n.tryLoc<=this.prev&&o.call(n,"finallyLoc")&&this.prev<n.finallyLoc){var i=n;break}}i&&("break"===t||"continue"===t)&&i.tryLoc<=r&&r<=i.finallyLoc&&(i=null);var a=i?i.completion:{};return a.type=t,a.arg=r,i?(this.method="next",this.next=i.finallyLoc,m):this.complete(a)},complete:function(t,r){if("throw"===t.type)throw t.arg;return"break"===t.type||"continue"===t.type?this.next=t.arg:"return"===t.type?(this.rval=this.arg=t.arg,this.method="return",this.next="end"):"normal"===t.type&&r&&(this.next=r),m},finish:function(t){for(var r=this.tryEntries.length-1;r>=0;--r){var e=this.tryEntries[r];if(e.finallyLoc===t)return this.complete(e.completion,e.afterLoc),N(e),m}},catch:function(t){for(var r=this.tryEntries.length-1;r>=0;--r){var e=this.tryEntries[r];if(e.tryLoc===t){var n=e.completion;if("throw"===n.type){var o=n.arg;N(e)}return o}}throw Error("illegal catch attempt")},delegateYield:function(r,e,n){return this.delegate={iterator:G(r),resultName:e,nextLoc:n},"next"===this.method&&(this.arg=t),m}},r}function a(t,r){(null==r||r>t.length)&&(r=t.length);for(var e=0,n=Array(r);e<r;e++)n[e]=t[e];return n}function c(t,r){var e=Object.keys(t);if(Object.getOwnPropertySymbols){var n=Object.getOwnPropertySymbols(t);r&&(n=n.filter((function(r){return Object.getOwnPropertyDescriptor(t,r).enumerable}))),e.push.apply(e,n)}return e}function u(t){for(var r=1;r<arguments.length;r++){var e=null!=arguments[r]?arguments[r]:{};r%2?c(Object(e),!0).forEach((function(r){f(t,r,e[r])})):Object.getOwnPropertyDescriptors?Object.defineProperties(t,Object.getOwnPropertyDescriptors(e)):c(Object(e)).forEach((function(r){Object.defineProperty(t,r,Object.getOwnPropertyDescriptor(e,r))}))}return t}function f(t,r,e){return(r=function(t){var r=function(t){if("object"!=n(t)||!t)return t;var r=t[Symbol.toPrimitive];if(void 0!==r){var e=r.call(t,"string");if("object"!=n(e))return e;throw new TypeError("@@toPrimitive must return a primitive value.")}return String(t)}(t);return"symbol"==n(r)?r:r+""}(r))in t?Object.defineProperty(t,r,{value:e,enumerable:!0,configurable:!0,writable:!0}):t[r]=e,t}function s(t,r){if(null==t)return{};var e,n,o=function(t,r){if(null==t)return{};var e={};for(var n in t)if({}.hasOwnProperty.call(t,n)){if(-1!==r.indexOf(n))continue;e[n]=t[n]}return e}(t,r);if(Object.getOwnPropertySymbols){var i=Object.getOwnPropertySymbols(t);for(n=0;n<i.length;n++)e=i[n],-1===r.indexOf(e)&&{}.propertyIsEnumerable.call(t,e)&&(o[e]=t[e])}return o}function l(t,r,e,n,o,i,a){try{var c=t[i](a),u=c.value}catch(t){return void e(t)}c.done?r(u):Promise.resolve(u).then(n,o)}function h(t){return function(){var r=this,e=arguments;return new Promise((function(n,o){var i=t.apply(r,e);function a(t){l(i,n,o,a,c,"next",t)}function c(t){l(i,n,o,a,c,"throw",t)}a(void 0)}))}}var p=e(35),y=e(910),v=e(65).log,d=e(70),g=e(972),m=e(523),b=m.defaultOptions,w=m.spawnWorker,L=m.terminateWorker,x=m.onMessage,E=m.loadImage,O=m.send,S=0;t.exports=h(i().mark((function t(){var r,e,n,c,f,l,m,j,P,_,k,T,N,A,G,I,F,R,D,M,C,U,Y,B,H,K,W,z,J,V,Z,Q,q,X,$=arguments;return i().wrap((function(t){for(;;)switch(t.prev=t.next){case 0:return r=$.length>0&&void 0!==$[0]?$[0]:"eng",e=$.length>1&&void 0!==$[1]?$[1]:g.LSTM_ONLY,n=$.length>2&&void 0!==$[2]?$[2]:{},c=$.length>3&&void 0!==$[3]?$[3]:{},f=d("Worker",S),l=p(u(u({},b),n)),m=l.logger,j=l.errorHandler,P=s(l,o),_={},k="string"==typeof r?r.split("+"):r,T=e,N=c,A=[g.DEFAULT,g.LSTM_ONLY].includes(e)&&!P.legacyCore,F=new Promise((function(t,r){I=t,G=r})),R=function(t){G(t.message)},(D=w(P)).onerror=R,S+=1,M=function(t){var r=t.id,e=t.action,n=t.payload;return new Promise((function(t,o){v("[".concat(f,"]: Start ").concat(r,", action=").concat(e));var i="".concat(e,"-").concat(r);_[i]={resolve:t,reject:o},O(D,{workerId:f,jobId:r,action:e,payload:n})}))},C=function(){return console.warn("`load` is depreciated and should be removed from code (workers now come pre-loaded)")},U=function(t){return M(y({id:t,action:"load",payload:{options:{lstmOnly:A,corePath:P.corePath,logging:P.logging}}}))},Y=function(t,r,e){return M(y({id:e,action:"FS",payload:{method:"writeFile",args:[t,r]}}))},B=function(t,r){return M(y({id:r,action:"FS",payload:{method:"readFile",args:[t,{encoding:"utf8"}]}}))},H=function(t,r){return M(y({id:r,action:"FS",payload:{method:"unlink",args:[t]}}))},K=function(t,r,e){return M(y({id:e,action:"FS",payload:{method:t,args:r}}))},W=function(t,r){return M(y({id:r,action:"loadLanguage",payload:{langs:t,options:{langPath:P.langPath,dataPath:P.dataPath,cachePath:P.cachePath,cacheMethod:P.cacheMethod,gzip:P.gzip,lstmOnly:[g.DEFAULT,g.LSTM_ONLY].includes(T)&&!P.legacyLang}}}))},z=function(t,r,e,n){return M(y({id:n,action:"initialize",payload:{langs:t,oem:r,config:e}}))},J=function(){var t=arguments.length>0&&void 0!==arguments[0]?arguments[0]:"eng",r=arguments.length>1?arguments[1]:void 0,e=arguments.length>2?arguments[2]:void 0,n=arguments.length>3?arguments[3]:void 0;if(A&&[g.TESSERACT_ONLY,g.TESSERACT_LSTM_COMBINED].includes(r))throw Error("Legacy model requested but code missing.");var o=r||T;T=o;var i=e||N;N=i;var c,u=("string"==typeof t?t.split("+"):t).filter((function(t){return!k.includes(t)}));return k.push.apply(k,function(t){if(Array.isArray(t))return a(t)}(c=u)||function(t){if("undefined"!=typeof Symbol&&null!=t[Symbol.iterator]||null!=t["@@iterator"])return Array.from(t)}(c)||function(t,r){if(t){if("string"==typeof t)return a(t,r);var e={}.toString.call(t).slice(8,-1);return"Object"===e&&t.constructor&&(e=t.constructor.name),"Map"===e||"Set"===e?Array.from(t):"Arguments"===e||/^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(e)?a(t,r):void 0}}(c)||function(){throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.")}()),u.length>0?W(u,n).then((function(){return z(t,o,i,n)})):z(t,o,i,n)},V=function(){return M(y({id:arguments.length>1?arguments[1]:void 0,action:"setParameters",payload:{params:arguments.length>0&&void 0!==arguments[0]?arguments[0]:{}}}))},Z=function(){var t=h(i().mark((function t(r){var e,n,o,a=arguments;return i().wrap((function(t){for(;;)switch(t.prev=t.next){case 0:return e=a.length>1&&void 0!==a[1]?a[1]:{},n=a.length>2&&void 0!==a[2]?a[2]:{text:!0},o=a.length>3?a[3]:void 0,t.t0=M,t.t1=y,t.t2=o,t.next=8,E(r);case 8:return t.t3=t.sent,t.t4=e,t.t5=n,t.t6={image:t.t3,options:t.t4,output:t.t5},t.t7={id:t.t2,action:"recognize",payload:t.t6},t.t8=(0,t.t1)(t.t7),t.abrupt("return",(0,t.t0)(t.t8));case 15:case"end":return t.stop()}}),t)})));return function(r){return t.apply(this,arguments)}}(),Q=function(){var t=h(i().mark((function t(r,e){return i().wrap((function(t){for(;;)switch(t.prev=t.next){case 0:if(!A){t.next=2;break}throw Error("`worker.detect` requires Legacy model, which was not loaded.");case 2:return t.t0=M,t.t1=y,t.t2=e,t.next=7,E(r);case 7:return t.t3=t.sent,t.t4={image:t.t3},t.t5={id:t.t2,action:"detect",payload:t.t4},t.t6=(0,t.t1)(t.t5),t.abrupt("return",(0,t.t0)(t.t6));case 12:case"end":return t.stop()}}),t)})));return function(r,e){return t.apply(this,arguments)}}(),q=function(){var t=h(i().mark((function t(){return i().wrap((function(t){for(;;)switch(t.prev=t.next){case 0:return null!==D&&(L(D),D=null),t.abrupt("return",Promise.resolve());case 2:case"end":return t.stop()}}),t)})));return function(){return t.apply(this,arguments)}}(),x(D,(function(t){var r=t.workerId,e=t.jobId,n=t.status,o=t.action,i=t.data,a="".concat(o,"-").concat(e);if("resolve"===n)v("[".concat(r,"]: Complete ").concat(e)),_[a].resolve({jobId:e,data:i}),delete _[a];else if("reject"===n){if(_[a].reject(i),delete _[a],"load"===o&&G(i),!j)throw Error(i);j(i)}else"progress"===n&&m(u(u({},i),{},{userJobId:e}))})),X={id:f,worker:D,load:C,writeText:Y,readText:B,removeFile:H,FS:K,reinitialize:J,setParameters:V,recognize:Z,detect:Q,terminate:q},U().then((function(){return W(r)})).then((function(){return z(r,e,c)})).then((function(){return I(X)})).catch((function(){})),t.abrupt("return",F);case 34:case"end":return t.stop()}}),t)})))},727:t=>{"use strict";t.exports=function(t,r){t.onmessage=function(t){var e=t.data;r(e)}}},753:t=>{"use strict";function r(t){return r="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol&&t!==Symbol.prototype?"symbol":typeof t},r(t)}function e(){e=function(){return n};var t,n={},o=Object.prototype,i=o.hasOwnProperty,a=Object.defineProperty||function(t,r,e){t[r]=e.value},c="function"==typeof Symbol?Symbol:{},u=c.iterator||"@@iterator",f=c.asyncIterator||"@@asyncIterator",s=c.toStringTag||"@@toStringTag";function l(t,r,e){return Object.defineProperty(t,r,{value:e,enumerable:!0,configurable:!0,writable:!0}),t[r]}try{l({},"")}catch(t){l=function(t,r,e){return t[r]=e}}function h(t,r,e,n){var o=r&&r.prototype instanceof b?r:b,i=Object.create(o.prototype),c=new A(n||[]);return a(i,"_invoke",{value:_(t,e,c)}),i}function p(t,r,e){try{return{type:"normal",arg:t.call(r,e)}}catch(t){return{type:"throw",arg:t}}}n.wrap=h;var y="suspendedStart",v="suspendedYield",d="executing",g="completed",m={};function b(){}function w(){}function L(){}var x={};l(x,u,(function(){return this}));var E=Object.getPrototypeOf,O=E&&E(E(G([])));O&&O!==o&&i.call(O,u)&&(x=O);var S=L.prototype=b.prototype=Object.create(x);function j(t){["next","throw","return"].forEach((function(r){l(t,r,(function(t){return this._invoke(r,t)}))}))}function P(t,e){function n(o,a,c,u){var f=p(t[o],t,a);if("throw"!==f.type){var s=f.arg,l=s.value;return l&&"object"==r(l)&&i.call(l,"__await")?e.resolve(l.__await).then((function(t){n("next",t,c,u)}),(function(t){n("throw",t,c,u)})):e.resolve(l).then((function(t){s.value=t,c(s)}),(function(t){return n("throw",t,c,u)}))}u(f.arg)}var o;a(this,"_invoke",{value:function(t,r){function i(){return new e((function(e,o){n(t,r,e,o)}))}return o=o?o.then(i,i):i()}})}function _(r,e,n){var o=y;return function(i,a){if(o===d)throw Error("Generator is already running");if(o===g){if("throw"===i)throw a;return{value:t,done:!0}}for(n.method=i,n.arg=a;;){var c=n.delegate;if(c){var u=k(c,n);if(u){if(u===m)continue;return u}}if("next"===n.method)n.sent=n._sent=n.arg;else if("throw"===n.method){if(o===y)throw o=g,n.arg;n.dispatchException(n.arg)}else"return"===n.method&&n.abrupt("return",n.arg);o=d;var f=p(r,e,n);if("normal"===f.type){if(o=n.done?g:v,f.arg===m)continue;return{value:f.arg,done:n.done}}"throw"===f.type&&(o=g,n.method="throw",n.arg=f.arg)}}}function k(r,e){var n=e.method,o=r.iterator[n];if(o===t)return e.delegate=null,"throw"===n&&r.iterator.return&&(e.method="return",e.arg=t,k(r,e),"throw"===e.method)||"return"!==n&&(e.method="throw",e.arg=new TypeError("The iterator does not provide a '"+n+"' method")),m;var i=p(o,r.iterator,e.arg);if("throw"===i.type)return e.method="throw",e.arg=i.arg,e.delegate=null,m;var a=i.arg;return a?a.done?(e[r.resultName]=a.value,e.next=r.nextLoc,"return"!==e.method&&(e.method="next",e.arg=t),e.delegate=null,m):a:(e.method="throw",e.arg=new TypeError("iterator result is not an object"),e.delegate=null,m)}function T(t){var r={tryLoc:t[0]};1 in t&&(r.catchLoc=t[1]),2 in t&&(r.finallyLoc=t[2],r.afterLoc=t[3]),this.tryEntries.push(r)}function N(t){var r=t.completion||{};r.type="normal",delete r.arg,t.completion=r}function A(t){this.tryEntries=[{tryLoc:"root"}],t.forEach(T,this),this.reset(!0)}function G(e){if(e||""===e){var n=e[u];if(n)return n.call(e);if("function"==typeof e.next)return e;if(!isNaN(e.length)){var o=-1,a=function r(){for(;++o<e.length;)if(i.call(e,o))return r.value=e[o],r.done=!1,r;return r.value=t,r.done=!0,r};return a.next=a}}throw new TypeError(r(e)+" is not iterable")}return w.prototype=L,a(S,"constructor",{value:L,configurable:!0}),a(L,"constructor",{value:w,configurable:!0}),w.displayName=l(L,s,"GeneratorFunction"),n.isGeneratorFunction=function(t){var r="function"==typeof t&&t.constructor;return!!r&&(r===w||"GeneratorFunction"===(r.displayName||r.name))},n.mark=function(t){return Object.setPrototypeOf?Object.setPrototypeOf(t,L):(t.__proto__=L,l(t,s,"GeneratorFunction")),t.prototype=Object.create(S),t},n.awrap=function(t){return{__await:t}},j(P.prototype),l(P.prototype,f,(function(){return this})),n.AsyncIterator=P,n.async=function(t,r,e,o,i){void 0===i&&(i=Promise);var a=new P(h(t,r,e,o),i);return n.isGeneratorFunction(r)?a:a.next().then((function(t){return t.done?t.value:a.next()}))},j(S),l(S,s,"Generator"),l(S,u,(function(){return this})),l(S,"toString",(function(){return"[object Generator]"})),n.keys=function(t){var r=Object(t),e=[];for(var n in r)e.push(n);return e.reverse(),function t(){for(;e.length;){var n=e.pop();if(n in r)return t.value=n,t.done=!1,t}return t.done=!0,t}},n.values=G,A.prototype={constructor:A,reset:function(r){if(this.prev=0,this.next=0,this.sent=this._sent=t,this.done=!1,this.delegate=null,this.method="next",this.arg=t,this.tryEntries.forEach(N),!r)for(var e in this)"t"===e.charAt(0)&&i.call(this,e)&&!isNaN(+e.slice(1))&&(this[e]=t)},stop:function(){this.done=!0;var t=this.tryEntries[0].completion;if("throw"===t.type)throw t.arg;return this.rval},dispatchException:function(r){if(this.done)throw r;var e=this;function n(n,o){return c.type="throw",c.arg=r,e.next=n,o&&(e.method="next",e.arg=t),!!o}for(var o=this.tryEntries.length-1;o>=0;--o){var a=this.tryEntries[o],c=a.completion;if("root"===a.tryLoc)return n("end");if(a.tryLoc<=this.prev){var u=i.call(a,"catchLoc"),f=i.call(a,"finallyLoc");if(u&&f){if(this.prev<a.catchLoc)return n(a.catchLoc,!0);if(this.prev<a.finallyLoc)return n(a.finallyLoc)}else if(u){if(this.prev<a.catchLoc)return n(a.catchLoc,!0)}else{if(!f)throw Error("try statement without catch or finally");if(this.prev<a.finallyLoc)return n(a.finallyLoc)}}}},abrupt:function(t,r){for(var e=this.tryEntries.length-1;e>=0;--e){var n=this.tryEntries[e];if(n.tryLoc<=this.prev&&i.call(n,"finallyLoc")&&this.prev<n.finallyLoc){var o=n;break}}o&&("break"===t||"continue"===t)&&o.tryLoc<=r&&r<=o.finallyLoc&&(o=null);var a=o?o.completion:{};return a.type=t,a.arg=r,o?(this.method="next",this.next=o.finallyLoc,m):this.complete(a)},complete:function(t,r){if("throw"===t.type)throw t.arg;return"break"===t.type||"continue"===t.type?this.next=t.arg:"return"===t.type?(this.rval=this.arg=t.arg,this.method="return",this.next="end"):"normal"===t.type&&r&&(this.next=r),m},finish:function(t){for(var r=this.tryEntries.length-1;r>=0;--r){var e=this.tryEntries[r];if(e.finallyLoc===t)return this.complete(e.completion,e.afterLoc),N(e),m}},catch:function(t){for(var r=this.tryEntries.length-1;r>=0;--r){var e=this.tryEntries[r];if(e.tryLoc===t){var n=e.completion;if("throw"===n.type){var o=n.arg;N(e)}return o}}throw Error("illegal catch attempt")},delegateYield:function(r,e,n){return this.delegate={iterator:G(r),resultName:e,nextLoc:n},"next"===this.method&&(this.arg=t),m}},n}function n(t,r,e,n,o,i,a){try{var c=t[i](a),u=c.value}catch(t){return void e(t)}c.done?r(u):Promise.resolve(u).then(n,o)}t.exports=function(){var t,r=(t=e().mark((function t(r,n){return e().wrap((function(t){for(;;)switch(t.prev=t.next){case 0:r.postMessage(n);case 1:case"end":return t.stop()}}),t)})),function(){var r=this,e=arguments;return new Promise((function(o,i){var a=t.apply(r,e);function c(t){n(a,o,i,c,u,"next",t)}function u(t){n(a,o,i,c,u,"throw",t)}c(void 0)}))});return function(t,e){return r.apply(this,arguments)}}()},830:(t,r,e)=>{"use strict";function n(t){return n="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol&&t!==Symbol.prototype?"symbol":typeof t},n(t)}function o(t,r){var e=Object.keys(t);if(Object.getOwnPropertySymbols){var n=Object.getOwnPropertySymbols(t);r&&(n=n.filter((function(r){return Object.getOwnPropertyDescriptor(t,r).enumerable}))),e.push.apply(e,n)}return e}function i(t){for(var r=1;r<arguments.length;r++){var e=null!=arguments[r]?arguments[r]:{};r%2?o(Object(e),!0).forEach((function(r){a(t,r,e[r])})):Object.getOwnPropertyDescriptors?Object.defineProperties(t,Object.getOwnPropertyDescriptors(e)):o(Object(e)).forEach((function(r){Object.defineProperty(t,r,Object.getOwnPropertyDescriptor(e,r))}))}return t}function a(t,r,e){return(r=function(t){var r=function(t){if("object"!=n(t)||!t)return t;var r=t[Symbol.toPrimitive];if(void 0!==r){var e=r.call(t,"string");if("object"!=n(e))return e;throw new TypeError("@@toPrimitive must return a primitive value.")}return String(t)}(t);return"symbol"==n(r)?r:r+""}(r))in t?Object.defineProperty(t,r,{value:e,enumerable:!0,configurable:!0,writable:!0}):t[r]=e,t}var c=e(330).rE,u=e(286);t.exports=i(i({},u),{},{workerPath:"https://cdn.jsdelivr.net/npm/tesseract.js@v".concat(c,"/dist/worker.min.js")})},862:t=>{"use strict";t.exports=function(t){t.terminate()}},877:(t,r,e)=>{"use strict";function n(t){return n="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol&&t!==Symbol.prototype?"symbol":typeof t},n(t)}function o(t,r){var e=Object.keys(t);if(Object.getOwnPropertySymbols){var n=Object.getOwnPropertySymbols(t);r&&(n=n.filter((function(r){return Object.getOwnPropertyDescriptor(t,r).enumerable}))),e.push.apply(e,n)}return e}function i(t,r,e){return(r=function(t){var r=function(t){if("object"!=n(t)||!t)return t;var r=t[Symbol.toPrimitive];if(void 0!==r){var e=r.call(t,"string");if("object"!=n(e))return e;throw new TypeError("@@toPrimitive must return a primitive value.")}return String(t)}(t);return"symbol"==n(r)?r:r+""}(r))in t?Object.defineProperty(t,r,{value:e,enumerable:!0,configurable:!0,writable:!0}):t[r]=e,t}e(30);var a=e(364),c=e(603),u=e(535),f=e(192),s=e(972),l=e(971),h=e(65).setLogging;t.exports=function(t){for(var r=1;r<arguments.length;r++){var e=null!=arguments[r]?arguments[r]:{};r%2?o(Object(e),!0).forEach((function(r){i(t,r,e[r])})):Object.getOwnPropertyDescriptors?Object.defineProperties(t,Object.getOwnPropertyDescriptors(e)):o(Object(e)).forEach((function(r){Object.defineProperty(t,r,Object.getOwnPropertyDescriptor(e,r))}))}return t}({languages:f,OEM:s,PSM:l,createScheduler:a,createWorker:c,setLogging:h},u)},910:(t,r,e)=>{"use strict";var n=e(70),o=0;t.exports=function(t){var r=t.id,e=t.action,i=t.payload,a=void 0===i?{}:i,c=r;return void 0===c&&(c=n("Job",o),o+=1),{id:c,action:e,payload:a}}},938:t=>{"use strict";function r(t){return r="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol&&t!==Symbol.prototype?"symbol":typeof t},r(t)}t.exports=function(t){var e={};return"undefined"!=typeof WorkerGlobalScope?e.type="webworker":"object"===("undefined"==typeof document?"undefined":r(document))?e.type="browser":"object"===("undefined"==typeof process?"undefined":r(process))&&(e.type="node"),void 0===t?e:e[t]}},971:t=>{"use strict";t.exports={OSD_ONLY:"0",AUTO_OSD:"1",AUTO_ONLY:"2",AUTO:"3",SINGLE_COLUMN:"4",SINGLE_BLOCK_VERT_TEXT:"5",SINGLE_BLOCK:"6",SINGLE_LINE:"7",SINGLE_WORD:"8",CIRCLE_WORD:"9",SINGLE_CHAR:"10",SPARSE_TEXT:"11",SPARSE_TEXT_OSD:"12",RAW_LINE:"13"}},972:t=>{"use strict";t.exports={TESSERACT_ONLY:0,LSTM_ONLY:1,TESSERACT_LSTM_COMBINED:2,DEFAULT:3}}},r={};function e(n){var o=r[n];if(void 0!==o)return o.exports;var i=r[n]={id:n,loaded:!1,exports:{}};return t[n].call(i.exports,i,i.exports,e),i.loaded=!0,i.exports}return e.nmd=t=>(t.paths=[],t.children||(t.children=[]),t),e(877)})()));
+//# sourceMappingURL=tesseract.min.js.map
+</script>
+<script>
+// ── Storage (GitHub API) ─────────────────────────────────
+let memos=[];
+let groups=[]; // {id, name, createdAt}
+let watchlist=[]; // 관심종목
+let selectedMemos=new Set(); // 체크된 메모 ID
+let settings={targetPct:'',stopPct:'',days:'',principle:''};
+let quickNote='';
+let _qnTimer=null; // quickNote 디바운스 타이머
+const GH_OWNER='activewith';
+const GH_REPO='trading-memo';
+const GH_FILE='data.json';
+const GH_API=`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`;
+const TOKEN_KEY='gh_token_v1';
+let ghSha=null; // 파일 SHA (업데이트 시 필요)
+
+function getToken(){return localStorage.getItem(TOKEN_KEY)||'';}
+
+function showTokenSetup(){
+  const overlay=document.getElementById('token-overlay');
+  if(overlay)overlay.style.display='flex';
+}
+function hideTokenSetup(){
+  const overlay=document.getElementById('token-overlay');
+  if(overlay)overlay.style.display='none';
+}
+async function saveToken(){
+  const v=(document.getElementById('token-input').value||'').trim();
+  if(!v){alert('토큰을 입력해주세요.');return;}
+  localStorage.setItem(TOKEN_KEY,v);
+  hideTokenSetup();
+  await load();
+}
+
+async function load(){
+  const token=getToken();
+  if(!token){showTokenSetup();return;}
+  // 로딩 표시
+  const badge=document.getElementById('count-badge');
+  if(badge)badge.textContent='불러오는 중…';
+  try{
+    const res=await fetch(GH_API,{headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json'}});
+    if(res.status===404){
+      // 파일 없음 → 빈 배열로 시작
+      memos=[];groups=[];ghSha=null;
+    } else if(res.ok){
+      const json=await res.json();
+      ghSha=json.sha;
+      const decoded=decodeURIComponent(escape(atob(json.content.replace(/\n/g,''))));
+      const parsed=JSON.parse(decoded);
+      // 하위호환: 이전 버전은 배열 형태였음
+      if(Array.isArray(parsed)){memos=parsed;groups=[];watchlist=[];}
+      else{memos=parsed.memos||[];groups=parsed.groups||[];watchlist=parsed.watchlist||[];settings=parsed.settings||{targetPct:'',stopPct:'',days:'',principle:''};quickNote=parsed.quickNote||'';}
+    } else if(res.status===401){
+      localStorage.removeItem(TOKEN_KEY);
+      showTokenSetup();
+      document.getElementById('token-msg').textContent='토큰이 유효하지 않습니다. 다시 입력해주세요.';
+      return;
+    }
+  }catch(e){
+    // 오프라인 등 → localStorage 캐시로 폴백
+    try{
+      const d=localStorage.getItem('tm_cache');
+      if(d){const p=JSON.parse(d);if(Array.isArray(p)){memos=p;groups=[];watchlist=[];}else{memos=p.memos||[];groups=p.groups||[];watchlist=p.watchlist||[];settings=p.settings||{targetPct:'',stopPct:'',days:'',principle:''};quickNote=p.quickNote||'';}}
+    }catch(e2){memos=[];groups=[];}
+  }
+  // 캐시 저장
+  try{localStorage.setItem('tm_cache',JSON.stringify({memos,groups,watchlist,settings,quickNote}));}catch(e){}
+  renderList();updateBadge();showInstallHint();
+  applyPrinciple();
+  applyQuickNote();
+  if(!localStorage.getItem('ocr_ready')&&!localStorage.getItem('ocr_hint_dismissed')){
+    document.getElementById('first-time-banner').style.display='block';
+  }
+}
+
+async function persist(){
+  // 로컬 캐시 즉시 저장
+  try{localStorage.setItem('tm_cache',JSON.stringify({memos,groups,watchlist,settings,quickNote}));}catch(e){}
+  const token=getToken();
+  if(!token)return;
+  // 저장 전 항상 최신 SHA를 GitHub에서 가져옴 (다른 기기에서 변경됐을 수 있으므로)
+  try{
+    const headRes=await fetch(GH_API,{headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json'}});
+    if(headRes.ok){
+      const headJson=await headRes.json();
+      ghSha=headJson.sha;
+    } else if(headRes.status===404){
+      ghSha=null;
+    }
+  }catch(e){}
+  const content=btoa(unescape(encodeURIComponent(JSON.stringify({memos,groups,watchlist,settings,quickNote},null,2))));
+  const body={message:'update data',content:content};
+  if(ghSha)body.sha=ghSha;
+  try{
+    const res=await fetch(GH_API,{method:'PUT',headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(res.ok){
+      const json=await res.json();
+      ghSha=json.content.sha;
+    }
+  }catch(e){}
+}
+
+function sw(p){
+  const tabs=document.querySelectorAll('.tab');
+  tabs[0].classList.toggle('on',p==='wlist');
+  tabs[1].classList.toggle('on',p==='trade');
+  tabs[2].classList.toggle('on',p==='stat');
+  document.getElementById('pane-wlist').style.display=p==='wlist'?'block':'none';
+  document.getElementById('pane-trade').style.display=p==='trade'?'block':'none';
+  document.getElementById('pane-stat').style.display=p==='stat'?'block':'none';
+  if(p==='trade'){renderList();}
+  if(p==='wlist')renderWatchlist();
+  if(p==='stat')renderStat();
+  if(p!=='trade')clearSelection();
+}
+
+// ── 계산 헬퍼 ───────────────────────────────────────────
+function pct(b,p){if(!b||!p||b==0)return null;return((p-b)/b*100).toFixed(1);}
+function fmt(n){return(n||n===0)?Number(n).toLocaleString('ko-KR'):'—';}
+
+function numVal(id){
+  var v=document.getElementById(id).value.replace(/,/g,'');
+  return parseFloat(v)||0;
+}
+function fmtInput(id){
+  var el=document.getElementById(id);
+  var raw=el.value.replace(/,/g,'').replace(/[^0-9]/g,'');
+  if(raw)el.value=parseInt(raw).toLocaleString('ko-KR');
+  else el.value='';
+}
+function onBuyInput(){
+  fmtInput('f-buy');
+  // 매수가 변경 시 금액으로 입력된 목표/손절 % 재계산
+  if(document.getElementById('f-target-amt').value) syncPrice('target','amt');
+  if(document.getElementById('f-stop-amt').value)   syncPrice('stop','amt');
+  upPrev();
+}
+function onQtyInput(){
+  fmtInput('f-qty');
+  upPrev();
+}
+function syncPrice(field,from){
+  var buy=numVal('f-buy');
+  if(!buy)return;
+  var pctEl=document.getElementById('f-'+field+'-pct');
+  var amtEl=document.getElementById('f-'+field+'-amt');
+  if(from==='pct'){
+    var raw=pctEl.value;
+    // 손절가: 숫자만 입력 시 자동으로 음수 처리
+    if(field==='stop'&&raw&&raw!=='-'&&parseFloat(raw)>0) raw='-'+raw;
+    var p=parseFloat(raw);
+    if(!isNaN(p)){
+      var amt=Math.round(buy*(1+p/100));
+      amtEl.value=amt>0?amt.toLocaleString('ko-KR'):'';
+    }else{amtEl.value='';}
+  }else{
+    fmtInput('f-'+field+'-amt');
+    var a=numVal('f-'+field+'-amt');
+    if(a>0){
+      var pp=((a-buy)/buy*100).toFixed(2);
+      // 손절가는 매수가보다 낮을 것이므로 pp가 음수면 그대로
+      pctEl.value=(parseFloat(pp)>0?'+':'')+pp;
+    }else{pctEl.value=field==='stop'?'-':'';}
+  }
+  upPrev();
+}
+function upPrev(){
+  var nm=document.getElementById('f-name').value;
+  var b=numVal('f-buy');
+  var qty=numVal('f-qty');
+  var t=numVal('f-target-amt');
+  var s=numVal('f-stop-amt');
+  var d=document.getElementById('f-days').value;
+  var dt=document.getElementById('f-date').value;
+  var total=b&&qty?b*qty:0;
+
+  document.getElementById('f-total').value=total?total.toLocaleString('ko-KR')+'원':'';
+
+  var pt=b&&t?pct(b,t):null;
+  var ps=b&&s?pct(b,s):null;
+
+  document.getElementById('prev').textContent=
+'매수날짜:  '+(dt||'—')+
+'\n종목명:    '+(nm||'—')+
+'\n매수가:    '+(b?fmt(b):'—')+
+'\n수량:      '+(qty?fmt(qty)+'주':'—')+
+'\n매수총액:  '+(total?fmt(total)+'원':'—')+
+'\n목표가:    '+(t?fmt(t)+' ('+(pt>0?'+':'')+pt+'%)':'—')+'  → 도달 시 즉시 매도'+
+'\n손절가:    '+(s?fmt(s)+' ('+(ps||'')+'%)':'—')+'  → 도달 시 즉시 매도'+
+'\n보유기한:  '+(d||'—')+' 일  → 위 둘 다 미달 시 매도';
+}
+
+// ── OCR ─────────────────────────────────────────────────
+async function onImg(inp){
+  if(!inp.files||!inp.files[0])return;
+  const file=inp.files[0];
+  setAnalyzing(true,'화면 인식 중...','OCR 엔진 로딩 중 (최초 1회만 약 10초)');
+  resetTradeScan();
+  document.getElementById('ocr-error').style.display='none';
+  document.getElementById('ocr-debug').style.display='none';
+  try{
+    const result=await Tesseract.recognize(file,'kor',{
+      logger:m=>{
+        if(m.status==='loading language traineddata')
+          setAnalyzing(true,'언어 데이터 다운로드 중...','처음 한 번만 — Wi-Fi 권장');
+        else if(m.status==='initializing api')
+          setAnalyzing(true,'OCR 초기화 중...','잠시만 기다려주세요');
+        else if(m.status==='recognizing text')
+          setAnalyzing(true,'화면 인식 중...','분석 중... '+Math.round((m.progress||0)*100)+'%');
+      }
+    });
+    setAnalyzing(false);
+    localStorage.setItem('ocr_ready','1');
+    document.getElementById('first-time-banner').style.display='none';
+    const rawText = result.data.text||'';
+    // 디버그: raw OCR 텍스트 표시
+    const dbg = document.getElementById('ocr-debug');
+    dbg.textContent = '[ OCR 원문 ]\n' + rawText;
+    dbg.style.display = 'block';
+    if(!rawText.trim()){
+      showError('OCR 인식 결과가 없습니다.\n스크린샷이 선명한지 확인해주세요.');
+      return;
+    }
+    const parsed=parseSamsungMTS(rawText);
+    if(parsed.type==='none'){
+      showError('종목 정보를 찾지 못했습니다.\n아래 OCR 원문을 확인해보세요.');
+      return;
+    }
+    showParsed(parsed);
+  }catch(e){
+    setAnalyzing(false);
+    var msg = e && e.message ? e.message : (e ? String(e) : '알 수 없는 오류');
+    showError('OCR 오류: '+msg+'\n\n가능한 원인:\n• 인터넷 연결 필요 (최초 1회)\n• Worker 스크립트 로딩 실패');
+    console.error(e);
+  }
+}
+function setAnalyzing(on,txt,detail){
+  document.getElementById('analyzing').style.display=on?'block':'none';
+  if(txt)document.getElementById('analyzing-txt').textContent=txt;
+  if(detail)document.getElementById('analyzing-detail').textContent=detail;
+}
+
+// ── 삼성증권 파싱 (개선) ─────────────────────────────────
+function parseSamsungMTS(text){
+  const lines=text.split('\n').map(l=>l.trim()).filter(l=>l.length>0);
+  const isTradingHistory=lines.some(l=>/(매매내역|체결내역|체결단가|현금매수|신용매수|KOSDAQ매수|KOSDAQ매도|매수|매도)/.test(l));
+  if(isTradingHistory)return parseTradingHistory(lines);
+  // 관심목록/시세 화면: 키워드 우선 감지 (Tesseract가 ▼를 v로 잘못 인식하는 경우 대비)
+  const isWatchlistKeyword=lines.some(l=>/(관심종목|투잡트레이딩)/.test(l));
+  const arrowLines=lines.filter(l=>/[▼▲]/.test(l));
+  if(isWatchlistKeyword||arrowLines.length>=2)return parseWatchlistScreen(lines);
+  return parseStockDetail(lines);
+}
+
+function cleanName(n){
+  if(!n)return n;
+  n=n.replace(/^\d{1,6}\s+/,'');
+  n=n.replace(/^[^가-힣A-Za-z0-9]+/,'').trim();
+  return n;
+}
+
+// ── 관심목록/시세 다종목 화면 파서 ───────────────────────
+function parseWatchlistScreen(lines){
+  const stocks=[];
+  // 헤더/메타 줄 스킵 키워드 (하드코딩 % 제거, 일반 % 패턴으로 처리)
+  const SKIP=/KOSPI|KOSDAQ|KQ|12H|HOME|메뉴|설정|검색|잔고|주문|차트|종료|보유종목|최근조회|투잡트레이딩|통합|현재가|뉴스|등락률|종목추가|장종료|해외|랭킹|종합/;
+
+  for(let i=0;i<lines.length;i++){
+    const l=lines[i];
+    if(SKIP.test(l))continue;
+    if(/^[\d,.\s▼▲vV%]+$/.test(l))continue; // 숫자/기호만 있는 줄
+    if(/^\d/.test(l))continue;               // 숫자로 시작하는 줄 (거래량 등)
+    if(/%$/.test(l))continue;                // % 로 끝나는 줄
+    if(!/[가-힣A-Za-z]/.test(l))continue;   // 한글/영문 없는 줄
+
+    // 현재가: 콤마 포함 4자리이상 숫자열 (예: 9,800 / 48,150)
+    // \d[\d,]{3,} → "9,800"(O), "200"(X, 3자뿐)
+    const priceReg=/\d[\d,]{3,}/g;
+    const priceMatch=priceReg.exec(l);
+    if(!priceMatch)continue;
+    const p=parseInt(priceMatch[0].replace(/,/g,''));
+    if(p<100||p>9999999)continue;
+    const price=p;
+
+    // 종목명: 가격 시작 위치 이전 텍스트만 사용
+    let namePart=l.slice(0,priceMatch.index)
+      .replace(/[^가-힣A-Za-z0-9\s]+$/,'')  // trailing 특수문자 제거
+      .trim();
+    const name=cleanName(namePart);
+    if(!name||name.length<2||SKIP.test(name))continue;
+
+    // 같은 줄에 가격이 없고 namePart만 있는 경우 → 다음 줄에서 탐색
+    if(!price&&namePart){
+      for(let k=i+1;k<Math.min(i+3,lines.length);k++){
+        const nl=lines[k];
+        if(SKIP.test(nl))break;
+        if(/[가-힣]/.test(nl)&&!/^\d/.test(nl))break;
+        const nn=nl.match(/[\d,]{4,}/g)||[];
+        if(nn.length>0){
+          const np=parseInt(nn[0].replace(/,/g,''));
+          if(np>=100&&np<=9999999){
+            if(!stocks.find(s=>s.name===name))stocks.push({name,price:String(np)});
+            break;
+          }
+        }
+      }
+      continue;
+    }
+
+    if(price&&!stocks.find(s=>s.name===name)){
+      stocks.push({name,price:String(price)});
+    }
+  }
+
+  if(stocks.length===1)return{type:'single',items:stocks};
+  if(stocks.length>1)return{type:'multi',items:stocks};
+  return{type:'none',items:[]};
+}
+
+// ── 단일 종목 시세 화면 파서 ─────────────────────────────
+function parseStockDetail(lines){
+  let name=null,price=null;
+  for(const l of lines){
+    if(/(←|→|HOME|메뉴|설정|검색|관심|잔고|주문|차트|종료|설정)/.test(l))continue;
+    if(/^\d/.test(l))continue;
+    if(l.length>=2&&l.length<=20&&/[가-힣A-Za-z]/.test(l)){name=l;break;}
+  }
+  // ▼▲ 있는 줄의 첫 번째 숫자 = 현재가 (Math.max 대신)
+  for(const l of lines){
+    if(/[▼▲]/.test(l)){
+      const m=l.match(/[\d,]{4,}/);
+      if(m){
+        const p=parseInt(m[0].replace(/,/g,''));
+        if(p>=100&&p<=9999999){price=String(p);break;}
+      }
+    }
+  }
+  // ▼▲ 없으면 전체에서 첫 번째 합리적 범위 숫자
+  if(!price){
+    const all=lines.join(' ').match(/\d{1,3}(?:,\d{3})+/g)||[];
+    for(const n of all){
+      const v=parseInt(n.replace(/,/g,''));
+      if(v>=100&&v<=9999999){price=String(v);break;}
+    }
+  }
+  const chgM=lines.join(' ').match(/[▲▼+\-]?\s*\d+\.\d+%/);
+  const change=chgM?chgM[0].replace(/\s/g,''):null;
+  return(name||price)?{type:'single',items:[{name,price,change}]}:{type:'none',items:[]};
+}
+
+function parseTradingHistory(lines){
+  const stocks=[];
+  const SKIP=/매매일|대출일|종목명|주문구분|체결수량|체결단가|기간|상세보기|체결내역|매매내역|매수체결|매도체결|종합|비대면|투잡/;
+
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i];
+
+    // ① 날짜가 있는 줄만 기준점으로 사용
+    const dateM=line.match(/(\d{4}-\d{2}-\d{2})/);
+    if(!dateM)continue;
+    if(line.indexOf('~')!==-1)continue; // 기간 범위 줄 제외 ("~ 2026-06-03")
+
+    const date=dateM[1];
+    let name=null, qty=null, price=null;
+
+    // ② 날짜 줄에서 종목명+수량 추출 ("2026-06-01  TIGER 200 금융  18")
+    const sameLine=line.replace(date,'').trim();
+    const slm=sameLine.match(/^(.+?)\s+(\d{1,5})\s*$/);
+    if(slm){
+      const cand=cleanName(slm[1]);
+      if(cand&&cand.length>=2&&/[가-힣A-Za-z]/.test(cand)&&!SKIP.test(cand)){
+        name=cand; qty=slm[2];
+      }
+    }
+
+    // ③ 날짜만 단독으로 있는 줄이면 → 바로 다음 1~3줄에서 종목명 탐색
+    if(!name){
+      for(let k=i+1;k<Math.min(i+4,lines.length);k++){
+        const nl=lines[k];
+        if(/\d{4}-\d{2}-\d{2}/.test(nl))break; // 다음 날짜 만나면 중단
+        if(/매수|매도/.test(nl))break;
+        if(SKIP.test(nl)||/^[-~\s]+$/.test(nl))continue;
+        // 종목명+수량
+        const nm=nl.match(/^(.+?)\s+(\d{1,5})\s*$/);
+        if(nm){
+          const cand=cleanName(nm[1]);
+          if(cand&&cand.length>=2&&/[가-힣A-Za-z]/.test(cand)){
+            name=cand; qty=nm[2]; break;
+          }
+        }
+        // 종목명만 (수량은 다음 줄)
+        if(/[가-힣A-Za-z]/.test(nl)&&nl.length>=2&&nl.length<=40){
+          const cand=cleanName(nl.trim());
+          if(cand&&cand.length>=2&&!SKIP.test(cand)){name=cand;}
+        }
+      }
+    }
+
+    if(!name)continue; // 종목명 없으면 이 날짜 줄은 스킵
+
+    // ④ 날짜 줄 이후 최대 6줄 안에서 매수/매도 가격 추출
+    // 현금매수, 신용매수, KOSDAQ매수, 코스피매수 등 "매수"가 포함된 줄 모두 처리
+    for(let j=i+1;j<Math.min(i+7,lines.length);j++){
+      if(/매수|매도/.test(lines[j])){
+        const nums=lines[j].match(/[\d,]{4,}/g);
+        if(nums)price=nums[nums.length-1].replace(/,/g,'');
+        break;
+      }
+    }
+
+    if(price&&!stocks.find(s=>s.name===name))
+      stocks.push({name,price,qty:qty||null,date});
+  }
+
+  return{type:stocks.length>0?'multi':'none',items:stocks};
+}
+
+
+// ── 결과 표시 ────────────────────────────────────────────
+function showParsed(parsed){
+  if(parsed.type==='none'||!parsed.items.length){
+    showNotice('인식 결과가 없습니다. 스크린샷을 다시 시도해주세요.','err');return;
+  }
+  renderTradePick(parsed.items);
+}
+
+function renderTradePick(items){
+  window._tParsed=items;
+  window._tChecked=items.map(function(){return true;});
+  var html=items.map(function(item,i){
+    var p=Number(item.price)||0;
+    var q=Number(item.qty)||0;
+    var total=p&&q?p*q:0;
+    return '<div id="tpci-'+i+'" onclick="toggleTradePick('+i+')" style="display:flex;align-items:center;gap:12px;padding:11px 13px;cursor:pointer;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px;background:var(--bg);-webkit-tap-highlight-color:transparent">'
+      +'<div id="tpck-'+i+'" style="width:22px;height:22px;border-radius:50%;border:2px solid var(--text);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;background:var(--text);color:var(--bg)">✓</div>'
+      +'<div style="flex:1;min-width:0">'
+      +'<div style="font-size:15px;font-weight:600;color:var(--text)">'+(item.name||'—')+'</div>'
+      +'<div style="font-size:12px;color:var(--text2);margin-top:2px">'
+      +(item.date?'📅 '+item.date+' &nbsp;':'')
+      +(p?'매수가 <b style="color:var(--text)">'+fmt(p)+'원</b>':'가격 미인식')
+      +(q?' &nbsp;수량 <b style="color:var(--text)">'+fmt(q)+'주</b>':'')
+      +(total?' &nbsp;총액 <b style="color:var(--text)">'+fmt(total)+'원</b>':'')
+      +'</div>'
+      +'</div>'
+      +'</div>';
+  }).join('');
+  document.getElementById('trade-pick-list').innerHTML=html;
+  document.getElementById('trade-pick-banner').style.display='block';
+}
+
+function toggleTradePick(i){
+  var arr=window._tChecked;
+  if(!arr)return;
+  arr[i]=!arr[i];
+  var ck=document.getElementById('tpck-'+i);
+  if(!ck)return;
+  if(arr[i]){
+    ck.style.background='var(--text)';ck.style.borderColor='var(--text)';ck.style.color='var(--bg)';ck.textContent='✓';
+  }else{
+    ck.style.background='transparent';ck.style.borderColor='var(--border2)';ck.style.color='transparent';ck.textContent='';
+  }
+}
+
+async function doTradeBulkSave(){
+  var items=window._tParsed||[];
+  var checked=window._tChecked||items.map(function(){return true;});
+  var today=new Date().toISOString().slice(0,10);
+  var saved=0;
+  // ── 설정 기본값 ──
+  var _defTgt=parseFloat(settings.targetPct)||0;
+  var _defStp=parseFloat(settings.stopPct)||0;
+  if(_defStp>0)_defStp=-_defStp;
+  var _defDays=parseInt(settings.days)||null;
+  items.forEach(function(item,i){
+    if(!checked[i])return;
+    if(!item.name)return;
+    var buy=parseInt((item.price||'').toString().replace(/,/g,''))||null;
+    var qty=parseInt((item.qty||'').toString().replace(/,/g,''))||null;
+    var total=buy&&qty?buy*qty:null;
+    var target=buy&&_defTgt?Math.round(buy*(1+_defTgt/100)):null;
+    var stop=buy&&_defStp?Math.round(buy*(1+_defStp/100)):null;
+    memos.unshift({
+      id:Date.now()+i,
+      name:item.name,
+      buy:buy,qty:qty,total:total,
+      target:target,stop:stop,days:_defDays?String(_defDays):null,memo:'',
+      buyDate:item.date||today,
+      date:new Date().toLocaleDateString('ko-KR'),
+      status:'active'
+    });
+    saved++;
+  });
+  if(!saved){showNotice('선택된 항목이 없습니다.','err');return;}
+  await persist();
+  updateBadge();
+  resetTradeScan();
+  renderList();
+  showNotice(saved+'개 저장됐습니다 ✓');
+}
+
+function resetTradeScan(){
+  document.getElementById('trade-pick-banner').style.display='none';
+  document.getElementById('trade-pick-list').innerHTML='';
+  document.getElementById('ocr-error').style.display='none';
+  document.getElementById('ocr-debug').style.display='none';
+  document.getElementById('analyzing').style.display='none';
+  document.getElementById('file-input').value='';
+  window._tParsed=[];window._tChecked=[];
+}
+
+// ── 저장/초기화 ──────────────────────────────────────────
+// doSave / clearFormOnly : 폼 제거로 불사용 (doTradeBulkSave 대체)
+function doSave(){}
+function clearF(){resetTradeScan();}
+
+function showError(msg){
+  setAnalyzing(false);
+  var el=document.getElementById('ocr-error');
+  var closeBtn='<br><button onclick="document.getElementById(\"ocr-error\").style.display=\"none\"" style="margin-top:8px;padding:5px 14px;border-radius:8px;border:1px solid var(--red-text);background:none;color:var(--red-text);cursor:pointer;font-size:12px;font-family:inherit">닫기</button>';
+  el.innerHTML=msg.replace(/\n/g,'<br>')+closeBtn;
+  el.style.display='block';
+  el.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function showNotice(txt,type){
+  const el=document.getElementById('notice');
+  el.textContent=txt;el.className='notice'+(type?' '+type:'');
+  setTimeout(()=>{el.textContent='';el.className='notice';},3500);
+}
+function updateBadge(){
+  const n=memos.filter(m=>m.status==='active').length;
+  document.getElementById('count-badge').textContent=n?`보유 ${n}종목`:'';
+}
+
+// ── 유틸 ─────────────────────────────────────────────────
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ── 체크박스 / 선택 ──────────────────────────────────────
+function toggleCheck(id){
+  if(selectedMemos.has(id))selectedMemos.delete(id);else selectedMemos.add(id);
+  updateSelectBar();
+  renderList();
+}
+function clearSelection(){
+  selectedMemos.clear();
+  updateSelectBar();
+  renderList();
+}
+function updateSelectBar(){
+  const bar=document.getElementById('select-bar');
+  const txt=document.getElementById('select-bar-txt');
+  if(selectedMemos.size>0){
+    bar.classList.add('show');
+    txt.textContent=selectedMemos.size+'개 선택됨';
+  }else{
+    bar.classList.remove('show');
+  }
+}
+
+// ── 그룹 만들기 ──────────────────────────────────────────
+function startGroupCreate(){
+  if(!selectedMemos.size)return;
+  const nextNum=groups.length+1;
+  const inp=document.getElementById('gmodal-input');
+  inp.value=nextNum+'회차';
+  document.getElementById('gmodal-overlay').classList.add('show');
+  setTimeout(()=>{inp.focus();inp.select();},100);
+}
+function cancelGroupCreate(){
+  document.getElementById('gmodal-overlay').classList.remove('show');
+}
+async function confirmGroupCreate(){
+  const name=(document.getElementById('gmodal-input').value||'').trim();
+  if(!name){alert('그룹 이름을 입력해주세요.');return;}
+  const gid=Date.now();
+  groups.push({id:gid,name,createdAt:new Date().toISOString()});
+  // 선택된 메모들에 groupId 할당
+  memos.forEach(m=>{if(selectedMemos.has(m.id))m.groupId=gid;});
+  selectedMemos.clear();
+  cancelGroupCreate();
+  await persist();
+  updateSelectBar();
+  renderList();
+}
+
+// ── 그룹 이름 편집 ───────────────────────────────────────
+function startEditGroupName(gid){
+  const g=groups.find(g=>g.id===gid);if(!g)return;
+  const el=document.getElementById('gname-'+gid);if(!el)return;
+  el.outerHTML='<input class="group-name-input" id="gname-inp-'+gid
+    +'" value="'+escHtml(g.name)+'"'
+    +' onblur="saveGroupName('+gid+',this.value)"'
+    +' onkeydown="if(event.key===\'Enter\')this.blur()">';
+  const inp=document.getElementById('gname-inp-'+gid);
+  if(inp){inp.focus();inp.select();}
+}
+async function saveGroupName(gid,val){
+  const g=groups.find(g=>g.id===gid);if(!g)return;
+  const name=(val||'').trim()||g.name;
+  g.name=name;
+  await persist();
+  renderList();
+}
+
+// ── 그룹 해제 ────────────────────────────────────────────
+async function ungroupGroup(gid){
+  if(!confirm('이 그룹을 해제할까요? 종목들은 미분류로 이동합니다.'))return;
+  memos.forEach(m=>{if(m.groupId===gid)delete m.groupId;});
+  groups=groups.filter(g=>g.id!==gid);
+  await persist();
+  renderList();
+}
+
+// ── 카드 렌더 ────────────────────────────────────────────
+function renderCard(m){
+  var tp=m.target?pct(m.buy,m.target):null;
+  var sp=m.stop?pct(m.buy,m.stop):null;
+  var isChecked=selectedMemos.has(m.id);
+  var rows='';
+  var r1='<span><span class="lbl">매수가</span><span class="val">'+fmt(m.buy)+'원</span></span>';
+  if(m.qty) r1+='<span><span class="lbl">수량</span><span class="val">'+fmt(m.qty)+'주</span></span>';
+  if(m.total) r1+='<span><span class="lbl">총액</span><span class="val">'+fmt(m.total)+'원</span></span>';
+  rows+='<div class="mc-meta-row">'+r1+'</div>';
+  var r2='';
+  if(m.target) r2+='<span><span class="lbl">목표</span><span class="val-up">'+fmt(m.target)+'원 (+'+tp+'%)</span></span>';
+  if(m.stop)   r2+='<span><span class="lbl">손절</span><span class="val-dn">'+fmt(m.stop)+'원 ('+sp+'%)</span></span>';
+  if(r2) rows+='<div class="mc-meta-row">'+r2+'</div>';
+  if(m.days){
+    var deadlineStr='';
+    var startD=new Date(m.buyDate||m.date);
+    if(!isNaN(startD.getTime())){
+      startD.setDate(startD.getDate()+parseInt(m.days));
+      var dy=startD.getFullYear();
+      var dm=String(startD.getMonth()+1).padStart(2,'0');
+      var dd=String(startD.getDate()).padStart(2,'0');
+      deadlineStr=' <span style="font-size:12px;color:var(--text3);font-weight:400">('+dy+'-'+dm+'-'+dd+')</span>';
+    }
+    rows+='<div class="mc-meta-row"><span><span class="lbl">보유기한</span><span class="val">'+m.days+'일'+deadlineStr+'</span></span></div>';
+  }
+  var closedBadge='';
+  if(m.status!=='active'&&m.sellPrice){
+    var crv=((m.sellPrice-m.buy)/m.buy*100);
+    var crs=(crv>0?'+':'')+crv.toFixed(2)+'%';
+    closedBadge='<div class="mc-closed-rate '+(crv>=0?'mc-cr-up':'mc-cr-dn')+'">'+crs+'</div>';
+  }
+  var cardHtml='<div class="memo-card" onclick="showDetail('+m.id+')">'
+    +'<div class="mc-top">'
+    +'<div>'
+    +'<div class="mc-name">'+m.name+'</div>'
+    +closedBadge
+    +'</div>'
+    +'<div class="mc-right">'
+    +'<span class="mc-date">'+(m.buyDate||m.date)+'</span>'
+    +'<span class="badge '+(m.status==='active'?'b-on':'b-off')+'">'+(m.status==='active'?'보유중':'종료')+'</span>'
+    +'</div></div>'
+    +'<div class="mc-divider"></div>'
+    +'<div class="mc-meta">'+rows+'</div>'
+    +(m.memo?'<div class="mc-memo-txt" style="margin-top:10px">📝 '+m.memo+'</div>':'')
+    +'</div>';
+  return '<div class="card-row">'
+    +'<div class="card-check'+(isChecked?' checked':'')+'" onclick="event.stopPropagation();toggleCheck('+m.id+')">'+(isChecked?'✓':'')+'</div>'
+    +cardHtml
+    +'</div>';
+}
+
+// ── 목록 ─────────────────────────────────────────────────
+function renderList(){
+  var la=document.getElementById('list-area');
+  if(!memos.length){la.innerHTML='<div class="empty">📋 저장된 기록이 없습니다.<br>위 스캔 영역에서 추가하세요.</div>';return;}
+  var html='';
+  var validGroupIds=new Set(groups.map(g=>g.id));
+  // 그룹별 렌더 (활성 종목이 있는 회차만 표시)
+  groups.forEach(function(g){
+    var gMemos=memos.filter(m=>m.groupId===g.id);
+    if(!gMemos.length)return;
+    // 모든 종목이 청산된 회차는 숨김 (지난 회차)
+    var hasActive=gMemos.some(m=>m.status==='active');
+    if(!hasActive)return;
+    // 그룹 요약 통계 (종료 종목만)
+    var closed=gMemos.filter(m=>m.status==='closed'&&m.sellPrice&&m.buy);
+    var totalBuyAmt=closed.reduce((s,m)=>s+m.buy*(m.qty||1),0);
+    var totalProfit=closed.reduce((s,m)=>s+(m.sellPrice-m.buy)*(m.qty||1),0);
+    var badge=gMemos.length+'종목';
+    if(closed.length){
+      var pp=totalBuyAmt?(totalProfit/totalBuyAmt*100):0;
+      badge+=' · 청산'+closed.length+' · <span style="color:'+(pp>=0?'var(--green-text)':'var(--red-text)')+'">'+( pp>0?'+':'')+pp.toFixed(1)+'%</span>';
+    }
+    html+='<div class="group-section">'
+      +'<div class="group-header">'
+      +'<span class="group-name-txt" id="gname-'+g.id+'" onclick="startEditGroupName('+g.id+')">'+escHtml(g.name)+'</span>'
+      +'<span class="group-stats-badge">'+badge+'</span>'
+      +'<button class="group-btn danger" onclick="ungroupGroup('+g.id+')">해제</button>'
+      +'</div>'
+      +gMemos.map(renderCard).join('')
+      +'</div>';
+  });
+  // 미분류 (groupId 없거나 존재하지 않는 그룹)
+  var ungrouped=memos.filter(m=>!m.groupId||!validGroupIds.has(m.groupId));
+  if(ungrouped.length){
+    if(groups.length){
+      html+='<div class="ungrouped-header">'
+        +'<span class="ungrouped-lbl">미분류</span>'
+        +'<span class="group-stats-badge">'+ungrouped.length+'종목</span>'
+        +'</div>';
+    }
+    html+=ungrouped.map(renderCard).join('');
+  }
+  la.innerHTML=html;
+}
+
+// ── 통계 ─────────────────────────────────────────────────
+function renderStat(){
+  var el=document.getElementById('stat-area');
+  var allClosed=memos.filter(m=>m.status==='closed'&&m.sellPrice&&m.buy);
+  if(!memos.length){
+    el.innerHTML='<div class="empty">📊 기록이 없습니다.<br>거래를 저장하면 통계가 생성됩니다.</div>';return;
+  }
+
+  // ── 전체 KPI ──
+  var totalBuy=allClosed.reduce((s,m)=>s+m.buy*(m.qty||1),0);
+  var totalSell=allClosed.reduce((s,m)=>s+m.sellPrice*(m.qty||1),0);
+  var totalProfit=allClosed.reduce((s,m)=>s+(m.sellPrice-m.buy)*(m.qty||1),0);
+  var wins=allClosed.filter(m=>m.sellPrice>m.buy).length;
+  var totalPct=totalBuy?(totalProfit/totalBuy*100):null;
+
+  var midHtml='<div class="stat-kpi" style="text-align:left;padding:10px 11px">'
+    +'<div style="font-size:10px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">매수/매도</div>'
+    +(totalBuy?'<div style="font-size:12px;color:var(--text2);margin-bottom:3px">매수 <b style="color:var(--text);font-size:13px">'+fmt(Math.round(totalBuy))+'</b></div>':'<div style="font-size:12px;color:var(--text3);margin-bottom:3px">매수 —</div>')
+    +(totalSell?'<div style="font-size:12px;color:var(--text2);margin-bottom:3px">매도 <b style="color:var(--text);font-size:13px">'+fmt(Math.round(totalSell))+'</b></div>':'<div style="font-size:12px;color:var(--text3);margin-bottom:3px">매도 —</div>')
+    +'<div style="font-size:12px;font-weight:700;color:'+(totalProfit>=0?'var(--green-text)':'var(--red-text)')+'">손익 '+(totalProfit>=0?'+':'')+fmt(Math.round(totalProfit))+(totalPct!==null?' ('+( totalPct>=0?'+':'')+totalPct.toFixed(2)+'%)':'')+'</div>'
+    +'</div>';
+
+  var kpiHtml='<div class="stat-summary-row">'
+    +'<div class="stat-kpi"><div class="stat-kpi-val">'+(memos.length)+'</div><div class="stat-kpi-lbl">총 거래 수</div></div>'
+    +midHtml
+    +'<div class="stat-kpi"><div class="stat-kpi-val '+(totalPct!==null?(totalPct>=0?'up':'dn'):'')+'">'+( totalPct!==null?(totalPct>=0?'+':'')+totalPct.toFixed(1)+'%':'—')+'</div><div class="stat-kpi-lbl">누적수익률</div></div>'
+    +'</div>'
+    +'<div style="text-align:center;font-size:13px;color:var(--text2);margin-bottom:16px">'
+    +'누적 손익금액: <b style="color:'+(totalProfit>=0?'var(--green-text)':'var(--red-text)')+'">'+( totalProfit>=0?'+':'')+fmt(Math.round(totalProfit))+'원</b>'
+    +'<br><span style="font-size:11px">청산 '+allClosed.length+'/'+memos.length+'종목 기준</span>'
+    +'</div>';
+
+  // ── 회차별 카드 ──
+  var validGroupIds=new Set(groups.map(g=>g.id));
+  var groupsHtml='';
+
+  if(groups.length){
+    groupsHtml+='<div class="stat-section"><div class="stat-sec-title">📊 회차별 손익</div>';
+
+    // 그룹 카드
+    var groupRows='';
+    var grandBuy=0,grandProfit=0,grandWins=0,grandClosed=0,grandTotal=0;
+
+    groups.forEach(function(g){
+      var gMemos=memos.filter(m=>m.groupId===g.id);
+      var gClosed=gMemos.filter(m=>m.status==='closed'&&m.sellPrice&&m.buy);
+      var buyAmt=gClosed.reduce((s,m)=>s+m.buy*(m.qty||1),0);
+      var profit=gClosed.reduce((s,m)=>s+(m.sellPrice-m.buy)*(m.qty||1),0);
+      var gWins=gClosed.filter(m=>m.sellPrice>m.buy).length;
+      var gWinRate=gClosed.length?Math.round(gWins/gClosed.length*100):null;
+      var gPct=buyAmt?(profit/buyAmt*100):null;
+      grandBuy+=buyAmt;grandProfit+=profit;grandWins+=gWins;grandClosed+=gClosed.length;grandTotal+=gMemos.length;
+
+      groupRows+='<div class="stat-group-card">'
+        +'<div class="stat-gc-header">'
+        +'<span class="stat-gc-name">'+escHtml(g.name)+'</span>'
+        +'<span class="stat-gc-count">'+gMemos.length+'종목 · 청산 '+gClosed.length+'</span>'
+        +'</div>'
+        +'<div class="stat-gc-rows">'
+        +'<div class="stat-gc-row"><span class="stat-gc-lbl">수익률</span><span class="stat-gc-val '+(gPct!==null?(gPct>=0?'up':'dn'):'')+'">'+( gPct!==null?(gPct>=0?'+':'')+gPct.toFixed(2)+'%':'데이터 없음')+'</span></div>'
+        +'<div class="stat-gc-row"><span class="stat-gc-lbl">손익금액</span><span class="stat-gc-val '+(gClosed.length?(profit>=0?'up':'dn'):'')+'">'+( gClosed.length?(profit>=0?'+':'')+fmt(Math.round(profit))+'원':'—')+'</span></div>'
+        +'</div></div>';
+    });
+
+    // 미분류
+    var ungrouped=memos.filter(m=>!m.groupId||!validGroupIds.has(m.groupId));
+    var uClosed=ungrouped.filter(m=>m.status==='closed'&&m.sellPrice&&m.buy);
+    if(uClosed.length){
+      var uBuy=uClosed.reduce((s,m)=>s+m.buy*(m.qty||1),0);
+      var uProfit=uClosed.reduce((s,m)=>s+(m.sellPrice-m.buy)*(m.qty||1),0);
+      var uWins=uClosed.filter(m=>m.sellPrice>m.buy).length;
+      var uWinRate=Math.round(uWins/uClosed.length*100);
+      var uPct=uBuy?(uProfit/uBuy*100):0;
+      grandBuy+=uBuy;grandProfit+=uProfit;grandWins+=uWins;grandClosed+=uClosed.length;grandTotal+=ungrouped.length;
+      groupRows+='<div class="stat-group-card" style="opacity:0.75">'
+        +'<div class="stat-gc-header">'
+        +'<span class="stat-gc-name" style="color:var(--text2)">미분류</span>'
+        +'<span class="stat-gc-count">'+ungrouped.length+'종목 · 청산 '+uClosed.length+'</span>'
+        +'</div>'
+        +'<div class="stat-gc-rows">'
+        +'<div class="stat-gc-row"><span class="stat-gc-lbl">수익률</span><span class="stat-gc-val '+(uPct>=0?'up':'dn')+'">'+(uPct>=0?'+':'')+uPct.toFixed(2)+'%</span></div>'
+        +'<div class="stat-gc-row"><span class="stat-gc-lbl">손익금액</span><span class="stat-gc-val '+(uProfit>=0?'up':'dn')+'">'+(uProfit>=0?'+':'')+fmt(Math.round(uProfit))+'원</span></div>'
+        +'</div></div>';
+    }
+
+    // 합계 카드
+    var grandPct=grandBuy?(grandProfit/grandBuy*100):null;
+    var grandWR=grandClosed?Math.round(grandWins/grandClosed*100):null;
+    groupRows+='<div class="stat-total-card">'
+      +'<div class="stat-total-label">전체 합계</div>'
+      +'<div class="stat-gc-rows">'
+      +'<div class="stat-gc-row"><span class="stat-gc-lbl">누적수익률</span><span class="stat-gc-val '+(grandPct!==null?(grandPct>=0?'up':'dn'):'')+'">'+( grandPct!==null?(grandPct>=0?'+':'')+grandPct.toFixed(2)+'%':'—')+'</span></div>'
+      +'<div class="stat-gc-row"><span class="stat-gc-lbl">누적손익</span><span class="stat-gc-val '+(grandProfit>=0?'up':'dn')+'">'+( grandProfit>=0?'+':'')+fmt(Math.round(grandProfit))+'원</span></div>'
+      +'</div></div>';
+
+    groupsHtml+=groupRows+'</div>';
+  }else{
+    groupsHtml='<div style="background:var(--bg2);border-radius:var(--radius);padding:16px;margin-bottom:14px;border:1px solid var(--border);text-align:center">'
+      +'<div style="font-size:13px;color:var(--text2);line-height:1.8">아직 그룹이 없어요.<br>목록 탭에서 종목을 선택해 회차를 만들면<br>여기에 회차별 통계가 표시됩니다.</div>'
+      +'<button onclick="sw(\'trade\')" style="margin-top:12px;padding:9px 18px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:13px;cursor:pointer;font-family:inherit">목록으로 이동</button>'
+      +'</div>';
+  }
+
+  el.innerHTML='<div>'+kpiHtml+groupsHtml+'</div>';
+}
+
+function closeDetail(){document.getElementById("detail-area").innerHTML="";}
+
+function detailRow(lbl,val,cls,sub){
+  return '<div class="d-row">'
+    +'<span class="d-lbl">'+lbl+'</span>'
+    +'<span class="d-val'+(cls?' '+cls:'')+'">'+val
+    +(sub?'<span class="d-sub">'+sub+'</span>':'')
+    +'</span></div>';
+}
+
+function showDetail(id){
+  var m=memos.find(function(m){return m.id===id;});if(!m)return;
+  var tp=m.target?pct(m.buy,m.target):null;
+  var sp=m.stop?pct(m.buy,m.stop):null;
+  var da=document.getElementById('detail-area');
+
+  var rows='';
+  rows+=detailRow('매수날짜', m.buyDate||'—');
+  rows+=detailRow('종목명', m.name);
+  rows+=detailRow('매수가', fmt(m.buy)+'원');
+  if(m.qty)   rows+=detailRow('수량', fmt(m.qty)+'주');
+  if(m.total) rows+=detailRow('매수총액', fmt(m.total)+'원');
+  if(m.target)rows+=detailRow('목표가', fmt(m.target)+'원','up','(+'+(tp)+'%)  → 도달 시 즉시 매도');
+  if(m.stop)  rows+=detailRow('손절가', fmt(m.stop)+'원','dn','('+sp+'%)  → 도달 시 즉시 매도');
+  if(m.days){
+    var _dlStr='';
+    if(m.buyDate){
+      var _dl=new Date(m.buyDate);
+      _dl.setDate(_dl.getDate()+parseInt(m.days));
+      _dlStr=' ('+_dl.toISOString().slice(0,10)+')';
+    }
+    rows+=detailRow('보유기한', m.days+'일'+_dlStr,'','→ 횡보 손절');
+  }
+  if(m.memo)  rows+=detailRow('메모', m.memo);
+
+  // 매도 결과 (이미 입력된 경우)
+  var sellResult='';
+  if(m.sellPrice){
+    var rateVal=((m.sellPrice-m.buy)/m.buy*100);
+    var isLoss=rateVal<0;
+    var rateStr=(rateVal>0?'+':'')+rateVal.toFixed(2)+'%';
+    var profitAmt=(m.sellPrice-m.buy)*(m.qty||1);
+    var cls2=isLoss?'neg':'pos';
+    var sellTotal=m.sellTotal||(m.sellPrice*(m.qty||1));
+    sellResult='<div class="profit-box '+cls2+'">'
+      +'<div class="profit-rate '+cls2+'">'+rateStr
+      +(isLoss?'<span class="손절-badge">손절</span>':'')+'</div>'
+      +'<div class="profit-detail '+cls2+'">'
+      +'매도총액 '+fmt(sellTotal)+'원'
+      +' &nbsp;|&nbsp; 수익 '+(profitAmt>0?'+':'')+fmt(Math.round(profitAmt))+'원'
+      +(m.sellDate?' &nbsp;|&nbsp; '+m.sellDate:'')
+      +'</div></div>';
+    rows+=detailRow('매도날짜', m.sellDate||'—');
+    rows+=detailRow('매도가', fmt(m.sellPrice)+'원');
+    rows+=detailRow('매도총액', fmt(sellTotal)+'원');
+  }
+
+  // 매도 입력 섹션 (미매도 상태)
+  var sellInput='';
+  if(!m.sellPrice){
+    sellInput='<div class="sell-section">'
+      +'<div class="sell-title">📤 매도 기록</div>'
+      +'<div class="sell-row">'
+      +'<div class="sell-field"><label>매도날짜</label>'
+      +'<input type="date" id="si-date-'+id+'" value="'+(m.buyDate||'')+'"></div>'
+      +'<div class="sell-field"><label>매도가</label>'
+      +'<input type="text" inputmode="numeric" id="si-price-'+id+'" placeholder="0" oninput="onSellInput('+id+')"></div>'
+      +'</div>'
+      +'<div id="si-profit-'+id+'"></div>'
+      +'<button class="btn-sell-confirm" onclick="confirmSell('+id+')">매도 확정</button>'
+      +'</div>';
+  }
+
+  // 추가매수 버튼 (보유중 종목만)
+  var addBuyBtn='';
+  if(m.status==='active'){
+    var _abId='ab-inp-'+id;
+    var _abRId='ab-result-'+id;
+    addBuyBtn='<div class="add-buy-scan" onclick="document.getElementById(\'' + _abId + '\').click()">'
+      +'<input type="file" accept="image/*" id="'+_abId+'" onchange="onAddBuyImg(this,'+id+')">'
+      +'<div class="ab-icon">📷</div>'
+      +'<div class="ab-label">추가매수 스크린샷</div>'
+      +'</div>'
+      +'<div id="'+_abRId+'"></div>';
+  }
+
+
+  da.innerHTML='<div class="detail">'
+    +'<div class="d-header"><span class="d-name">'+m.name+'</span>'
+    +'<button class="close-x" onclick="closeDetail()">✕</button></div>'
+    +sellResult
+    +'<div class="d-rows">'+rows+'</div>'
+    +addBuyBtn
+    +sellInput
+    +'<div class="act-row">'
+    +'<button class="act-btn act-edit" onclick="editDetail('+id+')">수정</button>'
+    +'<button class="act-btn" onclick="toggleStat('+id+')">'+(m.status==='active'?'종료 처리':'재개')+'</button>'
+    +'<button class="act-btn act-del" onclick="delMemo('+id+')">삭제</button>'
+    +'</div></div>';
+  da.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function fmtEditInput(el){var r=el.value.replace(/,/g,"").replace(/[^0-9]/g,"");el.value=r?parseInt(r).toLocaleString("ko-KR"):"";};
+function onSellInput(id){
+  var m=memos.find(function(m){return m.id===id;});if(!m)return;
+  var el=document.getElementById('si-price-'+id);
+  // 콤마 포맷
+  var raw=el.value.replace(/,/g,'').replace(/[^0-9]/g,'');
+  if(raw)el.value=parseInt(raw).toLocaleString('ko-KR');
+  var sellP=parseInt(raw)||0;
+  var box=document.getElementById('si-profit-'+id);
+  if(!sellP||!m.buy){box.innerHTML='';return;}
+  var rate=(sellP-m.buy)/m.buy*100;
+  var isLoss=rate<0;
+  var cls=isLoss?'neg':'pos';
+  var rateStr=(rate>0?'+':'')+rate.toFixed(2)+'%';
+  var profitAmt=(sellP-m.buy)*(m.qty||1);
+  var sellTotal=sellP*(m.qty||1);
+  box.innerHTML='<div class="profit-box '+cls+'" style="margin-bottom:12px">'
+    +'<div class="profit-rate '+cls+'">'+rateStr
+    +(isLoss?'<span class="손절-badge">손절</span>':'')+'</div>'
+    +'<div class="profit-detail '+cls+'">'
+    +'매도총액 '+fmt(sellTotal)+'원'
+    +' &nbsp;|&nbsp; 수익 '+(profitAmt>0?'+':'')+fmt(Math.round(profitAmt))+'원'
+    +'</div></div>';
+}
+
+async function confirmSell(id){
+  var m=memos.find(function(m){return m.id===id;});if(!m)return;
+  var priceEl=document.getElementById('si-price-'+id);
+  var dateEl=document.getElementById('si-date-'+id);
+  var raw=priceEl.value.replace(/,/g,'');
+  var sellP=parseInt(raw)||0;
+  if(!sellP){alert('매도가를 입력해주세요.');return;}
+  m.sellPrice=sellP;
+  m.sellTotal=sellP*(m.qty||1);
+  m.sellDate=dateEl?dateEl.value:'';
+  m.status='closed';
+ await persist();updateBadge();renderList();showDetail(id);
+}
+
+function editDetail(id){
+  var m=memos.find(function(m){return m.id===id;});if(!m)return;
+  var da=document.getElementById('detail-area');
+
+  // ── 기본값 계산 (설정값 → 폼 자동채움) ──
+  var _defTgt=parseFloat(settings.targetPct)||0;
+  var _defStp=parseFloat(settings.stopPct)||0;
+  if(_defStp>0)_defStp=-_defStp;
+  var _defDays=parseInt(settings.days)||0;
+
+  var _tPct='',_tAmt='',_sPct='',_sAmt='';
+  if(m.target&&m.buy){
+    var _tp=((m.target-m.buy)/m.buy*100);
+    _tPct=(_tp>0?'+':'')+_tp.toFixed(2);
+    _tAmt=fmt(m.target);
+  }else if(m.buy&&_defTgt){
+    _tPct='+'+_defTgt.toFixed(2);
+    _tAmt=Math.round(m.buy*(1+_defTgt/100)).toLocaleString('ko-KR');
+  }else if(m.target){_tAmt=fmt(m.target);}
+
+  if(m.stop&&m.buy){
+    var _sp=((m.stop-m.buy)/m.buy*100);
+    _sPct=(_sp>0?'+':'')+_sp.toFixed(2);
+    _sAmt=fmt(m.stop);
+  }else if(m.buy&&_defStp){
+    _sPct=_defStp.toFixed(2);
+    _sAmt=Math.round(m.buy*(1+_defStp/100)).toLocaleString('ko-KR');
+  }else if(m.stop){_sAmt=fmt(m.stop);}
+
+  var _dVal=m.days||(_defDays?String(_defDays):'');
+
+  da.innerHTML='<div class="detail">'
+    +'<div class="d-header"><span class="d-name">수정</span>'
+    +'<button class="close-x" onclick="showDetail('+id+')">✕</button></div>'
+
+    // ── 매수 정보 ──
+    +'<div class="edit-section">'
+    +'<div class="edit-title">📥 매수 정보</div>'
+    +'<div class="edit-field"><label>종목명</label>'
+    +'<input id="ef-name" type="text" value="'+escHtml(m.name)+'"></div>'
+    +'<div class="edit-row2">'
+    +'<div class="edit-field"><label>매수날짜</label>'
+    +'<input id="ef-date" type="date" value="'+(m.buyDate||'')+'"></div>'
+    +'<div class="edit-field"><label>매수가</label>'
+    +'<input id="ef-buy" type="text" inputmode="numeric" value="'+fmt(m.buy)+'" oninput="fmtEditInput(this)"></div>'
+    +'</div>'
+    +'<div class="edit-row2">'
+    +'<div class="edit-field"><label>수량</label>'
+    +'<input id="ef-qty" type="text" inputmode="numeric" value="'+(m.qty?fmt(m.qty):'')+'" oninput="fmtEditInput(this)"></div>'
+    +'<div class="edit-field"><label>보유기한(일)</label>'
+    +'<input id="ef-days" type="number" value="'+_dVal+'"></div>'
+    +'</div>'
+
+    +'<div class="edit-field"><label>목표가 <span style="font-size:11px;color:var(--text3);font-weight:400">% 또는 가격 입력</span></label>'
+    +'<div class="twin-input">'
+    +'<div class="ti-group"><input id="ef-target-pct" type="text" inputmode="decimal" value="'+_tPct+'" placeholder="+15" oninput="syncEditPrice(\'target\',\'pct\','+id+')"><span class="ti-unit">%</span></div>'
+    +'<div class="ti-div">→</div>'
+    +'<div class="ti-group"><input id="ef-target" type="text" inputmode="numeric" value="'+_tAmt+'" placeholder="0" oninput="syncEditPrice(\'target\',\'amt\','+id+')"><span class="ti-unit">원</span></div>'
+    +'</div></div>'
+
+    +'<div class="edit-field"><label>손절가 <span style="font-size:11px;color:var(--text3);font-weight:400">% 또는 가격 입력</span></label>'
+    +'<div class="twin-input">'
+    +'<div class="ti-group"><input id="ef-stop-pct" type="text" inputmode="decimal" value="'+_sPct+'" placeholder="-10" oninput="syncEditPrice(\'stop\',\'pct\','+id+')"><span class="ti-unit">%</span></div>'
+    +'<div class="ti-div">→</div>'
+    +'<div class="ti-group"><input id="ef-stop" type="text" inputmode="numeric" value="'+_sAmt+'" placeholder="0" oninput="syncEditPrice(\'stop\',\'amt\','+id+')"><span class="ti-unit">원</span></div>'
+    +'</div></div>'
+
+    +'<div class="edit-field"><label>메모</label>'
+    +'<input id="ef-memo" type="text" value="'+(m.memo||'')+'"></div>'
+    +'</div>'
+
+    // ── 매도 정보 ──
+    +'<div class="edit-section" style="margin-top:10px">'
+    +'<div class="edit-title">📤 매도 정보</div>'
+    +'<div class="edit-row2">'
+    +'<div class="edit-field"><label>매도날짜</label>'
+    +'<input id="ef-selldate" type="date" value="'+(m.sellDate||'')+'"></div>'
+    +'<div class="edit-field"><label>매도가</label>'
+    +'<input id="ef-sellprice" type="text" inputmode="numeric" value="'+(m.sellPrice?fmt(m.sellPrice):'')+'" oninput="fmtEditInput(this);updateEditSellCalc('+id+')"></div>'
+    +'</div>'
+    +'<div id="ef-sell-calc"></div>'
+    +'</div>'
+
+    +'<div class="edit-acts">'
+    +'<button class="edit-save" onclick="saveEdit('+id+')">저장</button>'
+    +'<button class="edit-cancel" onclick="showDetail('+id+')">취소</button>'
+    +'</div></div>';
+
+  // 매도가 이미 있으면 수익 미리 표시
+  if(m.sellPrice) updateEditSellCalc(id);
+  da.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function syncEditPrice(field,from,id){
+  var m=memos.find(function(m){return m.id===id;});
+  var buy=parseInt((document.getElementById('ef-buy').value||'').replace(/,/g,''))||(m?m.buy:0);
+  if(!buy)return;
+  var pctEl=document.getElementById('ef-'+field+'-pct');
+  var amtEl=document.getElementById('ef-'+field);
+  if(!pctEl||!amtEl)return;
+  if(from==='pct'){
+    var raw=pctEl.value.replace(/\s/g,'');
+    if(field==='stop'&&raw&&raw!=='-'&&parseFloat(raw)>0)raw='-'+raw;
+    var p=parseFloat(raw);
+    if(!isNaN(p)){
+      amtEl.value=Math.round(buy*(1+p/100)).toLocaleString('ko-KR');
+    }else{amtEl.value='';}
+  }else{
+    var r=amtEl.value.replace(/,/g,'').replace(/[^0-9]/g,'');
+    if(r)amtEl.value=parseInt(r).toLocaleString('ko-KR');else amtEl.value='';
+    var a=parseInt(r)||0;
+    if(a>0){
+      var pp=((a-buy)/buy*100).toFixed(2);
+      pctEl.value=(parseFloat(pp)>0?'+':'')+pp;
+    }else{pctEl.value=field==='stop'?'-':'';}
+  }
+}
+
+function updateEditSellCalc(id){
+  var m=memos.find(function(m){return m.id===id;});if(!m)return;
+  var el=document.getElementById('ef-sellprice');
+  var box=document.getElementById('ef-sell-calc');
+  if(!el||!box)return;
+  var sellP=parseInt(el.value.replace(/,/g,''))||0;
+  if(!sellP||!m.buy){box.innerHTML='';return;}
+  var rate=(sellP-m.buy)/m.buy*100;
+  var isLoss=rate<0;
+  var cls=isLoss?'neg':'pos';
+  var sellTotal=sellP*(m.qty||1);
+  var profitAmt=(sellP-m.buy)*(m.qty||1);
+  box.innerHTML='<div class="profit-box '+cls+'" style="margin:8px 0 4px">'
+    +'<div class="profit-rate '+cls+'">'+(rate>0?'+':'')+rate.toFixed(2)+'%'
+    +(isLoss?'<span class="손절-badge">손절</span>':'')+'</div>'
+    +'<div class="profit-detail '+cls+'">'
+    +'매도총액 '+fmt(sellTotal)+'원 &nbsp;|&nbsp; 수익 '+(profitAmt>0?'+':'')+fmt(Math.round(profitAmt))+'원'
+    +'</div></div>';
+}
+
+async function saveEdit(id){
+  var m=memos.find(function(m){return m.id===id;});if(!m)return;
+  m.name=document.getElementById('ef-name').value.trim()||m.name;
+  m.buyDate=document.getElementById('ef-date').value||m.buyDate;
+  m.buy=parseInt(document.getElementById('ef-buy').value.replace(/,/g,''))||m.buy;
+  m.qty=parseInt(document.getElementById('ef-qty').value.replace(/,/g,''))||null;
+  m.total=m.buy&&m.qty?m.buy*m.qty:null;
+  m.target=parseInt(document.getElementById('ef-target').value.replace(/,/g,''))||null;
+  m.stop=parseInt(document.getElementById('ef-stop').value.replace(/,/g,''))||null;
+  m.days=document.getElementById('ef-days').value||null;
+  m.memo=document.getElementById('ef-memo').value.trim();
+  // 매도 정보
+  var newSellPrice=parseInt((document.getElementById('ef-sellprice').value||'').replace(/,/g,''))||null;
+  var newSellDate=document.getElementById('ef-selldate').value||null;
+  m.sellPrice=newSellPrice||null;
+  m.sellDate=newSellDate||null;
+  m.sellTotal=newSellPrice&&m.qty?newSellPrice*m.qty:null;
+  if(m.sellPrice) m.status='closed';
+ await persist();renderList();showDetail(id);
+}
+
+// ── 추가매수 OCR ─────────────────────────────────────────
+async function onAddBuyImg(inp,id){
+  var m=memos.find(function(m){return m.id===id;});if(!m||!inp.files||!inp.files[0])return;
+  const file=inp.files[0];
+  const resEl=document.getElementById('ab-result-'+id);
+  resEl.innerHTML='<div class="ab-analyzing"><div class="spin"></div><div class="analyzing-txt" style="font-size:13px">화면 인식 중...</div></div>';
+  try{
+    const result=await Tesseract.recognize(file,'kor',{});
+    const raw=result.data.text||'';
+    const parsed=parseSamsungMTS(raw);
+    if(parsed.type==='none'||!parsed.items.length){
+      resEl.innerHTML='<div style="color:var(--red-text);font-size:13px;padding:8px 0">종목 정보를 찾지 못했습니다.</div>';return;
+    }
+    const it=parsed.items[0];
+    const newP=parseInt((it.price||'').replace(/,/g,''))||0;
+    const newQ=parseInt((it.qty||'').replace(/,/g,''))||0;
+    if(!newP){resEl.innerHTML='<div style="color:var(--red-text);font-size:13px;padding:8px 0">가격 인식 실패 — 다시 시도해주세요.</div>';return;}
+    // 계산
+    const oldBuy=m.buy||0;
+    const oldQty=m.qty||0;
+    let newAvgBuy=newP, newTotalQty=newQ, newTotal=newP*newQ;
+    if(oldQty>0&&newQ>0){
+      newTotalQty=oldQty+newQ;
+      newAvgBuy=Math.round((oldBuy*oldQty+newP*newQ)/newTotalQty);
+      newTotal=newAvgBuy*newTotalQty;
+    }else if(oldQty>0){
+      newTotalQty=oldQty; newAvgBuy=Math.round((oldBuy+newP)/2); newTotal=newAvgBuy*newTotalQty;
+    }
+    // 목표/손절 비율 유지
+    var newTarget=null,newStop=null;
+    if(m.target&&oldBuy){var tp=(m.target-oldBuy)/oldBuy;newTarget=Math.round(newAvgBuy*(1+tp));}
+    if(m.stop&&oldBuy){var sp=(m.stop-oldBuy)/oldBuy;newStop=Math.round(newAvgBuy*(1+sp));}
+    // 보유기한 +7
+    var oldDays=parseInt(m.days)||0;
+    var newDays=oldDays+7;
+    var dlDate=new Date();dlDate.setDate(dlDate.getDate()+newDays);
+    var dlStr=(dlDate.getMonth()+1)+'/'+(dlDate.getDate());
+    // 결과 표시
+    var html='<div class="ab-result-box">'
+      +'<div class="ab-result-title">📊 추가매수 계산 결과</div>'
+      +'<div class="ab-result-row"><span style="color:var(--text2);font-size:12px">매수가</span>'
+      +'<span><span class="ab-old">'+fmt(oldBuy)+'원</span>'
+      +'<span class="ab-arrow">→</span>'
+      +'<span class="ab-new-blue">'+fmt(newAvgBuy)+'원</span></span></div>';
+    if(oldQty)html+='<div class="ab-result-row"><span style="color:var(--text2);font-size:12px">수량</span>'
+      +'<span><span class="ab-old">'+fmt(oldQty)+'주</span>'
+      +'<span class="ab-arrow">→</span>'
+      +'<span class="ab-new-blue">'+fmt(newTotalQty)+'주</span></span></div>';
+    if(m.total)html+='<div class="ab-result-row"><span style="color:var(--text2);font-size:12px">매수총액</span>'
+      +'<span><span class="ab-old">'+fmt(m.total)+'원</span>'
+      +'<span class="ab-arrow">→</span>'
+      +'<span class="ab-new-blue">'+fmt(newTotal)+'원</span></span></div>';
+    if(newTarget)html+='<div class="ab-result-row"><span style="color:var(--text2);font-size:12px">목표가</span>'
+      +'<span><span class="ab-old">'+fmt(m.target)+'원</span>'
+      +'<span class="ab-arrow">→</span>'
+      +'<span class="ab-new-up">'+fmt(newTarget)+'원</span></span></div>';
+    if(newStop)html+='<div class="ab-result-row"><span style="color:var(--text2);font-size:12px">손절가</span>'
+      +'<span><span class="ab-old">'+fmt(m.stop)+'원</span>'
+      +'<span class="ab-arrow">→</span>'
+      +'<span class="ab-new-dn">'+fmt(newStop)+'원</span></span></div>';
+    html+='<div class="ab-result-row"><span style="color:var(--text2);font-size:12px">보유기한</span>'
+      +'<span><span class="ab-old">'+oldDays+'일</span>'
+      +'<span class="ab-arrow">→</span>'
+      +'<span class="ab-new-blue">'+newDays+'일 +7 ('+dlStr+')</span></span></div>'
+      +'</div>';
+    html+='<button class="ab-apply-btn" onclick="applyAddBuy('+id+','+newAvgBuy+','+newTotalQty+','+newTotal+','+(newTarget||0)+','+(newStop||0)+','+newDays+')">적용하기</button>';
+    html+='<button class="ab-cancel-btn" onclick="document.getElementById(\'ab-result-'+id+'\').innerHTML=\'\'">취소</button>';
+    resEl.innerHTML=html;
+    resEl.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }catch(e){
+    resEl.innerHTML='<div style="color:var(--red-text);font-size:13px;padding:8px 0">OCR 오류: '+(e.message||String(e))+'</div>';
+  }
+}
+
+async function applyAddBuy(id,newBuy,newQty,newTotal,newTarget,newStop,newDays){
+  var m=memos.find(function(m){return m.id===id;});if(!m)return;
+  m.buy=newBuy;
+  if(newQty)m.qty=newQty;
+  if(newTotal)m.total=newTotal;
+  if(newTarget)m.target=newTarget;
+  if(newStop)m.stop=newStop;
+  m.days=String(newDays);
+  await persist();renderList();showDetail(id);
+}
+
+async function toggleStat(id){const m=memos.find(m=>m.id===id);if(m){m.status=m.status==='active'?'closed':'active';await persist();updateBadge();renderList();document.getElementById('detail-area').innerHTML='';}
+}
+
+async function delMemo(id){if(!confirm('삭제할까요?'))return;memos=memos.filter(m=>m.id!==id);await persist();updateBadge();renderList();document.getElementById('detail-area').innerHTML='';}
+
+// ── 관심등록 OCR ─────────────────────────────────────────
+async function onWatchImg(inp){
+  if(!inp.files||!inp.files[0])return;
+  const file=inp.files[0];
+  document.getElementById('w-pick-banner').style.display='none';
+  document.getElementById('w-ocr-error').style.display='none';
+  setWatchAnalyzing(true,'화면 인식 중...','OCR 엔진 로딩 중 (최초 1회만 약 10초)');
+  try{
+    const result=await Tesseract.recognize(file,'kor',{
+      logger:m=>{
+        if(m.status==='loading language traineddata')
+          setWatchAnalyzing(true,'언어 데이터 다운로드 중...','처음 한 번만 — Wi-Fi 권장');
+        else if(m.status==='recognizing text')
+          setWatchAnalyzing(true,'인식 중...','분석 중 '+Math.round((m.progress||0)*100)+'%');
+      }
+    });
+    setWatchAnalyzing(false);
+    const raw=result.data.text||'';
+    if(!raw.trim()){showWatchOcrError('인식 결과가 없습니다.');return;}
+    const parsed=parseSamsungMTS(raw);
+    if(parsed.type==='none'){showWatchOcrError('종목 정보를 찾지 못했습니다.');return;}
+    if(parsed.type==='single'||parsed.type==='multi'){
+      window._wParsed=parsed.items;
+      window._wChecked=parsed.items.map(function(){return true;});
+      var html=parsed.items.map(function(item,i){
+        return '<div id="wpci-'+i+'" onclick="toggleWatchCheck('+i+')" style="display:flex;align-items:center;gap:12px;padding:11px 13px;cursor:pointer;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px;background:var(--bg);-webkit-tap-highlight-color:transparent">'
+          +'<div id="wpck-'+i+'" style="width:22px;height:22px;border-radius:50%;border:2px solid var(--text);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;background:var(--text);color:var(--bg)">✓</div>'
+          +'<div style="flex:1;min-width:0">'
+          +'<div style="font-size:15px;font-weight:600;color:var(--text)">'+escHtml(item.name||'')+'</div>'
+          +'<div style="font-size:12px;color:var(--text2);margin-top:2px">'+(item.price?'기준가 <b style="color:var(--text)">'+fmt(Number(item.price))+'원</b>':'가격 미인식')+'</div>'
+          +'</div>'
+          +'</div>';
+      }).join('');
+      document.getElementById('w-pick-list').innerHTML=html;
+      document.getElementById('w-pick-banner').style.display='block';
+    }
+  }catch(e){
+    setWatchAnalyzing(false);
+    showWatchOcrError('OCR 오류: '+(e&&e.message?e.message:String(e)));
+  }
+}
+function setWatchAnalyzing(on,txt,detail){
+  document.getElementById('w-analyzing').style.display=on?'block':'none';
+  if(txt)document.getElementById('w-analyzing-txt').textContent=txt;
+  if(detail)document.getElementById('w-analyzing-detail').textContent=detail;
+}
+function showWatchOcrError(msg){
+  var el=document.getElementById('w-ocr-error');
+  el.innerHTML=msg+'<br><button onclick="document.getElementById(\'w-ocr-error\').style.display=\'none\'" style="margin-top:8px;padding:4px 12px;border-radius:8px;border:1px solid var(--red-text);background:none;color:var(--red-text);cursor:pointer;font-size:12px;font-family:inherit">닫기</button>';
+  el.style.display='block';
+}
+function fillWatchForm(item){/* noop */}
+function fmtWPrice(){/* noop */}
+async function doWatchSave(){/* noop */}
+function resetWatchScan(){
+  document.getElementById('w-pick-banner').style.display='none';
+  document.getElementById('w-pick-list').innerHTML='';
+  document.getElementById('w-ocr-error').style.display='none';
+  document.getElementById('w-analyzing').style.display='none';
+  document.getElementById('w-file-input').value='';
+  window._wParsed=[];window._wChecked=[];
+}
+function clearWatchF(){resetWatchScan();}
+function toggleWatchCheck(i){
+  var arr=window._wChecked;
+  if(!arr)return;
+  arr[i]=!arr[i];
+  var ck=document.getElementById('wpck-'+i);
+  if(!ck)return;
+  if(arr[i]){
+    ck.style.background='var(--text)';ck.style.borderColor='var(--text)';ck.style.color='var(--bg)';ck.textContent='✓';
+  }else{
+    ck.style.background='transparent';ck.style.borderColor='var(--border2)';ck.style.color='transparent';ck.textContent='';
+  }
+}
+async function doWatchBulkSave(){
+  var items=window._wParsed||[];
+  var checked=window._wChecked||items.map(function(){return true;});
+  var today=new Date().toISOString().slice(0,10);
+  var saved=0;
+  items.forEach(function(item,i){
+    if(!checked[i])return;
+    if(!item.name)return;
+    watchlist.unshift({id:Date.now()+i,name:item.name,tag:'',price:item.price?parseInt(item.price):null,memo:'',date:today});
+    saved++;
+  });
+  if(!saved){showWatchNotice('선택된 항목이 없습니다.','err');return;}
+  await persist();
+  resetWatchScan();
+  renderWatchlist();
+  showWatchNotice(saved+'개 항목 저장됐습니다 ✓');
+}
+function showWatchNotice(txt,type){
+  const el=document.getElementById('w-notice');
+  el.textContent=txt;el.className='notice'+(type?' '+type:'');
+  setTimeout(()=>{el.textContent='';el.className='notice';},3500);
+}
+
+// ── 관심목록 렌더 ─────────────────────────────────────────
+function renderWatchlist(){
+  var la=document.getElementById('wl-list-area');
+  if(!watchlist.length){
+    la.innerHTML='<div class="empty">📋 관심등록 항목이 없습니다.<br>위의 스크린샷 선택으로 추가하세요.</div>';return;
+  }
+  la.innerHTML='<div class="memo-list">'+watchlist.map(function(w){
+    var tagBadge=w.tag?'<span class="wl-tag">'+escHtml(w.tag)+'</span>':'';
+    return '<div class="memo-card" onclick="showWatchDetail('+w.id+')">'
+      +'<div class="mc-top">'
+      +'<div><div class="mc-name">'+escHtml(w.name)+tagBadge+'</div></div>'
+      +'<div class="mc-right"><span class="mc-date">'+w.date+'</span></div>'
+      +'</div>'
+      +(w.price||w.memo?'<div class="mc-divider"></div>':'')
+      +'<div class="mc-meta">'
+      +(w.price?'<div class="mc-meta-row"><span><span class="lbl">기준가</span><span class="val">'+fmt(w.price)+'원</span></span></div>':'')
+      +(w.memo?'<div class="mc-memo-txt" style="margin-top:'+(w.price?'6':'0')+'px">📝 '+escHtml(w.memo)+'</div>':'')
+      +'</div>'
+      +'</div>';
+  }).join('')+'</div>';
+}
+
+function closeWatchDetail(){
+  document.getElementById('wl-detail-area').innerHTML='';
+}
+
+function showWatchDetail(id){
+  var w=watchlist.find(w=>w.id===id);if(!w)return;
+  var da=document.getElementById('wl-detail-area');
+  var tagBadge=w.tag?'<span class="wl-tag">'+escHtml(w.tag)+'</span>':'';
+  da.innerHTML='<div class="wl-detail">'
+    +'<div class="wl-d-header">'
+    +'<span class="wl-d-name">'+escHtml(w.name)+tagBadge+'</span>'
+    +'<button class="close-x" onclick="closeWatchDetail()">✕</button>'
+    +'</div>'
+    +'<div class="wl-d-rows">'
+    +detailRow('등록일',w.date)
+    +detailRow('종목명',escHtml(w.name)+(w.tag?' ['+escHtml(w.tag)+']':''))
+    +(w.price?detailRow('기준가',fmt(w.price)+'원'):'')
+    +(w.memo?detailRow('메모',escHtml(w.memo)):'')
+    +'</div>'
+    +'<div class="act-row">'
+    +'<button class="act-btn act-edit" onclick="editWatchDetail('+id+')">수정</button>'
+    +'<button class="act-btn act-del" onclick="delWatch('+id+')">삭제</button>'
+    +'</div></div>';
+  da.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function editWatchDetail(id){
+  var w=watchlist.find(function(w){return w.id===id;});if(!w)return;
+  var da=document.getElementById('wl-detail-area');
+  da.innerHTML='<div class="wl-detail">'
+    +'<div class="wl-d-header">'
+    +'<span class="wl-d-name" style="font-size:16px">수정</span>'
+    +'<button class="close-x" onclick="showWatchDetail('+id+')">✕</button>'
+    +'</div>'
+    +'<div class="edit-section">'
+    +'<div class="edit-field"><label>등록일</label>'
+    +'<input id="we-date" type="date" value="'+(w.date||'')+'"></div>'
+    +'<div class="edit-field"><label>종목명</label>'
+    +'<input id="we-name" type="text" value="'+escHtml(w.name||'')+'"></div>'
+    +'<div class="edit-field"><label>분류 태그</label>'
+    +'<input id="we-tag" type="text" value="'+escHtml(w.tag||'')+'" placeholder="예: 반도체" maxlength="10"></div>'
+    +'<div class="edit-field"><label>기준가 (원)</label>'
+    +'<input id="we-price" type="text" inputmode="numeric" value="'+(w.price?fmt(w.price):'')+'" oninput="var r=this.value.replace(/,/g,\'\').replace(/[^0-9]/g,\'\');this.value=r?parseInt(r).toLocaleString(\'ko-KR\'):\'\';"></div>'
+    +'<div class="edit-field"><label>메모</label>'
+    +'<input id="we-memo" type="text" value="'+escHtml(w.memo||'')+'" placeholder="관심 이유, 매수 조건..."></div>'
+    +'</div>'
+    +'<div class="act-row">'
+    +'<button class="act-btn act-edit" onclick="saveWatchEdit('+id+')">저장</button>'
+    +'<button class="act-btn" onclick="showWatchDetail('+id+')">취소</button>'
+    +'</div></div>';
+  da.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+async function saveWatchEdit(id){
+  var w=watchlist.find(function(w){return w.id===id;});if(!w)return;
+  var name=(document.getElementById('we-name').value||'').trim();
+  if(!name){alert('종목명은 필수입니다.');return;}
+  w.name=name;
+  w.tag=(document.getElementById('we-tag').value||'').trim();
+  var raw=(document.getElementById('we-price').value||'').replace(/,/g,'');
+  w.price=parseInt(raw)||null;
+  w.memo=(document.getElementById('we-memo').value||'').trim();
+  w.date=document.getElementById('we-date').value||w.date;
+  await persist();
+  renderWatchlist();
+  showWatchDetail(id);
+}
+async function delWatch(id){
+  if(!confirm('삭제할까요?'))return;
+  watchlist=watchlist.filter(w=>w.id!==id);
+  await persist();
+  renderWatchlist();
+  document.getElementById('wl-detail-area').innerHTML='';
+}
+
+function showInstallHint(){
+  if(localStorage.getItem('install_hint_shown'))return;
+  const ua=navigator.userAgent;
+  const hint=document.getElementById('install-hint');
+  const body=document.getElementById('install-hint-body');
+  if(window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone)return;
+  if(/iPad|iPhone|iPod/.test(ua)&&!window.MSStream){
+    body.innerHTML='Safari에서 하단 <b>공유(□↑)</b> → <b>"홈 화면에 추가"</b>';
+    hint.style.display='block';localStorage.setItem('install_hint_shown','1');
+  }else if(/Android/.test(ua)){
+    body.innerHTML='Chrome에서 우측 상단 <b>메뉴(⋮)</b> → <b>"홈 화면에 추가"</b>';
+    hint.style.display='block';localStorage.setItem('install_hint_shown','1');
+  }
+}
+
+// ── 단기메모 ─────────────────────────────────────────────
+function onQuickNoteInput(el){
+  quickNote=el.value;
+  // 높이 자동조절
+  el.style.height='auto';
+  el.style.height=Math.min(el.scrollHeight,90)+'px';
+  // 로컬 캐시 즉시 반영
+  try{const c=JSON.parse(localStorage.getItem('tm_cache')||'{}');c.quickNote=quickNote;localStorage.setItem('tm_cache',JSON.stringify(c));}catch(e){}
+  // 서버 저장은 디바운스 (1.5초)
+  clearTimeout(_qnTimer);
+  _qnTimer=setTimeout(()=>persist(),1500);
+}
+function applyQuickNote(){
+  var el=document.getElementById('quick-note');
+  if(!el)return;
+  el.value=quickNote||'';
+  if(quickNote){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,90)+'px';}
+}
+
+// ── 원칙 표시 ─────────────────────────────────────────────
+function applyPrinciple(){
+  var bar=document.getElementById('principle-bar');
+  var txt=document.getElementById('principle-text');
+  if(!bar||!txt)return;
+  var p=settings.principle||'';
+  if(p.trim()){
+    txt.textContent=p;
+    bar.style.display='block';
+  } else {
+    bar.style.display='none';
+  }
+}
+
+// ── 설정 기본값 적용 ──────────────────────────────────────
+function applySettingsDefaults(){
+  // 등록폼 제거로 no-op (설정 기본값은 수정 화면에서 직접 입력)
+}
+
+// ── 설정 열기/닫기/저장 ──────────────────────────────────
+function openSettings(){
+  // 현재 값으로 폼 채우기
+  document.getElementById('cfg-principle').value=settings.principle||'';
+  document.getElementById('cfg-target-pct').value=settings.targetPct!=null?settings.targetPct:'';
+  document.getElementById('cfg-stop-pct').value=settings.stopPct!=null?settings.stopPct:'';
+  document.getElementById('cfg-days').value=settings.days!=null?settings.days:'';
+  document.getElementById('cfg-token').value=getToken();
+  document.getElementById('settings-notice').textContent='';
+  var ov=document.getElementById('settings-overlay');
+  ov.style.display='flex';
+}
+function closeSettings(){
+  document.getElementById('settings-overlay').style.display='none';
+}
+async function saveSettings(){
+  var principle=(document.getElementById('cfg-principle').value||'').trim();
+  var targetPct=(document.getElementById('cfg-target-pct').value||'').trim();
+  var stopPct=(document.getElementById('cfg-stop-pct').value||'').trim();
+  var days=(document.getElementById('cfg-days').value||'').trim();
+  var token=(document.getElementById('cfg-token').value||'').trim();
+
+  // 토큰 변경
+  if(token&&token!==getToken()){
+    localStorage.setItem(TOKEN_KEY,token);
+  }
+
+  settings.principle=principle;
+  settings.targetPct=targetPct;
+  settings.stopPct=stopPct;
+  settings.days=days;
+
+  applyPrinciple();
+
+  await persist();
+
+  var n=document.getElementById('settings-notice');
+  n.textContent='저장됐습니다 ✓';
+  n.style.color='var(--green)';
+  setTimeout(()=>{n.textContent='';},2500);
+}
+
+(async()=>{
+  try{await load();}catch(e){console.error('load error',e);}
+  try{applyQuickNote();applyPrinciple();}catch(e){console.error('apply error',e);}
+  try{
+    sw('wlist');
+  }catch(e){
+    const pw=document.getElementById('pane-wlist');
+    if(pw)pw.style.display='block';
+    console.error('sw error',e);
+  }
+})();
+</script>
+</body>
+</html>
