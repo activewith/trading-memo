@@ -131,7 +131,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 .b-on{background:var(--blue-bg);color:var(--blue-text)}
 .b-off{background:var(--bg3);color:var(--text2)}
 .mc-meta{display:flex;flex-wrap:wrap;gap:8px 0;flex-direction:column;margin-top:2px}
-.mc-meta-row{display:flex;gap:16px;font-size:14px;color:var(--text2)}
+.mc-meta-row{display:flex;gap:16px;font-size:14px;color:var(--text2);flex-wrap:nowrap}
+.mc-meta-row>span{white-space:nowrap;flex-shrink:0}
 .mc-meta-row .lbl{font-size:12px;color:var(--text3);margin-right:3px}
 .mc-meta-row .val{color:var(--text);font-weight:600}
 .mc-meta-row .val-up{color:var(--green-text);font-weight:700;font-size:15px}
@@ -1154,7 +1155,18 @@ function renderCard(m){
   if(m.target) r2+='<span><span class="lbl">목표</span><span class="val-up">'+fmt(m.target)+'원 (+'+tp+'%)</span></span>';
   if(m.stop)   r2+='<span><span class="lbl">손절</span><span class="val-dn">'+fmt(m.stop)+'원 ('+sp+'%)</span></span>';
   if(r2) rows+='<div class="mc-meta-row">'+r2+'</div>';
-  if(m.days) rows+='<div class="mc-meta-row"><span><span class="lbl">보유기한</span><span class="val">'+m.days+'일</span></span></div>';
+  if(m.days){
+    var deadlineStr='';
+    var startD=new Date(m.buyDate||m.date);
+    if(!isNaN(startD.getTime())){
+      startD.setDate(startD.getDate()+parseInt(m.days));
+      var dy=startD.getFullYear();
+      var dm=String(startD.getMonth()+1).padStart(2,'0');
+      var dd=String(startD.getDate()).padStart(2,'0');
+      deadlineStr=' <span style="font-size:12px;color:var(--text3);font-weight:400">('+dy+'-'+dm+'-'+dd+')</span>';
+    }
+    rows+='<div class="mc-meta-row"><span><span class="lbl">보유기한</span><span class="val">'+m.days+'일'+deadlineStr+'</span></span></div>';
+  }
   var closedBadge='';
   if(m.status!=='active'&&m.sellPrice){
     var crv=((m.sellPrice-m.buy)/m.buy*100);
