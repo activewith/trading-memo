@@ -310,6 +310,14 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 .stat-gc-val.dn{color:var(--red-text);font-weight:700}
 .stat-total-card{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:13px 14px;margin-top:4px}
 .stat-total-label{font-size:13px;font-weight:700;margin-bottom:8px;color:var(--text)}
+
+/* 현재가 */
+.mc-cur-row{display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap}
+.mc-cur-val{font-size:14px;font-weight:600;color:var(--text)}
+.mc-cur-up{font-size:12px;font-weight:700;color:var(--green-text)}
+.mc-cur-dn{font-size:12px;font-weight:700;color:var(--red-text)}
+.mc-cur-flat{font-size:12px;color:var(--text2)}
+.pfetch-spin{display:inline-block;width:11px;height:11px;border:1.5px solid var(--border2);border-top-color:var(--text2);border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle}
 </style>
 </head>
 <body>
@@ -450,6 +458,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
       <div style="display:flex;align-items:center;gap:8px;margin:4px 0 12px">
         <span style="font-size:12px;font-weight:700;color:var(--text2);white-space:nowrap">매매 목록</span>
         <div style="flex:1;border-top:1px solid var(--border)"></div>
+        <span id="price-fetch-badge" style="font-size:11px;color:var(--text3);white-space:nowrap"></span>
       </div>
       <div id="detail-area"></div>
       <div id="list-area"></div>
@@ -536,6 +545,9 @@ let selectedMemos=new Set(); // 체크된 메모 ID
 let settings={targetPct:'',stopPct:'',days:'',principle:''};
 let quickNote='';
 let _qnTimer=null; // quickNote 디바운스 타이머
+let currentTab=null; // 현재 활성 탭 (B방식 재탭 감지)
+let priceCache={}; // {memoId: {price, fetchedAt}} — 현재가 in-memory 캐시
+let _priceFetching=false;
 const GH_OWNER='activewith';
 const GH_REPO='trading-memo';
 const GH_FILE='data.json';
@@ -631,6 +643,8 @@ async function persist(){
 }
 
 function sw(p){
+  var wasOnTrade=(currentTab==='trade');
+  currentTab=p;
   const tabs=document.querySelectorAll('.tab');
   tabs[0].classList.toggle('on',p==='wlist');
   tabs[1].classList.toggle('on',p==='trade');
@@ -638,7 +652,7 @@ function sw(p){
   document.getElementById('pane-wlist').style.display=p==='wlist'?'block':'none';
   document.getElementById('pane-trade').style.display=p==='trade'?'block':'none';
   document.getElementById('pane-stat').style.display=p==='stat'?'block':'none';
-  if(p==='trade'){renderList();}
+  if(p==='trade'){renderList();if(wasOnTrade)fetchAllPrices();}
   if(p==='wlist')renderWatchlist();
   if(p==='stat')renderStat();
   if(p!=='trade')clearSelection();
@@ -1140,6 +1154,57 @@ async function ungroupGroup(gid){
   renderList();
 }
 
+// ── 현재가 일괄 조회 ─────────────────────────────────────
+async function fetchAllPrices(){
+  if(_priceFetching)return;
+  var targets=memos.filter(function(m){return m.status==='active'&&m.code;});
+  var badge=document.getElementById('price-fetch-badge');
+  if(!targets.length){
+    if(badge){badge.style.color='var(--text3)';badge.textContent='코드 미등록';setTimeout(function(){badge.textContent='';},2500);}
+    return;
+  }
+  _priceFetching=true;
+  if(badge){badge.innerHTML='<span class="pfetch-spin"></span>';}
+  var fetched=0;
+  await Promise.allSettled(targets.map(async function(m){
+    var p=await fetchPrice(m.code);
+    if(p!==null){priceCache[m.id]={price:p,fetchedAt:Date.now()};fetched++;}
+  }));
+  _priceFetching=false;
+  if(badge){
+    badge.innerHTML='';
+    badge.textContent=fetched?fetched+'개 갱신':'조회 실패';
+    badge.style.color=fetched?'var(--green-text)':'var(--red-text)';
+    setTimeout(function(){badge.textContent='';badge.style.color='';},3000);
+  }
+  renderList();
+}
+
+async function fetchPrice(code){
+  var ctrl=typeof AbortSignal!=='undefined'&&AbortSignal.timeout?{signal:AbortSignal.timeout(6000)}:{};
+  // 1순위: Yahoo Finance — KQ(KOSDAQ) → KS(KOSPI) 순 시도
+  for(var i=0;i<2;i++){
+    var sfx=i===0?'.KQ':'.KS';
+    try{
+      var r=await fetch('https://query1.finance.yahoo.com/v8/finance/chart/'+code+sfx+'?interval=1d&range=1d',ctrl);
+      if(r.ok){
+        var d=await r.json();
+        var meta=d.chart&&d.chart.result&&d.chart.result[0]&&d.chart.result[0].meta;
+        if(meta&&meta.regularMarketPrice)return meta.regularMarketPrice;
+      }
+    }catch(e){}
+  }
+  // 2순위: Naver Finance mobile API
+  try{
+    var nr=await fetch('https://m.stock.naver.com/api/stock/'+code+'/basic',ctrl);
+    if(nr.ok){
+      var nd=await nr.json();
+      if(nd.closePrice)return parseInt(nd.closePrice.replace(/,/g,''))||null;
+    }
+  }catch(e){}
+  return null;
+}
+
 // ── 카드 렌더 ────────────────────────────────────────────
 function renderCard(m){
   var tp=m.target?pct(m.buy,m.target):null;
@@ -1172,6 +1237,19 @@ function renderCard(m){
     var crs=(crv>0?'+':'')+crv.toFixed(2)+'%';
     closedBadge='<div class="mc-closed-rate '+(crv>=0?'mc-cr-up':'mc-cr-dn')+'">'+crs+'</div>';
   }
+  // 현재가 표시 (캐시 있을 때)
+  var curRow='';
+  if(m.status==='active'&&priceCache[m.id]){
+    var cp=priceCache[m.id].price;
+    var cpChg=m.buy?((cp-m.buy)/m.buy*100):null;
+    var cpStr=cpChg!==null?(cpChg>=0?'+':'')+cpChg.toFixed(2)+'%':'';
+    var cpCls=cpChg===null?'mc-cur-flat':(cpChg>0?'mc-cur-up':(cpChg<0?'mc-cur-dn':'mc-cur-flat'));
+    curRow='<div class="mc-cur-row">'
+      +'<span class="lbl">현재가</span>'
+      +'<span class="mc-cur-val">'+fmt(Math.round(cp))+'원</span>'
+      +(cpStr?'<span class="'+cpCls+'">'+cpStr+'</span>':'')
+      +'</div>';
+  }
   var cardHtml='<div class="memo-card" onclick="showDetail('+m.id+')">'
     +'<div class="mc-top">'
     +'<div style="display:flex;align-items:center;gap:9px">'
@@ -1184,6 +1262,7 @@ function renderCard(m){
     +'</div></div>'
     +'<div class="mc-divider"></div>'
     +'<div class="mc-meta">'+rows+'</div>'
+    +curRow
     +(m.memo?'<div class="mc-memo-txt" style="margin-top:10px">📝 '+m.memo+'</div>':'')
     +'</div>';
   return '<div class="card-row">'+cardHtml+'</div>';
@@ -1521,6 +1600,8 @@ function editDetail(id){
     +'<div class="edit-title">📥 매수 정보</div>'
     +'<div class="edit-field"><label>종목명</label>'
     +'<input id="ef-name" type="text" value="'+escHtml(m.name)+'"></div>'
+    +'<div class="edit-field"><label>종목코드 <span style="font-size:11px;color:var(--text3);font-weight:400">현재가 조회용 (예: 253590)</span></label>'
+    +'<input id="ef-code" type="text" inputmode="numeric" value="'+(m.code||'')+'" placeholder="6자리 숫자" maxlength="6"></div>'
     +'<div class="edit-row2">'
     +'<div class="edit-field"><label>매수날짜</label>'
     +'<input id="ef-date" type="date" value="'+(m.buyDate||'')+'"></div>'
@@ -1622,6 +1703,7 @@ function updateEditSellCalc(id){
 async function saveEdit(id){
   var m=memos.find(function(m){return m.id===id;});if(!m)return;
   m.name=document.getElementById('ef-name').value.trim()||m.name;
+  m.code=(document.getElementById('ef-code').value||'').trim().replace(/\D/g,'')||m.code||null;
   m.buyDate=document.getElementById('ef-date').value||m.buyDate;
   m.buy=parseInt(document.getElementById('ef-buy').value.replace(/,/g,''))||m.buy;
   m.qty=parseInt(document.getElementById('ef-qty').value.replace(/,/g,''))||null;
