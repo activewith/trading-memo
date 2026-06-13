@@ -1191,15 +1191,17 @@ async function fetchAllPrices(){
 }
 
 async function fetchPrice(code){
-  var hasSuffix=code.indexOf('.')!==-1;
-  var numCode=code.replace(/\..*/,'');
-  var avSymbols=hasSuffix?[code]:[code+'.KS',code+'.KQ'];
+  var hasSuffix=/\.(KS|KQ)$/i.test(code);
+  var numCode=code.replace(/\.(KS|KQ)$/i,'');
+  var avSymbols=hasSuffix?[code]:[numCode+'.KS',numCode+'.KQ'];
 
-  // 1순위: Finnhub — CORS 공식 지원, 60회/분, 한국 주식 지원
+  // 1순위: Finnhub — CORS 공식 지원, 60회/분, KRX 심볼 형식 사용
   var fhKey=(settings.finnhubKey||'').trim();
   if(fhKey){
     try{
-      var fr=await fetch('https://finnhub.io/api/v1/quote?symbol='+code+'&token='+fhKey);
+      // Finnhub 한국 주식 심볼 형식: KRX:XXXXXX (.KS/.KQ 형식은 미지원)
+      var fhSymbol=hasSuffix?'KRX:'+numCode:code;
+      var fr=await fetch('https://finnhub.io/api/v1/quote?symbol='+fhSymbol+'&token='+fhKey);
       if(fr.ok){
         var fd=await fr.json();
         if(fd.c&&fd.c>0)return fd.c;
