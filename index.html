@@ -369,8 +369,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 
       <div class="settings-sec">현재가 조회</div>
       <div class="settings-field">
-        <label>Twelve Data API 키 <span style="font-size:11px;font-weight:400;color:var(--text3)">(<a href="https://twelvedata.com" target="_blank" style="color:var(--blue-text)">무료 발급</a> — 없으면 Naver 프록시 사용)</span></label>
-        <input id="cfg-twelve-key" type="text" placeholder="예: abc123..." autocomplete="off">
+        <label>Twelve Data API 키 <span style="font-size:11px;font-weight:400;color:var(--text3)">(유료 플랜 필요 — KRX 무료 미지원)</span></label>
+        <input id="cfg-twelve-key" type="text" placeholder="현재 비활성 (Naver/Yahoo 사용 중)" autocomplete="off" disabled style="opacity:0.5">
       </div>
 
       <div class="settings-sec">GitHub 토큰</div>
@@ -1187,45 +1187,59 @@ async function fetchAllPrices(){
 }
 
 async function fetchPrice(code){
-  // 1순위: Twelve Data (키 있을 때) — 형식 3가지 순차 시도
-  var tdKey=(settings.twelveKey||'').trim();
-  if(tdKey){
-    var tdUrls=[
-      'https://api.twelvedata.com/price?symbol='+code+':KRX&apikey='+tdKey,
-      'https://api.twelvedata.com/price?symbol='+code+'&exchange=KRX&apikey='+tdKey,
-      'https://api.twelvedata.com/price?symbol='+code+':XKRX&apikey='+tdKey,
-    ];
-    for(var ti=0;ti<tdUrls.length;ti++){
-      try{
-        var tr=await fetch(tdUrls[ti]);
-        if(tr.ok){
-          var td=await tr.json();
-          if(td.price&&!td.code){var tp=parseFloat(td.price);if(tp>0)return tp;}
-        }
-      }catch(e){}
-    }
-  }
-  // 2순위: corsproxy.io → Naver Finance mobile API
-  try{
-    var nr=await fetch('https://corsproxy.io/?'+encodeURIComponent('https://m.stock.naver.com/api/stock/'+code+'/basic'));
-    if(nr.ok){
-      var nd=await nr.json();
-      var nv=nd.closePrice||nd.currentPrice||nd.stockPrice;
-      if(nv)return parseInt(String(nv).replace(/,/g,''))||null;
-    }
-  }catch(e){}
-  // 3순위: Yahoo Finance 비공식 (KQ→KS)
-  for(var i=0;i<2;i++){
-    var sfx=i===0?'.KQ':'.KS';
+  // ※ Twelvedata 무료 플랜은 KRX 미지원 — 유료 플랜 보유 시만 활성화
+  // var tdKey=(settings.twelveKey||'').trim();
+  // if(tdKey){ ... }
+
+  // 1순위: Naver Finance 직접 호출 (2개 엔드포인트 시도)
+  var naverApis=[
+    'https://m.stock.naver.com/api/stock/'+code+'/basic',
+    'https://polling.finance.naver.com/api/realtime?query=SERVICE_REALTIME_STOCK_ITEM:'+code,
+  ];
+  for(var ni=0;ni<naverApis.length;ni++){
     try{
-      var yr=await fetch('https://query1.finance.yahoo.com/v8/finance/chart/'+code+sfx+'?interval=1d&range=1d');
-      if(yr.ok){
-        var yd=await yr.json();
-        var meta=yd.chart&&yd.chart.result&&yd.chart.result[0]&&yd.chart.result[0].meta;
-        if(meta&&meta.regularMarketPrice)return meta.regularMarketPrice;
+      var nr=await fetch(naverApis[ni]);
+      if(nr.ok){
+        var nd=await nr.json();
+        var nv=nd.closePrice||nd.currentPrice||nd.stockPrice;
+        if(nv)return parseInt(String(nv).replace(/,/g,''))||null;
+        // polling API 응답 형식
+        var item=nd['SERVICE_REALTIME_STOCK_ITEM:'+code];
+        if(item){var iv=item.currentPrice||item.closePrice;if(iv)return parseInt(String(iv).replace(/,/g,''))||null;}
       }
     }catch(e){}
   }
+  // 2순위: Yahoo Finance (v7 quote → v8 chart, KQ/KS)
+  var yahooApis=[
+    {url:'https://query2.finance.yahoo.com/v7/finance/quote?symbols='+code+'.KQ',type:'quote'},
+    {url:'https://query2.finance.yahoo.com/v7/finance/quote?symbols='+code+'.KS',type:'quote'},
+    {url:'https://query1.finance.yahoo.com/v8/finance/chart/'+code+'.KQ?interval=1d&range=1d',type:'chart'},
+    {url:'https://query1.finance.yahoo.com/v8/finance/chart/'+code+'.KS?interval=1d&range=1d',type:'chart'},
+  ];
+  for(var yi=0;yi<yahooApis.length;yi++){
+    try{
+      var yr=await fetch(yahooApis[yi].url);
+      if(yr.ok){
+        var yd=await yr.json();
+        if(yahooApis[yi].type==='quote'){
+          var qr=yd.quoteResponse&&yd.quoteResponse.result&&yd.quoteResponse.result[0];
+          if(qr&&qr.regularMarketPrice)return qr.regularMarketPrice;
+        }else{
+          var meta=yd.chart&&yd.chart.result&&yd.chart.result[0]&&yd.chart.result[0].meta;
+          if(meta&&meta.regularMarketPrice)return meta.regularMarketPrice;
+        }
+      }
+    }catch(e){}
+  }
+  // 3순위: corsproxy.io 경유 Naver (최후 수단)
+  try{
+    var pr=await fetch('https://corsproxy.io/?'+encodeURIComponent('https://m.stock.naver.com/api/stock/'+code+'/basic'));
+    if(pr.ok){
+      var pd=await pr.json();
+      var pv=pd.closePrice||pd.currentPrice||pd.stockPrice;
+      if(pv)return parseInt(String(pv).replace(/,/g,''))||null;
+    }
+  }catch(e){}
   return null;
 }
 
