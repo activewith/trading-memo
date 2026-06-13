@@ -369,8 +369,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 
       <div class="settings-sec">현재가 조회</div>
       <div class="settings-field">
-        <label>Twelve Data API 키 <span style="font-size:11px;font-weight:400;color:var(--text3)">(유료 플랜 필요 — KRX 무료 미지원)</span></label>
-        <input id="cfg-twelve-key" type="text" placeholder="현재 비활성 (Naver/Yahoo 사용 중)" autocomplete="off" disabled style="opacity:0.5">
+        <label>Alpha Vantage API 키 <span style="font-size:11px;font-weight:400;color:var(--text3)">(<a href="https://www.alphavantage.co/support/#api-key" target="_blank" style="color:var(--blue-text)">무료 발급</a> · 25회/일 · 3종목 기준 하루 8회 조회)</span></label>
+        <input id="cfg-alpha-key" type="text" placeholder="예: ABCDE12345" autocomplete="off">
       </div>
 
       <div class="settings-sec">GitHub 토큰</div>
@@ -548,7 +548,7 @@ let memos=[];
 let groups=[]; // {id, name, createdAt}
 let watchlist=[]; // 관심종목
 let selectedMemos=new Set(); // 체크된 메모 ID
-let settings={targetPct:'',stopPct:'',days:'',principle:'',twelveKey:''};
+let settings={targetPct:'',stopPct:'',days:'',principle:'',alphaKey:''};
 let quickNote='';
 let _qnTimer=null; // quickNote 디바운스 타이머
 let currentTab=null; // 현재 활성 탭 (B방식 재탭 감지)
@@ -597,7 +597,7 @@ async function load(){
       const parsed=JSON.parse(decoded);
       // 하위호환: 이전 버전은 배열 형태였음
       if(Array.isArray(parsed)){memos=parsed;groups=[];watchlist=[];}
-      else{memos=parsed.memos||[];groups=parsed.groups||[];watchlist=parsed.watchlist||[];settings=Object.assign({targetPct:'',stopPct:'',days:'',principle:'',twelveKey:''},parsed.settings||{});quickNote=parsed.quickNote||'';}
+      else{memos=parsed.memos||[];groups=parsed.groups||[];watchlist=parsed.watchlist||[];settings=Object.assign({targetPct:'',stopPct:'',days:'',principle:'',alphaKey:''},parsed.settings||{});quickNote=parsed.quickNote||'';}
     } else if(res.status===401){
       localStorage.removeItem(TOKEN_KEY);
       showTokenSetup();
@@ -608,7 +608,7 @@ async function load(){
     // 오프라인 등 → localStorage 캐시로 폴백
     try{
       const d=localStorage.getItem('tm_cache');
-      if(d){const p=JSON.parse(d);if(Array.isArray(p)){memos=p;groups=[];watchlist=[];}else{memos=p.memos||[];groups=p.groups||[];watchlist=p.watchlist||[];settings=Object.assign({targetPct:'',stopPct:'',days:'',principle:'',twelveKey:''},p.settings||{});quickNote=p.quickNote||'';}}
+      if(d){const p=JSON.parse(d);if(Array.isArray(p)){memos=p;groups=[];watchlist=[];}else{memos=p.memos||[];groups=p.groups||[];watchlist=p.watchlist||[];settings=Object.assign({targetPct:'',stopPct:'',days:'',principle:'',alphaKey:''},p.settings||{});quickNote=p.quickNote||'';}}
     }catch(e2){memos=[];groups=[];}
   }
   // 캐시 저장
@@ -1187,11 +1187,19 @@ async function fetchAllPrices(){
 }
 
 async function fetchPrice(code){
-  // ※ Twelvedata 무료 플랜은 KRX 미지원 — 유료 플랜 보유 시만 활성화
-  // var tdKey=(settings.twelveKey||'').trim();
-  // if(tdKey){ ... }
-
-  // 1순위: Naver Finance 직접 호출 (2개 엔드포인트 시도)
+  // 1순위: Alpha Vantage — CORS 공식 지원, 한국 주식({code}.KRX) 지원, 무료 25회/일
+  var avKey=(settings.alphaKey||'').trim();
+  if(avKey){
+    try{
+      var ar=await fetch('https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol='+code+'.KRX&apikey='+avKey);
+      if(ar.ok){
+        var ad=await ar.json();
+        var gq=ad['Global Quote'];
+        if(gq&&gq['05. price']){var ap=parseFloat(gq['05. price']);if(ap>0)return ap;}
+      }
+    }catch(e){}
+  }
+  // 2순위: Naver Finance 직접 호출 (2개 엔드포인트)
   var naverApis=[
     'https://m.stock.naver.com/api/stock/'+code+'/basic',
     'https://polling.finance.naver.com/api/realtime?query=SERVICE_REALTIME_STOCK_ITEM:'+code,
@@ -1203,13 +1211,12 @@ async function fetchPrice(code){
         var nd=await nr.json();
         var nv=nd.closePrice||nd.currentPrice||nd.stockPrice;
         if(nv)return parseInt(String(nv).replace(/,/g,''))||null;
-        // polling API 응답 형식
         var item=nd['SERVICE_REALTIME_STOCK_ITEM:'+code];
         if(item){var iv=item.currentPrice||item.closePrice;if(iv)return parseInt(String(iv).replace(/,/g,''))||null;}
       }
     }catch(e){}
   }
-  // 2순위: Yahoo Finance (v7 quote → v8 chart, KQ/KS)
+  // 3순위: Yahoo Finance (v7 quote → v8 chart, KQ/KS)
   var yahooApis=[
     {url:'https://query2.finance.yahoo.com/v7/finance/quote?symbols='+code+'.KQ',type:'quote'},
     {url:'https://query2.finance.yahoo.com/v7/finance/quote?symbols='+code+'.KS',type:'quote'},
@@ -1231,7 +1238,7 @@ async function fetchPrice(code){
       }
     }catch(e){}
   }
-  // 3순위: corsproxy.io 경유 Naver (최후 수단)
+  // 4순위: corsproxy.io 경유 Naver (최후 수단)
   try{
     var pr=await fetch('https://corsproxy.io/?'+encodeURIComponent('https://m.stock.naver.com/api/stock/'+code+'/basic'));
     if(pr.ok){
@@ -2107,7 +2114,7 @@ function openSettings(){
   document.getElementById('cfg-target-pct').value=settings.targetPct!=null?settings.targetPct:'';
   document.getElementById('cfg-stop-pct').value=settings.stopPct!=null?settings.stopPct:'';
   document.getElementById('cfg-days').value=settings.days!=null?settings.days:'';
-  document.getElementById('cfg-twelve-key').value=settings.twelveKey||'';
+  document.getElementById('cfg-alpha-key').value=settings.alphaKey||'';
   document.getElementById('cfg-token').value=getToken();
   document.getElementById('settings-notice').textContent='';
   var ov=document.getElementById('settings-overlay');
@@ -2121,7 +2128,7 @@ async function saveSettings(){
   var targetPct=(document.getElementById('cfg-target-pct').value||'').trim();
   var stopPct=(document.getElementById('cfg-stop-pct').value||'').trim();
   var days=(document.getElementById('cfg-days').value||'').trim();
-  var twelveKey=(document.getElementById('cfg-twelve-key').value||'').trim();
+  var alphaKey=(document.getElementById('cfg-alpha-key').value||'').trim();
   var token=(document.getElementById('cfg-token').value||'').trim();
 
   // 토큰 변경
@@ -2133,7 +2140,7 @@ async function saveSettings(){
   settings.targetPct=targetPct;
   settings.stopPct=stopPct;
   settings.days=days;
-  settings.twelveKey=twelveKey;
+  settings.alphaKey=alphaKey;
 
   applyPrinciple();
 
