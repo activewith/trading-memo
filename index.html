@@ -369,12 +369,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 
       <div class="settings-sec">현재가 조회</div>
       <div class="settings-field">
-        <label>Finnhub API 키 <span style="font-size:11px;font-weight:400;color:var(--text3)">(권장 · <a href="https://finnhub.io" target="_blank" style="color:var(--blue-text)">무료 발급</a> · 60회/분)</span></label>
-        <input id="cfg-finnhub-key" type="text" placeholder="예: abc123xyz..." autocomplete="off">
-      </div>
-      <div class="settings-field">
-        <label>Alpha Vantage API 키 <span style="font-size:11px;font-weight:400;color:var(--text3)">(보조 · 25회/일)</span></label>
-        <input id="cfg-alpha-key" type="text" placeholder="예: ABCDE12345" autocomplete="off">
+        <label>프록시 URL <span style="font-size:11px;font-weight:400;color:var(--text3)">(Cloudflare Worker 배포 후 입력)</span></label>
+        <input id="cfg-proxy-url" type="text" placeholder="https://stock-proxy.xxx.workers.dev" autocomplete="off">
       </div>
 
       <div class="settings-sec">GitHub 토큰</div>
@@ -552,7 +548,7 @@ let memos=[];
 let groups=[]; // {id, name, createdAt}
 let watchlist=[]; // 관심종목
 let selectedMemos=new Set(); // 체크된 메모 ID
-let settings={targetPct:'',stopPct:'',days:'',principle:'',alphaKey:'',finnhubKey:''};
+let settings={targetPct:'',stopPct:'',days:'',principle:'',proxyUrl:''};
 let quickNote='';
 let _qnTimer=null; // quickNote 디바운스 타이머
 let currentTab=null; // 현재 활성 탭 (B방식 재탭 감지)
@@ -601,7 +597,7 @@ async function load(){
       const parsed=JSON.parse(decoded);
       // 하위호환: 이전 버전은 배열 형태였음
       if(Array.isArray(parsed)){memos=parsed;groups=[];watchlist=[];}
-      else{memos=parsed.memos||[];groups=parsed.groups||[];watchlist=parsed.watchlist||[];settings=Object.assign({targetPct:'',stopPct:'',days:'',principle:'',alphaKey:'',finnhubKey:''},parsed.settings||{});quickNote=parsed.quickNote||'';}
+      else{memos=parsed.memos||[];groups=parsed.groups||[];watchlist=parsed.watchlist||[];settings=Object.assign({targetPct:'',stopPct:'',days:'',principle:'',proxyUrl:''},parsed.settings||{});quickNote=parsed.quickNote||'';}
     } else if(res.status===401){
       localStorage.removeItem(TOKEN_KEY);
       showTokenSetup();
@@ -612,7 +608,7 @@ async function load(){
     // 오프라인 등 → localStorage 캐시로 폴백
     try{
       const d=localStorage.getItem('tm_cache');
-      if(d){const p=JSON.parse(d);if(Array.isArray(p)){memos=p;groups=[];watchlist=[];}else{memos=p.memos||[];groups=p.groups||[];watchlist=p.watchlist||[];settings=Object.assign({targetPct:'',stopPct:'',days:'',principle:'',alphaKey:'',finnhubKey:''},p.settings||{});quickNote=p.quickNote||'';}}
+      if(d){const p=JSON.parse(d);if(Array.isArray(p)){memos=p;groups=[];watchlist=[];}else{memos=p.memos||[];groups=p.groups||[];watchlist=p.watchlist||[];settings=Object.assign({targetPct:'',stopPct:'',days:'',principle:'',proxyUrl:''},p.settings||{});quickNote=p.quickNote||'';}}
     }catch(e2){memos=[];groups=[];}
   }
   // 캐시 저장
@@ -1191,77 +1187,36 @@ async function fetchAllPrices(){
 }
 
 async function fetchPrice(code){
-  var hasSuffix=/\.(KS|KQ)$/i.test(code);
   var numCode=code.replace(/\.(KS|KQ)$/i,'');
-  var avSymbols=hasSuffix?[code]:[numCode+'.KS',numCode+'.KQ'];
+  var naverPath='https://m.stock.naver.com/api/stock/'+numCode+'/basic';
 
-  // 1순위: Finnhub — CORS 공식 지원, 60회/분, KRX 심볼 형식 사용
-  var fhKey=(settings.finnhubKey||'').trim();
-  if(fhKey){
+  // Cloudflare Worker (설정된 경우 최우선)
+  var proxyUrl=(settings.proxyUrl||'').trim().replace(/\/+$/,'');
+  if(proxyUrl){
     try{
-      // Finnhub 한국 주식 심볼 형식: KRX:XXXXXX (.KS/.KQ 형식은 미지원)
-      var fhSymbol=hasSuffix?'KRX:'+numCode:code;
-      var fr=await fetch('https://finnhub.io/api/v1/quote?symbol='+fhSymbol+'&token='+fhKey);
-      if(fr.ok){
-        var fd=await fr.json();
-        if(fd.c&&fd.c>0)return fd.c;
-      }
+      var r=await fetch(proxyUrl+'?code='+numCode);
+      if(r.ok){var d=await r.json();if(d.price&&d.price>0)return d.price;}
     }catch(e){}
   }
-  // 2순위: Alpha Vantage — 무료 25회/일
-  var avKey=(settings.alphaKey||'').trim();
-  if(avKey){
-    for(var ai=0;ai<avSymbols.length;ai++){
-      try{
-        var ar=await fetch('https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol='+avSymbols[ai]+'&apikey='+avKey);
-        if(ar.ok){
-          var ad=await ar.json();
-          var gq=ad['Global Quote'];
-          if(gq&&gq['05. price']&&gq['05. price']!=='0.0000'){
-            var ap=parseFloat(gq['05. price']);if(ap>0)return ap;
-          }
-        }
-      }catch(e){}
-    }
-  }
-  // 3순위: Naver Finance 직접
-  var naverApis=[
-    'https://m.stock.naver.com/api/stock/'+numCode+'/basic',
-    'https://polling.finance.naver.com/api/realtime?query=SERVICE_REALTIME_STOCK_ITEM:'+numCode,
+
+  // 공개 CORS 프록시 순차 시도
+  var proxies=[
+    'https://corsproxy.io/?',
+    'https://api.allorigins.win/raw?url=',
+    'https://proxy.cors.sh/',
   ];
-  for(var ni=0;ni<naverApis.length;ni++){
+  for(var pi=0;pi<proxies.length;pi++){
     try{
-      var nr=await fetch(naverApis[ni]);
-      if(nr.ok){
-        var nd=await nr.json();
-        var nv=nd.closePrice||nd.currentPrice||nd.stockPrice;
-        if(nv)return parseInt(String(nv).replace(/,/g,''))||null;
-        var item=nd['SERVICE_REALTIME_STOCK_ITEM:'+numCode];
-        if(item){var iv=item.currentPrice||item.closePrice;if(iv)return parseInt(String(iv).replace(/,/g,''))||null;}
+      var url=proxies[pi]+encodeURIComponent(naverPath);
+      var res=await fetch(url,{signal:AbortSignal.timeout(4000)});
+      if(res.ok){
+        var d=await res.json();
+        var raw=d.closePrice||d.stockPrice||d.currentPrice||'';
+        var price=parseInt(String(raw).replace(/,/g,''))||null;
+        if(price>0)return price;
       }
     }catch(e){}
   }
-  // 4순위: Yahoo Finance
-  var ySuffixes=hasSuffix?[code.split('.')[1]]:['KQ','KS'];
-  for(var yi=0;yi<ySuffixes.length;yi++){
-    try{
-      var yr=await fetch('https://query2.finance.yahoo.com/v7/finance/quote?symbols='+numCode+'.'+ySuffixes[yi]);
-      if(yr.ok){
-        var yd=await yr.json();
-        var qr=yd.quoteResponse&&yd.quoteResponse.result&&yd.quoteResponse.result[0];
-        if(qr&&qr.regularMarketPrice)return qr.regularMarketPrice;
-      }
-    }catch(e){}
-  }
-  // 5순위: corsproxy.io 경유 Naver
-  try{
-    var pr=await fetch('https://corsproxy.io/?'+encodeURIComponent('https://m.stock.naver.com/api/stock/'+numCode+'/basic'));
-    if(pr.ok){
-      var pd=await pr.json();
-      var pv=pd.closePrice||pd.currentPrice||pd.stockPrice;
-      if(pv)return parseInt(String(pv).replace(/,/g,''))||null;
-    }
-  }catch(e){}
   return null;
 }
 
@@ -1663,8 +1618,8 @@ function editDetail(id){
     +'<div class="edit-title">📥 매수 정보</div>'
     +'<div class="edit-field"><label>종목명</label>'
     +'<input id="ef-name" type="text" value="'+escHtml(m.name)+'"></div>'
-    +'<div class="edit-field"><label>티커코드 <span style="font-size:11px;color:var(--text3);font-weight:400">현재가 조회용 (예: 005930.KS / 253590.KQ)</span></label>'
-    +'<input id="ef-code" type="text" inputmode="text" value="'+(m.code||'')+'" placeholder="6자리+.KS 또는 .KQ" maxlength="12" style="text-transform:uppercase"></div>'
+    +'<div class="edit-field"><label>티커코드 <span style="font-size:11px;color:var(--text3);font-weight:400">현재가 조회용 · 6자리 숫자 (예: 005930 / 253590)</span></label>'
+    +'<input id="ef-code" type="text" inputmode="numeric" value="'+(m.code||'')+'" placeholder="253590" maxlength="6"></div>'
     +'<div class="edit-row2">'
     +'<div class="edit-field"><label>매수날짜</label>'
     +'<input id="ef-date" type="date" value="'+(m.buyDate||'')+'"></div>'
@@ -1766,7 +1721,7 @@ function updateEditSellCalc(id){
 async function saveEdit(id){
   var m=memos.find(function(m){return m.id===id;});if(!m)return;
   m.name=document.getElementById('ef-name').value.trim()||m.name;
-  m.code=(document.getElementById('ef-code').value||'').trim().toUpperCase()||m.code||null;
+  m.code=(document.getElementById('ef-code').value||'').trim().replace(/[^0-9]/g,'')||m.code||null;
   m.buyDate=document.getElementById('ef-date').value||m.buyDate;
   m.buy=parseInt(document.getElementById('ef-buy').value.replace(/,/g,''))||m.buy;
   m.qty=parseInt(document.getElementById('ef-qty').value.replace(/,/g,''))||null;
@@ -2129,8 +2084,7 @@ function openSettings(){
   document.getElementById('cfg-target-pct').value=settings.targetPct!=null?settings.targetPct:'';
   document.getElementById('cfg-stop-pct').value=settings.stopPct!=null?settings.stopPct:'';
   document.getElementById('cfg-days').value=settings.days!=null?settings.days:'';
-  document.getElementById('cfg-finnhub-key').value=settings.finnhubKey||'';
-  document.getElementById('cfg-alpha-key').value=settings.alphaKey||'';
+  document.getElementById('cfg-proxy-url').value=settings.proxyUrl||'';
   document.getElementById('cfg-token').value=getToken();
   document.getElementById('settings-notice').textContent='';
   var ov=document.getElementById('settings-overlay');
@@ -2144,8 +2098,7 @@ async function saveSettings(){
   var targetPct=(document.getElementById('cfg-target-pct').value||'').trim();
   var stopPct=(document.getElementById('cfg-stop-pct').value||'').trim();
   var days=(document.getElementById('cfg-days').value||'').trim();
-  var finnhubKey=(document.getElementById('cfg-finnhub-key').value||'').trim();
-  var alphaKey=(document.getElementById('cfg-alpha-key').value||'').trim();
+  var proxyUrl=(document.getElementById('cfg-proxy-url').value||'').trim();
   var token=(document.getElementById('cfg-token').value||'').trim();
 
   // 토큰 변경
@@ -2157,8 +2110,7 @@ async function saveSettings(){
   settings.targetPct=targetPct;
   settings.stopPct=stopPct;
   settings.days=days;
-  settings.finnhubKey=finnhubKey;
-  settings.alphaKey=alphaKey;
+  settings.proxyUrl=proxyUrl;
 
   applyPrinciple();
 
