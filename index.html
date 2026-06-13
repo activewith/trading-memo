@@ -367,6 +367,12 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
         </div>
       </div>
 
+      <div class="settings-sec">현재가 조회</div>
+      <div class="settings-field">
+        <label>Twelve Data API 키 <span style="font-size:11px;font-weight:400;color:var(--text3)">(<a href="https://twelvedata.com" target="_blank" style="color:var(--blue-text)">무료 발급</a> — 없으면 Naver 프록시 사용)</span></label>
+        <input id="cfg-twelve-key" type="text" placeholder="예: abc123..." autocomplete="off">
+      </div>
+
       <div class="settings-sec">GitHub 토큰</div>
       <div class="settings-field">
         <label>Personal Access Token</label>
@@ -542,7 +548,7 @@ let memos=[];
 let groups=[]; // {id, name, createdAt}
 let watchlist=[]; // 관심종목
 let selectedMemos=new Set(); // 체크된 메모 ID
-let settings={targetPct:'',stopPct:'',days:'',principle:''};
+let settings={targetPct:'',stopPct:'',days:'',principle:'',twelveKey:''};
 let quickNote='';
 let _qnTimer=null; // quickNote 디바운스 타이머
 let currentTab=null; // 현재 활성 탭 (B방식 재탭 감지)
@@ -591,7 +597,7 @@ async function load(){
       const parsed=JSON.parse(decoded);
       // 하위호환: 이전 버전은 배열 형태였음
       if(Array.isArray(parsed)){memos=parsed;groups=[];watchlist=[];}
-      else{memos=parsed.memos||[];groups=parsed.groups||[];watchlist=parsed.watchlist||[];settings=parsed.settings||{targetPct:'',stopPct:'',days:'',principle:''};quickNote=parsed.quickNote||'';}
+      else{memos=parsed.memos||[];groups=parsed.groups||[];watchlist=parsed.watchlist||[];settings=Object.assign({targetPct:'',stopPct:'',days:'',principle:'',twelveKey:''},parsed.settings||{});quickNote=parsed.quickNote||'';}
     } else if(res.status===401){
       localStorage.removeItem(TOKEN_KEY);
       showTokenSetup();
@@ -602,7 +608,7 @@ async function load(){
     // 오프라인 등 → localStorage 캐시로 폴백
     try{
       const d=localStorage.getItem('tm_cache');
-      if(d){const p=JSON.parse(d);if(Array.isArray(p)){memos=p;groups=[];watchlist=[];}else{memos=p.memos||[];groups=p.groups||[];watchlist=p.watchlist||[];settings=p.settings||{targetPct:'',stopPct:'',days:'',principle:''};quickNote=p.quickNote||'';}}
+      if(d){const p=JSON.parse(d);if(Array.isArray(p)){memos=p;groups=[];watchlist=[];}else{memos=p.memos||[];groups=p.groups||[];watchlist=p.watchlist||[];settings=Object.assign({targetPct:'',stopPct:'',days:'',principle:'',twelveKey:''},p.settings||{});quickNote=p.quickNote||'';}}
     }catch(e2){memos=[];groups=[];}
   }
   // 캐시 저장
@@ -1181,27 +1187,38 @@ async function fetchAllPrices(){
 }
 
 async function fetchPrice(code){
-  var ctrl=typeof AbortSignal!=='undefined'&&AbortSignal.timeout?{signal:AbortSignal.timeout(6000)}:{};
-  // 1순위: Yahoo Finance — KQ(KOSDAQ) → KS(KOSPI) 순 시도
+  // 1순위: Twelve Data (설정에 키가 있을 때) — CORS 공식 지원, 무료 800회/일
+  var tdKey=(settings.twelveKey||'').trim();
+  if(tdKey){
+    try{
+      var tr=await fetch('https://api.twelvedata.com/price?symbol='+code+':KRX&apikey='+tdKey);
+      if(tr.ok){
+        var td=await tr.json();
+        if(td.price){var tp=parseFloat(td.price);if(tp>0)return tp;}
+      }
+    }catch(e){}
+  }
+  // 2순위: corsproxy.io → Naver Finance mobile API (무료, 키 불필요)
+  try{
+    var nr=await fetch('https://corsproxy.io/?https://m.stock.naver.com/api/stock/'+code+'/basic');
+    if(nr.ok){
+      var nd=await nr.json();
+      if(nd.closePrice)return parseInt(nd.closePrice.replace(/,/g,''))||null;
+      if(nd.currentPrice)return parseInt(String(nd.currentPrice).replace(/,/g,''))||null;
+    }
+  }catch(e){}
+  // 3순위: Yahoo Finance 비공식 (KQ→KS)
   for(var i=0;i<2;i++){
     var sfx=i===0?'.KQ':'.KS';
     try{
-      var r=await fetch('https://query1.finance.yahoo.com/v8/finance/chart/'+code+sfx+'?interval=1d&range=1d',ctrl);
-      if(r.ok){
-        var d=await r.json();
-        var meta=d.chart&&d.chart.result&&d.chart.result[0]&&d.chart.result[0].meta;
+      var yr=await fetch('https://query1.finance.yahoo.com/v8/finance/chart/'+code+sfx+'?interval=1d&range=1d');
+      if(yr.ok){
+        var yd=await yr.json();
+        var meta=yd.chart&&yd.chart.result&&yd.chart.result[0]&&yd.chart.result[0].meta;
         if(meta&&meta.regularMarketPrice)return meta.regularMarketPrice;
       }
     }catch(e){}
   }
-  // 2순위: Naver Finance mobile API
-  try{
-    var nr=await fetch('https://m.stock.naver.com/api/stock/'+code+'/basic',ctrl);
-    if(nr.ok){
-      var nd=await nr.json();
-      if(nd.closePrice)return parseInt(nd.closePrice.replace(/,/g,''))||null;
-    }
-  }catch(e){}
   return null;
 }
 
@@ -2066,6 +2083,7 @@ function openSettings(){
   document.getElementById('cfg-target-pct').value=settings.targetPct!=null?settings.targetPct:'';
   document.getElementById('cfg-stop-pct').value=settings.stopPct!=null?settings.stopPct:'';
   document.getElementById('cfg-days').value=settings.days!=null?settings.days:'';
+  document.getElementById('cfg-twelve-key').value=settings.twelveKey||'';
   document.getElementById('cfg-token').value=getToken();
   document.getElementById('settings-notice').textContent='';
   var ov=document.getElementById('settings-overlay');
@@ -2079,6 +2097,7 @@ async function saveSettings(){
   var targetPct=(document.getElementById('cfg-target-pct').value||'').trim();
   var stopPct=(document.getElementById('cfg-stop-pct').value||'').trim();
   var days=(document.getElementById('cfg-days').value||'').trim();
+  var twelveKey=(document.getElementById('cfg-twelve-key').value||'').trim();
   var token=(document.getElementById('cfg-token').value||'').trim();
 
   // 토큰 변경
@@ -2090,6 +2109,7 @@ async function saveSettings(){
   settings.targetPct=targetPct;
   settings.stopPct=stopPct;
   settings.days=days;
+  settings.twelveKey=twelveKey;
 
   applyPrinciple();
 
