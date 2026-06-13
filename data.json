@@ -13,7 +13,11 @@
       "buyDate": "2026-06-09",
       "date": "2026. 6. 9.",
       "status": "active",
-      "groupId": 1780987033641
+      "groupId": 1780987033641,
+      "code": "486450",
+      "sellPrice": null,
+      "sellDate": null,
+      "sellTotal": null
     },
     {
       "id": 1780976969854,
