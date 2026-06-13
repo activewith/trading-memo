@@ -1652,7 +1652,7 @@ function editDetail(id){
     +'<div class="edit-field"><label>종목명</label>'
     +'<input id="ef-name" type="text" value="'+escHtml(m.name)+'"></div>'
     +'<div class="edit-field"><label>티커코드 <span style="font-size:11px;color:var(--text3);font-weight:400">현재가 조회용 (예: 005930.KS / 253590.KQ)</span></label>'
-    +'<input id="ef-code" type="text" value="'+(m.code||'')+'" placeholder="6자리+.KS 또는 .KQ" maxlength="12" style="text-transform:uppercase"></div>'
+    +'<input id="ef-code" type="text" inputmode="text" value="'+(m.code||'')+'" placeholder="6자리+.KS 또는 .KQ" maxlength="12" style="text-transform:uppercase"></div>'
     +'<div class="edit-row2">'
     +'<div class="edit-field"><label>매수날짜</label>'
     +'<input id="ef-date" type="date" value="'+(m.buyDate||'')+'"></div>'
