@@ -369,7 +369,11 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 
       <div class="settings-sec">현재가 조회</div>
       <div class="settings-field">
-        <label>Alpha Vantage API 키 <span style="font-size:11px;font-weight:400;color:var(--text3)">(<a href="https://www.alphavantage.co/support/#api-key" target="_blank" style="color:var(--blue-text)">무료 발급</a> · 25회/일 · 3종목 기준 하루 8회 조회)</span></label>
+        <label>Finnhub API 키 <span style="font-size:11px;font-weight:400;color:var(--text3)">(권장 · <a href="https://finnhub.io" target="_blank" style="color:var(--blue-text)">무료 발급</a> · 60회/분)</span></label>
+        <input id="cfg-finnhub-key" type="text" placeholder="예: abc123xyz..." autocomplete="off">
+      </div>
+      <div class="settings-field">
+        <label>Alpha Vantage API 키 <span style="font-size:11px;font-weight:400;color:var(--text3)">(보조 · 25회/일)</span></label>
         <input id="cfg-alpha-key" type="text" placeholder="예: ABCDE12345" autocomplete="off">
       </div>
 
@@ -548,7 +552,7 @@ let memos=[];
 let groups=[]; // {id, name, createdAt}
 let watchlist=[]; // 관심종목
 let selectedMemos=new Set(); // 체크된 메모 ID
-let settings={targetPct:'',stopPct:'',days:'',principle:'',alphaKey:''};
+let settings={targetPct:'',stopPct:'',days:'',principle:'',alphaKey:'',finnhubKey:''};
 let quickNote='';
 let _qnTimer=null; // quickNote 디바운스 타이머
 let currentTab=null; // 현재 활성 탭 (B방식 재탭 감지)
@@ -597,7 +601,7 @@ async function load(){
       const parsed=JSON.parse(decoded);
       // 하위호환: 이전 버전은 배열 형태였음
       if(Array.isArray(parsed)){memos=parsed;groups=[];watchlist=[];}
-      else{memos=parsed.memos||[];groups=parsed.groups||[];watchlist=parsed.watchlist||[];settings=Object.assign({targetPct:'',stopPct:'',days:'',principle:'',alphaKey:''},parsed.settings||{});quickNote=parsed.quickNote||'';}
+      else{memos=parsed.memos||[];groups=parsed.groups||[];watchlist=parsed.watchlist||[];settings=Object.assign({targetPct:'',stopPct:'',days:'',principle:'',alphaKey:'',finnhubKey:''},parsed.settings||{});quickNote=parsed.quickNote||'';}
     } else if(res.status===401){
       localStorage.removeItem(TOKEN_KEY);
       showTokenSetup();
@@ -608,7 +612,7 @@ async function load(){
     // 오프라인 등 → localStorage 캐시로 폴백
     try{
       const d=localStorage.getItem('tm_cache');
-      if(d){const p=JSON.parse(d);if(Array.isArray(p)){memos=p;groups=[];watchlist=[];}else{memos=p.memos||[];groups=p.groups||[];watchlist=p.watchlist||[];settings=Object.assign({targetPct:'',stopPct:'',days:'',principle:'',alphaKey:''},p.settings||{});quickNote=p.quickNote||'';}}
+      if(d){const p=JSON.parse(d);if(Array.isArray(p)){memos=p;groups=[];watchlist=[];}else{memos=p.memos||[];groups=p.groups||[];watchlist=p.watchlist||[];settings=Object.assign({targetPct:'',stopPct:'',days:'',principle:'',alphaKey:'',finnhubKey:''},p.settings||{});quickNote=p.quickNote||'';}}
     }catch(e2){memos=[];groups=[];}
   }
   // 캐시 저장
@@ -1187,13 +1191,22 @@ async function fetchAllPrices(){
 }
 
 async function fetchPrice(code){
-  // 코드에 이미 .KS/.KQ 포함 여부 확인
   var hasSuffix=code.indexOf('.')!==-1;
-  var numCode=code.replace(/\..*/,''); // 숫자 부분만 (Naver용)
-  // Alpha Vantage 시도 심볼: 접미사 있으면 그대로, 없으면 .KS/.KQ 둘 다 시도
+  var numCode=code.replace(/\..*/,'');
   var avSymbols=hasSuffix?[code]:[code+'.KS',code+'.KQ'];
 
-  // 1순위: Alpha Vantage — 공식 CORS, 무료 25회/일
+  // 1순위: Finnhub — CORS 공식 지원, 60회/분, 한국 주식 지원
+  var fhKey=(settings.finnhubKey||'').trim();
+  if(fhKey){
+    try{
+      var fr=await fetch('https://finnhub.io/api/v1/quote?symbol='+code+'&token='+fhKey);
+      if(fr.ok){
+        var fd=await fr.json();
+        if(fd.c&&fd.c>0)return fd.c;
+      }
+    }catch(e){}
+  }
+  // 2순위: Alpha Vantage — 무료 25회/일
   var avKey=(settings.alphaKey||'').trim();
   if(avKey){
     for(var ai=0;ai<avSymbols.length;ai++){
@@ -1202,16 +1215,14 @@ async function fetchPrice(code){
         if(ar.ok){
           var ad=await ar.json();
           var gq=ad['Global Quote'];
-          // 빈 응답 또는 0 제외
           if(gq&&gq['05. price']&&gq['05. price']!=='0.0000'){
-            var ap=parseFloat(gq['05. price']);
-            if(ap>0)return ap;
+            var ap=parseFloat(gq['05. price']);if(ap>0)return ap;
           }
         }
       }catch(e){}
     }
   }
-  // 2순위: Naver Finance 직접 (숫자 코드 사용)
+  // 3순위: Naver Finance 직접
   var naverApis=[
     'https://m.stock.naver.com/api/stock/'+numCode+'/basic',
     'https://polling.finance.naver.com/api/realtime?query=SERVICE_REALTIME_STOCK_ITEM:'+numCode,
@@ -1228,12 +1239,11 @@ async function fetchPrice(code){
       }
     }catch(e){}
   }
-  // 3순위: Yahoo Finance (접미사 있으면 그대로, 없으면 KQ/KS 순)
+  // 4순위: Yahoo Finance
   var ySuffixes=hasSuffix?[code.split('.')[1]]:['KQ','KS'];
   for(var yi=0;yi<ySuffixes.length;yi++){
-    var ySym=numCode+'.'+ySuffixes[yi];
     try{
-      var yr=await fetch('https://query2.finance.yahoo.com/v7/finance/quote?symbols='+ySym);
+      var yr=await fetch('https://query2.finance.yahoo.com/v7/finance/quote?symbols='+numCode+'.'+ySuffixes[yi]);
       if(yr.ok){
         var yd=await yr.json();
         var qr=yd.quoteResponse&&yd.quoteResponse.result&&yd.quoteResponse.result[0];
@@ -1241,7 +1251,7 @@ async function fetchPrice(code){
       }
     }catch(e){}
   }
-  // 4순위: corsproxy.io 경유 Naver
+  // 5순위: corsproxy.io 경유 Naver
   try{
     var pr=await fetch('https://corsproxy.io/?'+encodeURIComponent('https://m.stock.naver.com/api/stock/'+numCode+'/basic'));
     if(pr.ok){
@@ -2117,6 +2127,7 @@ function openSettings(){
   document.getElementById('cfg-target-pct').value=settings.targetPct!=null?settings.targetPct:'';
   document.getElementById('cfg-stop-pct').value=settings.stopPct!=null?settings.stopPct:'';
   document.getElementById('cfg-days').value=settings.days!=null?settings.days:'';
+  document.getElementById('cfg-finnhub-key').value=settings.finnhubKey||'';
   document.getElementById('cfg-alpha-key').value=settings.alphaKey||'';
   document.getElementById('cfg-token').value=getToken();
   document.getElementById('settings-notice').textContent='';
@@ -2131,6 +2142,7 @@ async function saveSettings(){
   var targetPct=(document.getElementById('cfg-target-pct').value||'').trim();
   var stopPct=(document.getElementById('cfg-stop-pct').value||'').trim();
   var days=(document.getElementById('cfg-days').value||'').trim();
+  var finnhubKey=(document.getElementById('cfg-finnhub-key').value||'').trim();
   var alphaKey=(document.getElementById('cfg-alpha-key').value||'').trim();
   var token=(document.getElementById('cfg-token').value||'').trim();
 
@@ -2143,6 +2155,7 @@ async function saveSettings(){
   settings.targetPct=targetPct;
   settings.stopPct=stopPct;
   settings.days=days;
+  settings.finnhubKey=finnhubKey;
   settings.alphaKey=alphaKey;
 
   applyPrinciple();
