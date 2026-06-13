@@ -1187,24 +1187,31 @@ async function fetchAllPrices(){
 }
 
 async function fetchPrice(code){
-  // 1순위: Twelve Data (설정에 키가 있을 때) — CORS 공식 지원, 무료 800회/일
+  // 1순위: Twelve Data (키 있을 때) — 형식 3가지 순차 시도
   var tdKey=(settings.twelveKey||'').trim();
   if(tdKey){
-    try{
-      var tr=await fetch('https://api.twelvedata.com/price?symbol='+code+':KRX&apikey='+tdKey);
-      if(tr.ok){
-        var td=await tr.json();
-        if(td.price){var tp=parseFloat(td.price);if(tp>0)return tp;}
-      }
-    }catch(e){}
+    var tdUrls=[
+      'https://api.twelvedata.com/price?symbol='+code+':KRX&apikey='+tdKey,
+      'https://api.twelvedata.com/price?symbol='+code+'&exchange=KRX&apikey='+tdKey,
+      'https://api.twelvedata.com/price?symbol='+code+':XKRX&apikey='+tdKey,
+    ];
+    for(var ti=0;ti<tdUrls.length;ti++){
+      try{
+        var tr=await fetch(tdUrls[ti]);
+        if(tr.ok){
+          var td=await tr.json();
+          if(td.price&&!td.code){var tp=parseFloat(td.price);if(tp>0)return tp;}
+        }
+      }catch(e){}
+    }
   }
-  // 2순위: corsproxy.io → Naver Finance mobile API (무료, 키 불필요)
+  // 2순위: corsproxy.io → Naver Finance mobile API
   try{
-    var nr=await fetch('https://corsproxy.io/?https://m.stock.naver.com/api/stock/'+code+'/basic');
+    var nr=await fetch('https://corsproxy.io/?'+encodeURIComponent('https://m.stock.naver.com/api/stock/'+code+'/basic'));
     if(nr.ok){
       var nd=await nr.json();
-      if(nd.closePrice)return parseInt(nd.closePrice.replace(/,/g,''))||null;
-      if(nd.currentPrice)return parseInt(String(nd.currentPrice).replace(/,/g,''))||null;
+      var nv=nd.closePrice||nd.currentPrice||nd.stockPrice;
+      if(nv)return parseInt(String(nv).replace(/,/g,''))||null;
     }
   }catch(e){}
   // 3순위: Yahoo Finance 비공식 (KQ→KS)
@@ -1248,24 +1255,28 @@ function renderCard(m){
     }
     rows+='<div class="mc-meta-row"><span><span class="lbl">보유기한</span><span class="val">'+m.days+'일'+deadlineStr+'</span></span></div>';
   }
+  // 현재가 행 — 코드가 등록된 보유중 종목은 항상 표시
+  if(m.status==='active'&&m.code){
+    var r_cur='';
+    if(priceCache[m.id]){
+      var cp=priceCache[m.id].price;
+      var cpChg=m.buy?((cp-m.buy)/m.buy*100):null;
+      var cpStr=cpChg!==null?(cpChg>=0?'+':'')+cpChg.toFixed(2)+'%':'';
+      var cpColor=cpChg===null?'var(--text2)':(cpChg>0?'var(--green-text)':cpChg<0?'var(--red-text)':'var(--text2)');
+      r_cur='<span><span class="lbl">현재가</span>'
+        +'<span class="val">'+fmt(Math.round(cp))+'원</span>'
+        +(cpStr?'<span style="margin-left:5px;font-weight:700;font-size:13px;color:'+cpColor+'">'+cpStr+'</span>':'')
+        +'</span>';
+    }else{
+      r_cur='<span><span class="lbl">현재가</span><span style="font-size:13px;color:var(--text3)">— 탭 재탭으로 조회</span></span>';
+    }
+    rows+='<div class="mc-meta-row" style="margin-top:5px;padding-top:7px;border-top:1px dashed var(--border)">'+r_cur+'</div>';
+  }
   var closedBadge='';
   if(m.status!=='active'&&m.sellPrice){
     var crv=((m.sellPrice-m.buy)/m.buy*100);
     var crs=(crv>0?'+':'')+crv.toFixed(2)+'%';
     closedBadge='<div class="mc-closed-rate '+(crv>=0?'mc-cr-up':'mc-cr-dn')+'">'+crs+'</div>';
-  }
-  // 현재가 표시 (캐시 있을 때)
-  var curRow='';
-  if(m.status==='active'&&priceCache[m.id]){
-    var cp=priceCache[m.id].price;
-    var cpChg=m.buy?((cp-m.buy)/m.buy*100):null;
-    var cpStr=cpChg!==null?(cpChg>=0?'+':'')+cpChg.toFixed(2)+'%':'';
-    var cpCls=cpChg===null?'mc-cur-flat':(cpChg>0?'mc-cur-up':(cpChg<0?'mc-cur-dn':'mc-cur-flat'));
-    curRow='<div class="mc-cur-row">'
-      +'<span class="lbl">현재가</span>'
-      +'<span class="mc-cur-val">'+fmt(Math.round(cp))+'원</span>'
-      +(cpStr?'<span class="'+cpCls+'">'+cpStr+'</span>':'')
-      +'</div>';
   }
   var cardHtml='<div class="memo-card" onclick="showDetail('+m.id+')">'
     +'<div class="mc-top">'
@@ -1279,7 +1290,6 @@ function renderCard(m){
     +'</div></div>'
     +'<div class="mc-divider"></div>'
     +'<div class="mc-meta">'+rows+'</div>'
-    +curRow
     +(m.memo?'<div class="mc-memo-txt" style="margin-top:10px">📝 '+m.memo+'</div>':'')
     +'</div>';
   return '<div class="card-row">'+cardHtml+'</div>';
