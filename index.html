@@ -1163,8 +1163,8 @@ function renderCard(m){
   if(m.total) r1+='<span><span class="lbl">총액</span><span class="val">'+fmt(m.total)+'원</span></span>';
   rows+='<div class="mc-meta-row">'+r1+'</div>';
   var r2='';
-  if(m.target) r2+='<span><span class="lbl">목표</span><span class="val-up" style="font-size:13px">'+fmt(m.target)+'원 <span style="font-size:11px">(+'+tp+'%)</span></span></span>';
-  if(m.stop)   r2+='<span><span class="lbl">손절</span><span class="val-dn" style="font-size:13px">'+fmt(m.stop)+'원 <span style="font-size:11px">('+sp+'%)</span></span></span>';
+  if(m.target) r2+='<span><span class="lbl">목표</span><span class="val-up" style="font-size:15px">'+fmt(m.target)+'원 <span style="font-size:11px">(+'+tp+'%)</span></span></span>';
+  if(m.stop)   r2+='<span><span class="lbl">손절</span><span class="val-dn" style="font-size:15px">'+fmt(m.stop)+'원 <span style="font-size:11px">('+sp+'%)</span></span></span>';
   if(r2) rows+='<div class="mc-meta-row">'+r2+'</div>';
   if(m.days){
     var deadlineStr='';
