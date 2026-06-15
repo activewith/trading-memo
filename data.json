@@ -31,12 +31,12 @@
       "memo": "신한 투자의견 10만",
       "buyDate": "2026-06-09",
       "date": "2026. 6. 9.",
-      "status": "active",
+      "status": "closed",
       "groupId": 1780987033641,
       "code": "229640",
-      "sellPrice": null,
-      "sellDate": null,
-      "sellTotal": null
+      "sellPrice": 68100,
+      "sellDate": "2026-06-15",
+      "sellTotal": 340500
     },
     {
       "id": 1780976818861,
