@@ -63,7 +63,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 .settings-save:active{opacity:0.7}
 .settings-notice{text-align:center;font-size:13px;color:var(--green);min-height:20px;margin-top:8px;font-weight:500}
 .tabs{display:flex;padding:0 6px}
-.tab{flex:1;padding:10px 0 8px;font-size:11px;font-weight:500;text-align:center;cursor:pointer;color:var(--text2);border:none;background:none;border-bottom:2px solid transparent;transition:all 0.2s}
+.tab{flex:1;padding:10px 0 8px;font-size:14px;font-weight:600;text-align:center;cursor:pointer;color:var(--text2);border:none;background:none;border-bottom:2px solid transparent;transition:all 0.2s;letter-spacing:-0.3px}
 .tab.on{color:var(--text);border-bottom-color:var(--text)}
 .scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .content{padding:16px 16px max(calc(env(safe-area-inset-bottom) + 80px), 120px)}
@@ -311,6 +311,13 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 .stat-total-card{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:13px 14px;margin-top:4px}
 .stat-total-label{font-size:13px;font-weight:700;margin-bottom:8px;color:var(--text)}
 
+/* 중간점검 알람 배너 */
+.midpoint-banner{display:none;background:var(--bg);border-radius:var(--radius);border:1.5px solid #E8A020;padding:13px 14px;margin-bottom:12px}
+.midpoint-banner-title{font-size:13px;font-weight:700;color:#B87010;margin-bottom:6px}
+.midpoint-banner-list{display:flex;flex-direction:column;gap:5px}
+.midpoint-banner-item{font-size:13px;color:var(--text);display:flex;align-items:center;gap:6px}
+.midpoint-banner-close{float:right;background:none;border:none;cursor:pointer;color:var(--text2);font-size:15px;padding:0;line-height:1;margin:-2px -2px 0 8px}
+
 /* 현재가 */
 .mc-cur-row{display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap}
 .mc-cur-val{font-size:14px;font-weight:600;color:var(--text)}
@@ -459,6 +466,13 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
         <span style="font-size:12px;font-weight:700;color:var(--text2);white-space:nowrap">매매 목록</span>
         <div style="flex:1;border-top:1px solid var(--border)"></div>
       </div>
+      <!-- 중간점검 알람 배너 -->
+      <div id="midpoint-banner" class="midpoint-banner">
+        <button class="midpoint-banner-close" onclick="document.getElementById('midpoint-banner').style.display='none'">✕</button>
+        <div class="midpoint-banner-title">⏰ 중간점검 알림</div>
+        <div class="midpoint-banner-list" id="midpoint-banner-list"></div>
+      </div>
+
       <div id="detail-area"></div>
       <div id="list-area"></div>
     </div>
@@ -604,7 +618,7 @@ async function load(){
   }
   // 캐시 저장
   try{localStorage.setItem('tm_cache',JSON.stringify({memos,groups,watchlist,settings,quickNote}));}catch(e){}
-  renderList();updateBadge();showInstallHint();
+  renderList();updateBadge();showInstallHint();checkMidpointAlerts();
   applyPrinciple();
   applyQuickNote();
   if(!localStorage.getItem('ocr_ready')&&!localStorage.getItem('ocr_hint_dismissed')){
@@ -648,7 +662,7 @@ function sw(p){
   document.getElementById('pane-wlist').style.display=p==='wlist'?'block':'none';
   document.getElementById('pane-trade').style.display=p==='trade'?'block':'none';
   document.getElementById('pane-stat').style.display=p==='stat'?'block':'none';
-  if(p==='trade')renderList();
+  if(p==='trade'){renderList();checkMidpointAlerts();}
   if(p==='wlist')renderWatchlist();
   if(p==='stat')renderStat();
   if(p!=='trade')clearSelection();
@@ -1953,7 +1967,56 @@ function showInstallHint(){
   }
 }
 
-// ── 단기메모 ─────────────────────────────────────────────
+// ── 중간점검 알람 ─────────────────────────────────────────
+function checkMidpointAlerts(){
+  var banner=document.getElementById('midpoint-banner');
+  var listEl=document.getElementById('midpoint-banner-list');
+  if(!banner||!listEl)return;
+  var today=new Date();
+  today.setHours(0,0,0,0);
+  var alerts=[];
+  memos.forEach(function(m){
+    if(m.status!=='active')return;
+    if(!m.days||!m.buyDate&&!m.date)return;
+    var days=parseInt(m.days);
+    if(!days||days<2)return;
+    var startD=new Date(m.buyDate||m.date);
+    if(isNaN(startD.getTime()))return;
+    startD.setHours(0,0,0,0);
+    var halfDays=Math.floor(days/2);
+    var midD=new Date(startD);
+    midD.setDate(midD.getDate()+halfDays);
+    var endD=new Date(startD);
+    endD.setDate(endD.getDate()+days);
+    // 중간점검일 당일 또는 이미 지났지만 아직 보유기한 내
+    var todayMs=today.getTime();
+    var midMs=midD.getTime();
+    var endMs=endD.getTime();
+    if(todayMs>=midMs&&todayMs<endMs){
+      var elapsed=Math.round((todayMs-startD.getTime())/(1000*60*60*24));
+      var remaining=Math.round((endMs-todayMs)/(1000*60*60*24));
+      var isToday=todayMs===midMs;
+      alerts.push({name:m.name,halfDays,elapsed,remaining,isToday});
+    }
+  });
+  if(!alerts.length){
+    banner.style.display='none';
+    return;
+  }
+  listEl.innerHTML=alerts.map(function(a){
+    var tag=a.isToday
+      ?'<span style="font-size:11px;font-weight:700;background:#FFF3E0;color:#E65100;padding:1px 7px;border-radius:8px;margin-right:4px">오늘</span>'
+      :'<span style="font-size:11px;font-weight:700;background:var(--bg3);color:var(--text2);padding:1px 7px;border-radius:8px;margin-right:4px">경과중</span>';
+    return '<div class="midpoint-banner-item">'+tag
+      +'<b>'+escHtml(a.name)+'</b>'
+      +'<span style="font-size:12px;color:var(--text2);margin-left:2px">'
+      +a.elapsed+'일째 · 잔여 '+a.remaining+'일</span>'
+      +'</div>';
+  }).join('');
+  banner.style.display='block';
+}
+
+
 function onQuickNoteInput(el){
   quickNote=el.value;
   // 높이 자동조절
