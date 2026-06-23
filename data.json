@@ -12,12 +12,12 @@
       "memo": "24,500 반도체가 너무 올라서. 연습용",
       "buyDate": "2026-06-09",
       "date": "2026. 6. 9.",
-      "status": "active",
+      "status": "closed",
       "groupId": 1780987033641,
       "code": "486450",
-      "sellPrice": null,
-      "sellDate": null,
-      "sellTotal": null
+      "sellPrice": 25565,
+      "sellDate": "2026-06-23",
+      "sellTotal": 255650
     },
     {
       "id": 1780976969854,
