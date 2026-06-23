@@ -50,12 +50,12 @@
       "memo": "18,370 상위 구성사 kb, 삼생 투자의견 상한선이 대부분 한참 높음.",
       "buyDate": "2026-06-09",
       "date": "2026. 6. 9.",
-      "status": "active",
+      "status": "closed",
       "groupId": 1780987033641,
       "code": "139270",
-      "sellPrice": null,
-      "sellDate": null,
-      "sellTotal": null
+      "sellPrice": 16769,
+      "sellDate": "2026-06-23",
+      "sellTotal": 335380
     },
     {
       "id": 1780640972004,
