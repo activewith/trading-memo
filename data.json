@@ -155,16 +155,7 @@
       "createdAt": "2026-06-09T06:37:13.641Z"
     }
   ],
-  "watchlist": [
-    {
-      "id": 1780930991945,
-      "name": "Sol 미ai전력인프라",
-      "tag": "전력",
-      "price": 23815,
-      "memo": "미국전력장비 수요를 믿는다. 근거빈약.",
-      "date": "2026-06-08"
-    }
-  ],
+  "watchlist": [],
   "settings": {
     "targetPct": "15",
     "stopPct": "10",
