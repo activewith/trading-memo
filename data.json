@@ -2,7 +2,7 @@
   "memos": [
     {
       "id": 1782451994946,
-      "name": "5에코에너지",
+      "name": "Ls에코에너지",
       "buy": 46400,
       "qty": 10,
       "total": 464000,
@@ -12,7 +12,10 @@
       "memo": "",
       "buyDate": "2026-06-26",
       "date": "2026. 6. 26.",
-      "status": "active"
+      "status": "active",
+      "sellPrice": null,
+      "sellDate": null,
+      "sellTotal": null
     },
     {
       "id": 1782451994939,
