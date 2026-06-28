@@ -19,7 +19,7 @@
     },
     {
       "id": 1782451994939,
-      "name": "1668 200 금융",
+      "name": "Tiger 200 금융",
       "buy": 15600,
       "qty": 20,
       "total": 312000,
@@ -29,7 +29,10 @@
       "memo": "",
       "buyDate": "2026-06-26",
       "date": "2026. 6. 26.",
-      "status": "active"
+      "status": "active",
+      "sellPrice": null,
+      "sellDate": null,
+      "sellTotal": null
     },
     {
       "id": 1780977028177,
