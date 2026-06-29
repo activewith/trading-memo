@@ -15,7 +15,8 @@
       "status": "active",
       "sellPrice": null,
       "sellDate": null,
-      "sellTotal": null
+      "sellTotal": null,
+      "groupId": 1782736459396
     },
     {
       "id": 1782451994939,
@@ -32,7 +33,8 @@
       "status": "active",
       "sellPrice": null,
       "sellDate": null,
-      "sellTotal": null
+      "sellTotal": null,
+      "groupId": 1782736459396
     },
     {
       "id": 1780977028177,
@@ -156,6 +158,11 @@
       "id": 1780987033641,
       "name": "2회차",
       "createdAt": "2026-06-09T06:37:13.641Z"
+    },
+    {
+      "id": 1782736459396,
+      "name": "3회차",
+      "createdAt": "2026-06-29T12:34:19.396Z"
     }
   ],
   "watchlist": [],
