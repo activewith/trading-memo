@@ -30,10 +30,10 @@
       "memo": "",
       "buyDate": "2026-06-26",
       "date": "2026. 6. 26.",
-      "status": "active",
-      "sellPrice": null,
-      "sellDate": null,
-      "sellTotal": null,
+      "status": "closed",
+      "sellPrice": 17330,
+      "sellDate": "2026-07-03",
+      "sellTotal": 346600,
       "groupId": 1782736459396
     },
     {
