@@ -19,7 +19,7 @@
     },
     {
       "id": 1783316881140,
-      "name": "5에코에너지",
+      "name": "Ls에코에너지",
       "buy": 49240,
       "qty": 10,
       "total": 492400,
@@ -29,7 +29,10 @@
       "memo": "",
       "buyDate": "2026-07-06",
       "date": "2026. 7. 6.",
-      "status": "active"
+      "status": "active",
+      "sellPrice": null,
+      "sellDate": null,
+      "sellTotal": null
     },
     {
       "id": 1782451994946,
