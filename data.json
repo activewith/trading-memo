@@ -2,7 +2,7 @@
   "memos": [
     {
       "id": 1783316958517,
-      "name": "195『.시바도체핵삼공",
+      "name": "Tiger AI반도체핵삼공정",
       "buy": 15460,
       "qty": 10,
       "total": 154600,
@@ -12,7 +12,10 @@
       "memo": "",
       "buyDate": "2026-07-06",
       "date": "2026. 7. 6.",
-      "status": "active"
+      "status": "active",
+      "sellPrice": null,
+      "sellDate": null,
+      "sellTotal": null
     },
     {
       "id": 1783316881140,
